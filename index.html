@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plus Two Mission Control</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Premium effects dependencies -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/1.4.11/Tone.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
+        .gradient-text { background: linear-gradient(90deg, #2563eb, #7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .checkbox-custom:checked + label .check-icon { display: block; }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Navbar -->
+    <nav class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-10">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="bg-blue-600 text-white p-2 rounded-lg">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <h1 class="text-xl font-bold text-slate-800">Mission <span class="text-blue-600">PlusTwo</span></h1>
+            </div>
+            <div id="date-display" class="text-sm font-medium text-slate-500"></div>
+        </div>
+    </nav>
+
+    <!-- Main Content Container -->
+    <main id="app-container" class="flex-grow max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+        <!-- Views will be dynamically injected here by JavaScript -->
+    </main>
+
+    <!-- Regenerate Modal -->
+    <div id="regenerate-modal" class="fixed inset-0 bg-slate-900 bg-opacity-50 hidden items-center justify-center z-50 px-4">
+        <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 animate-fade-in-up">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-slate-800">Adjust Schedule</h2>
+                <button onclick="closeRegenerateModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-times text-xl"></i></button>
+            </div>
+            <p class="text-sm text-slate-600 mb-6">Fell behind? No problem. Select the last day you fully completed, and we'll redistribute the remaining syllabus from tomorrow until your deadline.</p>
+            
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-slate-700 mb-2">I have completed up to:</label>
+                <select id="completed-day-select" class="w-full border border-slate-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
+                    <!-- Options populated via JS -->
+                </select>
+            </div>
+            
+            <div class="flex gap-3">
+                <button onclick="closeRegenerateModal()" class="flex-1 py-3 px-4 bg-slate-100 text-slate-700 font-semibold rounded-xl hover:bg-slate-200 transition-colors">Cancel</button>
+                <button onclick="executeRegeneration()" class="flex-1 py-3 px-4 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200">Re-plan</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. DATA SOURCE (Verified Kerala DHSE Rationalized Syllabus) ---
+        const makeTasks = (subject, grade, chapters) => {
+            let tasks = [];
+            chapters.forEach((ch, chIdx) => {
+                let parts = ch.parts;
+                for(let p=1; p<=parts; p++) {
+                    tasks.push({
+                        id: `${grade}_${subject.charAt(0)}_${chIdx+1}_${p}`,
+                        chapId: `${grade}_${subject}_${chIdx+1}`,
+                        subject: subject,
+                        grade: grade,
+                        chapter: `${chIdx+1}. ${ch.name}`,
+                        topic: parts === 1 ? 'Full Chapter' : `Part ${p} of ${parts}`,
+                        term: ch.term || 1
+                    });
+                }
+            });
+            return tasks;
+        };
+
+        const PLUS_TWO_DATA = [
+            ...makeTasks('Physics', '+2', [
+                {name: 'Electric Charges & Fields', parts: 2, term: 1},
+                {name: 'Electrostatic Potential & Capacitance', parts: 2, term: 1},
+                {name: 'Current Electricity', parts: 3, term: 1},
+                {name: 'Moving Charges & Magnetism', parts: 2, term: 1},
+                {name: 'Magnetism & Matter', parts: 1, term: 1},
+                {name: 'Electromagnetic Induction', parts: 2, term: 2},
+                {name: 'Alternating Current', parts: 2, term: 2},
+                {name: 'Electromagnetic Waves', parts: 1, term: 2},
+                {name: 'Ray Optics & Optical Instruments', parts: 3, term: 2},
+                {name: 'Wave Optics', parts: 2, term: 2},
+                {name: 'Dual Nature of Radiation & Matter', parts: 2, term: 3},
+                {name: 'Atoms', parts: 2, term: 3},
+                {name: 'Nuclei', parts: 1, term: 3},
+                {name: 'Semiconductor Electronics', parts: 3, term: 3}
+            ]),
+            ...makeTasks('Chemistry', '+2', [
+                {name: 'Solutions', parts: 3, term: 1},
+                {name: 'Electrochemistry', parts: 3, term: 1},
+                {name: 'Chemical Kinetics', parts: 2, term: 1},
+                {name: 'The d-and f-Block Elements', parts: 2, term: 2},
+                {name: 'Coordination Compounds', parts: 2, term: 2},
+                {name: 'Haloalkanes and Haloarenes', parts: 3, term: 2},
+                {name: 'Alcohols, Phenols and Ethers', parts: 3, term: 3},
+                {name: 'Aldehydes, Ketones and Carboxylic Acids', parts: 3, term: 3},
+                {name: 'Biomolecules', parts: 2, term: 3}
+            ]),
+            ...makeTasks('Mathematics', '+2', [
+                {name: 'Relations & Functions', parts: 2, term: 1},
+                {name: 'Inverse Trigonometric Functions', parts: 1, term: 1},
+                {name: 'Matrices', parts: 2, term: 1},
+                {name: 'Determinants', parts: 2, term: 1},
+                {name: 'Continuity & Differentiability', parts: 3, term: 1},
+                {name: 'Application of Derivatives', parts: 2, term: 2},
+                {name: 'Integrals', parts: 4, term: 2},
+                {name: 'Application of Integrals', parts: 1, term: 2},
+                {name: 'Differential Equations', parts: 2, term: 2},
+                {name: 'Vector Algebra', parts: 2, term: 3},
+                {name: 'Three Dimensional Geometry', parts: 2, term: 3},
+                {name: 'Linear Programming', parts: 1, term: 3},
+                {name: 'Probability', parts: 3, term: 3}
+            ]),
+            ...makeTasks('Computer Science', '+2', [
+                {name: 'Structures and Pointers', parts: 2, term: 1},
+                {name: 'Concepts of Object-Oriented Programming', parts: 1, term: 1},
+                {name: 'Data Structures and Operations', parts: 3, term: 1},
+                {name: 'Web Technology', parts: 2, term: 1},
+                {name: 'Web Designing using HTML', parts: 3, term: 2},
+                {name: 'Client side scripting using JavaScript', parts: 3, term: 2},
+                {name: 'Web Hosting', parts: 1, term: 2},
+                {name: 'Database Management System', parts: 3, term: 2},
+                {name: 'Structured Query Language', parts: 3, term: 3},
+                {name: 'Server Side Scripting using PHP', parts: 3, term: 3},
+                {name: 'Advances in Computing', parts: 2, term: 3},
+                {name: 'ICT and Society', parts: 1, term: 3}
+            ])
+        ];
+
+        const PLUS_ONE_DATA = [
+            ...makeTasks('Physics', '+1', [
+                {name: 'Units & Measurements', parts: 1},
+                {name: 'Motion in a Straight Line', parts: 2},
+                {name: 'Motion in a Plane', parts: 2},
+                {name: 'Laws of Motion', parts: 2},
+                {name: 'Work, Energy & Power', parts: 2},
+                {name: 'System of Particles & Rotational Motion', parts: 2},
+                {name: 'Gravitation', parts: 2},
+                {name: 'Mechanical Properties of Solids', parts: 1},
+                {name: 'Mechanical Properties of Fluids', parts: 2},
+                {name: 'Thermal Properties of Matter', parts: 2},
+                {name: 'Thermodynamics', parts: 2},
+                {name: 'Kinetic Theory', parts: 1},
+                {name: 'Oscillations', parts: 2},
+                {name: 'Waves', parts: 2}
+            ]),
+            ...makeTasks('Chemistry', '+1', [
+                {name: 'Some Basic Concepts of Chemistry', parts: 2},
+                {name: 'Structure of Atom', parts: 3},
+                {name: 'Classification of Elements', parts: 1},
+                {name: 'Chemical Bonding', parts: 3},
+                {name: 'Thermodynamics', parts: 2},
+                {name: 'Equilibrium', parts: 3},
+                {name: 'Redox Reactions', parts: 2},
+                {name: 'Organic Chemistry - Some Basic Principles', parts: 3},
+                {name: 'Hydrocarbons', parts: 3}
+            ]),
+            ...makeTasks('Mathematics', '+1', [
+                {name: 'Sets', parts: 2},
+                {name: 'Relations & Functions', parts: 2},
+                {name: 'Trigonometric Functions', parts: 3},
+                {name: 'Complex Numbers & Quadratic Equations', parts: 2},
+                {name: 'Linear Inequalities', parts: 1},
+                {name: 'Permutations & Combinations', parts: 2},
+                {name: 'Binomial Theorem', parts: 1},
+                {name: 'Sequences & Series', parts: 2},
+                {name: 'Straight Lines', parts: 2},
+                {name: 'Conic Sections', parts: 2},
+                {name: 'Introduction to Three-dimensional Geometry', parts: 1},
+                {name: 'Limits & Derivatives', parts: 2},
+                {name: 'Statistics', parts: 2},
+                {name: 'Probability', parts: 2}
+            ]),
+            ...makeTasks('Computer Science', '+1', [
+                {name: 'The Discipline of Computing', parts: 1},
+                {name: 'Data Representation and Boolean Algebra', parts: 3},
+                {name: 'Components of Computer System', parts: 2},
+                {name: 'Principles of Programming & Problem Solving', parts: 2},
+                {name: 'Introduction to C++ Programming', parts: 2},
+                {name: 'Data Types and Operators', parts: 2},
+                {name: 'Control Statements', parts: 2},
+                {name: 'Arrays', parts: 2},
+                {name: 'String Handling and I/O Functions', parts: 2},
+                {name: 'Functions', parts: 2},
+                {name: 'Computer Networks', parts: 2},
+                {name: 'Internet and Mobile Computing', parts: 2}
+            ])
+        ];
+
+        // --- 2. STATE MANAGEMENT ---
+        let appState = JSON.parse(localStorage.getItem('plusTwoPlanState')) || null;
+        let currentView = 'dashboard'; // Tracks which page is currently open
+        
+        let synth = null;
+        function initAudio() {
+            if(!synth) {
+                synth = new Tone.PolySynth(Tone.Synth, {
+                    oscillator: { type: "sine" },
+                    envelope: { attack: 0.01, decay: 0.1, sustain: 0.1, release: 1 }
+                }).toDestination();
+                Tone.Destination.volume.value = -10;
+            }
+        }
+        function playTick() {
+            try {
+                initAudio();
+                if(Tone.context.state !== 'running') Tone.start();
+                synth.triggerAttackRelease(["C5", "E5", "G5"], "16n");
+                if(navigator.vibrate) navigator.vibrate([30, 50, 30]);
+                confetti({
+                    particleCount: 80,
+                    spread: 70,
+                    origin: { y: 0.8 },
+                    colors: ['#2563eb', '#10b981', '#f59e0b', '#8b5cf6'],
+                    disableForReducedMotion: true
+                });
+            } catch(e) { console.log("Audio/Visual Error:", e); }
+        }
+        function playUntick() {
+            try {
+                initAudio();
+                if(Tone.context.state !== 'running') Tone.start();
+                synth.triggerAttackRelease("G4", "32n");
+                if(navigator.vibrate) navigator.vibrate(20);
+            } catch(e) { console.log("Audio Error:", e); }
+        }
+
+        // Helper: Get local date string YYYY-MM-DD
+        const getLocalDateStr = (dateObj) => {
+            const tzOffset = dateObj.getTimezoneOffset() * 60000; 
+            return (new Date(dateObj - tzOffset)).toISOString().split('T')[0];
+        };
+
+        const TODAY_STR = getLocalDateStr(new Date());
+        
+        // --- 3. CORE LOGIC ---
+        function calculateDaysBetween(startDateStr, endDateStr) {
+            const start = new Date(startDateStr);
+            const end = new Date(endDateStr);
+            const diffTime = end - start;
+            return Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+        }
+
+        function createNewPlan(deadlineStr, startingTasks, startDateStr = TODAY_STR, improvementConfig = []) {
+            const daysAvailable = calculateDaysBetween(startDateStr, deadlineStr);
+            
+            if (daysAvailable <= 0) {
+                alert("Deadline must be in the future!");
+                return null;
+            }
+
+            let plan = [];
+            for (let i = 0; i <= daysAvailable; i++) {
+                let currentDate = new Date(startDateStr);
+                currentDate.setDate(currentDate.getDate() + i);
+                plan.push({
+                    dayNumber: appState ? appState.currentDayOffset + i + 1 : i + 1,
+                    date: getLocalDateStr(currentDate),
+                    tasks: []
+                });
+            }
+
+            // 1. Distribute Plus One Improvement Tasks evenly before their respective exams
+            improvementConfig.forEach(config => {
+                let subjectTasks = startingTasks.filter(t => t.grade === '+1' && t.subject === config.subject);
+                if(subjectTasks.length === 0) return;
+
+                let examDaysAvailable = calculateDaysBetween(startDateStr, config.examDate);
+                if(examDaysAvailable <= 0) return; // Exam date passed or is today
+                
+                // Distribute evenly up to the day before the exam
+                let daysToDistribute = Math.min(examDaysAvailable, daysAvailable + 1);
+                let accum = 0;
+                let taskIdx = 0;
+                let dailyRate = subjectTasks.length / daysToDistribute;
+
+                for (let i = 0; i < daysToDistribute; i++) {
+                    accum += dailyRate;
+                    let tasksToday = Math.floor(accum);
+                    accum -= tasksToday;
+                    
+                    // Cleanup any rounding remainders on the final valid day
+                    if (i === daysToDistribute - 1 && taskIdx < subjectTasks.length) {
+                        tasksToday += (subjectTasks.length - taskIdx);
+                    }
+                    
+                    for (let j = 0; j < tasksToday && taskIdx < subjectTasks.length; j++) {
+                        plan[i].tasks.push({
+                            ...subjectTasks[taskIdx],
+                            completed: false
+                        });
+                        taskIdx++;
+                    }
+                }
+            });
+
+            // 2. Intelligent Interleaving of Plus Two Tasks
+            // Spread tasks across available days, interleaving subjects daily
+            let p2Tasks = startingTasks.filter(t => t.grade === '+2');
+            let p2Queues = {
+                'Physics': p2Tasks.filter(t => t.subject === 'Physics'),
+                'Chemistry': p2Tasks.filter(t => t.subject === 'Chemistry'),
+                'Mathematics': p2Tasks.filter(t => t.subject === 'Mathematics'),
+                'Computer Science': p2Tasks.filter(t => t.subject === 'Computer Science')
+            };
+            
+            let p2SubjectOrder = ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'];
+            let currentP2SubjectIndex = 0;
+            
+            let totalP2 = p2Tasks.length;
+            let p2Accum = 0;
+            let p2DailyRate = totalP2 / (daysAvailable + 1);
+            
+            for (let i = 0; i <= daysAvailable; i++) {
+                p2Accum += p2DailyRate;
+                let tasksToday = Math.floor(p2Accum);
+                p2Accum -= tasksToday;
+                
+                if (i === daysAvailable && totalP2 > 0) tasksToday += totalP2;
+
+                let scheduledToday = 0;
+                while (scheduledToday < tasksToday && totalP2 > 0) {
+                    let attempts = 0;
+                    let selectedTask = null;
+
+                    // Pull from the next subject in rotation to interleave
+                    while (attempts < 4 && !selectedTask) {
+                        let subjectToPull = p2SubjectOrder[currentP2SubjectIndex];
+                        if (p2Queues[subjectToPull].length > 0) {
+                            selectedTask = p2Queues[subjectToPull].shift();
+                        }
+                        currentP2SubjectIndex = (currentP2SubjectIndex + 1) % 4;
+                        attempts++;
+                    }
+
+                    if (selectedTask) {
+                        plan[i].tasks.push({
+                            ...selectedTask,
+                            completed: false
+                        });
+                        totalP2--;
+                        scheduledToday++;
+                    }
+                }
+            }
+
+            return plan;
+        }
+
+        window.toggleImprovementSection = function() {
+            const section = document.getElementById('improvement-section');
+            section.classList.toggle('hidden', !document.getElementById('has-improvement').checked);
+        };
+        
+        window.toggleSubjectDate = function(subjectId) {
+            const dateContainer = document.getElementById(`date-${subjectId}`);
+            const isChecked = document.getElementById(`imp-${subjectId}`).checked;
+            if(isChecked) {
+                dateContainer.classList.remove('hidden');
+                setTimeout(() => dateContainer.classList.remove('opacity-0'), 10);
+            } else {
+                dateContainer.classList.add('opacity-0');
+                setTimeout(() => dateContainer.classList.add('hidden'), 300);
+            }
+        };
+
+        function handleInitialSetup() {
+            const deadlineInput = document.getElementById('deadline-date').value;
+            const targetTerm = parseInt(document.getElementById('target-term').value);
+            
+            if(!deadlineInput) return alert("Please select a deadline.");
+            
+            let improvementConfig = [];
+            
+            // Collect checked finished chapters
+            let completedChaps = Array.from(document.querySelectorAll('.completed-chapter-cb:checked')).map(cb => cb.value);
+
+            // Filter PLUS_TWO_DATA based on Target Term and Completed Chapters
+            let tasksToSchedule = PLUS_TWO_DATA.filter(t => t.term <= targetTerm && !completedChaps.includes(t.chapId));
+
+            if(document.getElementById('has-improvement') && document.getElementById('has-improvement').checked) {
+                ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'].forEach(sub => {
+                    const subId = sub.replace(' ', '-').toLowerCase();
+                    const cb = document.getElementById(`imp-${subId}`);
+                    if(cb && cb.checked) {
+                        const examDate = document.getElementById(`input-date-${subId}`).value;
+                        if(!examDate) {
+                            alert(`Please select an official exam date for ${sub} Improvement.`);
+                            throw new Error('Missing date');
+                        }
+                        improvementConfig.push({ subject: sub, examDate: examDate });
+                        tasksToSchedule.push(...PLUS_ONE_DATA.filter(t => t.subject === sub));
+                    }
+                });
+            }
+            
+            const newPlan = createNewPlan(deadlineInput, tasksToSchedule, TODAY_STR, improvementConfig);
+            if(newPlan) {
+                appState = {
+                    startDate: TODAY_STR,
+                    deadlineDate: deadlineInput,
+                    targetTerm: targetTerm,
+                    completedChapters: completedChaps,
+                    improvementConfig: improvementConfig,
+                    plan: newPlan,
+                    currentDayOffset: 0,
+                    historyCompletedTasks: []
+                };
+                saveState();
+                renderApp();
+            }
+        }
+
+        function executeRegeneration() {
+            const completedUpTo = parseInt(document.getElementById('completed-day-select').value);
+            
+            let tasksToKeep = [];
+            let tasksToRedistribute = [];
+            
+            appState.plan.forEach(day => {
+                if(day.dayNumber <= completedUpTo) {
+                    day.tasks.forEach(t => t.completed = true);
+                    tasksToKeep.push(day);
+                    appState.historyCompletedTasks.push(...day.tasks);
+                } else {
+                    tasksToRedistribute.push(...day.tasks);
+                }
+            });
+
+            tasksToRedistribute = tasksToRedistribute.map(t => { t.completed = false; return t; });
+            
+            const config = appState.improvementConfig || [];
+            
+            // Drop uncompleted +1 topics if their specific exam date has already passed
+            tasksToRedistribute = tasksToRedistribute.filter(t => {
+                if(t.grade !== '+1') return true;
+                const subjConf = config.find(c => c.subject === t.subject);
+                if(subjConf && calculateDaysBetween(TODAY_STR, subjConf.examDate) < 0) {
+                    return false; 
+                }
+                return true;
+            });
+
+            const newSubPlan = createNewPlan(appState.deadlineDate, tasksToRedistribute, TODAY_STR, config);
+            
+            if(newSubPlan) {
+                newSubPlan.forEach((d, index) => {
+                    d.dayNumber = completedUpTo + index + 1;
+                });
+
+                appState.plan = [...tasksToKeep, ...newSubPlan];
+                appState.currentDayOffset = completedUpTo;
+                
+                saveState();
+                closeRegenerateModal();
+                renderApp();
+            }
+        }
+
+        // --- 4. UI RENDERING ---
+        function toggleTask(elem, dayIndex, taskIndex) {
+            const isCompleted = elem.checked;
+            appState.plan[dayIndex].tasks[taskIndex].completed = isCompleted;
+            saveState();
+            updateProgress();
+            
+            // Traverse DOM to apply strikethrough smoothly without re-rendering entire app
+            const labelContent = elem.closest('label').querySelector('.task-text');
+            if(labelContent) {
+                if(isCompleted) labelContent.classList.add('line-through', 'opacity-50');
+                else labelContent.classList.remove('line-through', 'opacity-50');
+            }
+
+            if(isCompleted) playTick();
+            else playUntick();
+        }
+
+        function goToSettings() {
+            currentView = 'settings';
+            renderApp();
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        }
+
+        function goToDashboard() {
+            currentView = 'dashboard';
+            renderApp();
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        }
+
+        function resetApp() {
+            if(confirm('Are you sure you want to delete this plan and start over? This cannot be undone.')) {
+                localStorage.removeItem('plusTwoPlanState');
+                location.reload();
+            }
+        }
+
+        function saveState() {
+            localStorage.setItem('plusTwoPlanState', JSON.stringify(appState));
+        }
+
+        function renderApp() {
+            document.getElementById('date-display').innerText = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+            const container = document.getElementById('app-container');
+            
+            if (!appState) {
+                // VIEW 1: Setup
+                let defaultTarget = new Date();
+                defaultTarget.setMonth(10); 
+                defaultTarget.setDate(30);
+                if(new Date() > defaultTarget) defaultTarget.setFullYear(defaultTarget.getFullYear() + 1);
+
+                const subjects = ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'];
+                let chaptersHTML = '';
+                subjects.forEach(sub => {
+                    let chaps = PLUS_TWO_DATA.filter(t => t.subject === sub);
+                    let uniqueChaps = [...new Map(chaps.map(item => [item.chapId, item])).values()];
+                    chaptersHTML += `<div class="mb-4"><h5 class="text-sm font-bold text-slate-800 mb-2 border-b border-slate-200 pb-1">${sub}</h5><div class="grid grid-cols-1 sm:grid-cols-2 gap-2">`;
+                    uniqueChaps.forEach(ch => {
+                        chaptersHTML += `
+                            <label class="flex items-center gap-2 text-sm text-slate-600 cursor-pointer group">
+                                <div class="relative flex items-center justify-center w-4 h-4 shrink-0">
+                                    <input type="checkbox" class="completed-chapter-cb peer opacity-0 absolute inset-0 cursor-pointer" value="${ch.chapId}">
+                                    <div class="pointer-events-none w-full h-full rounded border-2 border-slate-300 peer-checked:bg-emerald-500 peer-checked:border-emerald-500 flex items-center justify-center transition-all">
+                                        <i class="fa-solid fa-check text-white text-[8px] opacity-0 peer-checked:opacity-100"></i>
+                                    </div>
+                                </div>
+                                <span class="group-hover:text-slate-900 transition-colors truncate" title="${ch.chapter}">${ch.chapter.substring(0, 30)}${ch.chapter.length > 30 ? '...' : ''}</span>
+                            </label>
+                        `;
+                    });
+                    chaptersHTML += `</div></div>`;
+                });
+
+                container.innerHTML = `
+                    <div class="max-w-2xl mx-auto glass-card rounded-3xl p-6 sm:p-10 text-center mt-6 shadow-2xl border-t-4 border-t-blue-500 animate-fade-in-up">
+                        <div class="w-16 h-16 bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl shadow-inner border border-blue-200">
+                            <i class="fa-solid fa-rocket"></i>
+                        </div>
+                        <h2 class="text-3xl font-extrabold text-slate-800 mb-2 tracking-tight">Mission Control</h2>
+                        <p class="text-slate-500 mb-8 text-md px-4">Let's build a smart, achievable syllabus completion plan.</p>
+                        
+                        <div class="bg-white p-6 rounded-2xl mb-6 shadow-sm border border-slate-200 text-left space-y-6">
+                            
+                            <!-- Target Term -->
+                            <div>
+                                <label class="block text-sm font-bold text-slate-700 mb-2"><i class="fa-solid fa-bullseye text-blue-500 mr-2"></i>What's your current goal?</label>
+                                <select id="target-term" class="w-full border-2 border-slate-200 rounded-xl p-3 text-md focus:ring-4 focus:ring-blue-50 focus:border-blue-500 outline-none transition-all cursor-pointer font-medium text-slate-700 bg-slate-50">
+                                    <option value="1">Term 1 Only (Onam Portions)</option>
+                                    <option value="2" selected>Term 1 & 2 (Half-Yearly Portions)</option>
+                                    <option value="3">Full Syllabus (Board Exam)</option>
+                                </select>
+                            </div>
+
+                            <!-- Target Date -->
+                            <div>
+                                <label class="block text-sm font-bold text-slate-700 mb-2"><i class="fa-regular fa-calendar-check text-blue-500 mr-2"></i>Deadline Date</label>
+                                <input type="date" id="deadline-date" value="${getLocalDateStr(defaultTarget)}" class="w-full border-2 border-slate-200 rounded-xl p-3 text-md focus:ring-4 focus:ring-blue-50 focus:border-blue-500 outline-none transition-all font-medium text-slate-700 bg-slate-50">
+                            </div>
+
+                            <!-- Completed Chapters (Collapsible) -->
+                            <div class="border border-slate-200 rounded-xl overflow-hidden bg-slate-50">
+                                <label class="flex items-center justify-between p-4 cursor-pointer hover:bg-slate-100 transition-colors" onclick="document.getElementById('completed-chaps-container').classList.toggle('hidden')">
+                                    <span class="font-bold text-slate-700 text-sm"><i class="fa-solid fa-list-check text-emerald-500 mr-2"></i>Exclude Finished Chapters</span>
+                                    <i class="fa-solid fa-chevron-down text-slate-400"></i>
+                                </label>
+                                <div id="completed-chaps-container" class="hidden p-4 bg-white border-t border-slate-200 max-h-60 overflow-y-auto">
+                                    <p class="text-xs text-slate-500 mb-4 bg-emerald-50 p-2 rounded-lg border border-emerald-100">Check chapters you have <b>already learned</b>. We'll skip them to save time.</p>
+                                    ${chaptersHTML}
+                                </div>
+                            </div>
+                            
+                            <!-- Plus One Improvement -->
+                            <div class="pt-2">
+                                <label class="flex items-center gap-3 cursor-pointer p-4 border-2 border-slate-200 rounded-xl hover:border-blue-400 transition-all bg-slate-50">
+                                    <div class="relative flex items-center justify-center w-5 h-5 shrink-0">
+                                        <input type="checkbox" id="has-improvement" class="peer opacity-0 absolute inset-0 cursor-pointer" onchange="toggleImprovementSection()">
+                                        <div class="pointer-events-none w-full h-full rounded border-2 border-slate-300 peer-checked:bg-blue-600 peer-checked:border-blue-600 flex items-center justify-center transition-all">
+                                            <i class="fa-solid fa-check text-white text-[10px] opacity-0 peer-checked:opacity-100 transform scale-50 peer-checked:scale-100 transition-all"></i>
+                                        </div>
+                                    </div>
+                                    <span class="text-sm font-bold text-slate-700">Add Plus One Improvement Exams</span>
+                                </label>
+                                
+                                <div id="improvement-section" class="hidden space-y-3 bg-white p-4 rounded-xl border border-slate-200 shadow-inner mt-3">
+                                    <p class="text-xs font-medium text-amber-600 mb-3 bg-amber-50 p-2 rounded border border-amber-100"><i class="fa-solid fa-bolt mr-1"></i> Official Oct 2026 Dates Auto-filled</p>
+                                    
+                                    ${['Physics', 'Chemistry', 'Mathematics', 'Computer Science'].map(sub => {
+                                        let defaultDate = sub === 'Physics' ? '2026-10-12' : (sub === 'Mathematics' ? '2026-10-14' : (sub === 'Chemistry' ? '2026-10-16' : '2026-10-19'));
+                                        let subId = sub.replace(' ', '-').toLowerCase();
+                                        return `
+                                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-slate-50 border border-slate-100 rounded-lg">
+                                            <label class="flex items-center gap-3 cursor-pointer text-sm font-bold text-slate-700 w-full sm:w-auto">
+                                                <div class="relative flex items-center justify-center w-4 h-4 shrink-0">
+                                                    <input type="checkbox" id="imp-${subId}" value="${sub}" class="peer opacity-0 absolute inset-0 cursor-pointer" onchange="toggleSubjectDate('${subId}')"> 
+                                                    <div class="pointer-events-none w-full h-full rounded border-2 border-slate-300 peer-checked:bg-blue-600 peer-checked:border-blue-600 flex items-center justify-center transition-all">
+                                                        <i class="fa-solid fa-check text-white text-[8px] opacity-0 peer-checked:opacity-100 transform scale-50 peer-checked:scale-100 transition-all"></i>
+                                                    </div>
+                                                </div>
+                                                ${sub}
+                                            </label>
+                                            <div id="date-${subId}" class="hidden flex items-center gap-2 w-full sm:w-auto mt-1 sm:mt-0 opacity-0 transition-opacity duration-300">
+                                                <input type="date" id="input-date-${subId}" value="${defaultDate}" class="w-full sm:w-auto border-2 border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-50 outline-none font-medium text-slate-600">
+                                            </div>
+                                        </div>
+                                    `}).join('')}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button onclick="handleInitialSetup()" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold py-4 px-8 rounded-xl shadow-xl shadow-blue-200 transform transition active:scale-[0.98] text-lg flex justify-center items-center gap-2">
+                            <span>Ignite Plan</span>
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </div>
+                `;
+            } else if (currentView === 'settings') {
+                // VIEW 3: Settings & Full Plan
+                let planHTML = '';
+                appState.plan.forEach((day, dayIndex) => {
+                    const isToday = day.date === TODAY_STR;
+                    const isPast = new Date(day.date) < new Date(TODAY_STR);
+                    const headerColor = isToday ? 'bg-blue-50 border-blue-200 text-blue-800' : (isPast ? 'bg-slate-50 border-slate-200 text-slate-600' : 'bg-white border-slate-200 text-slate-800');
+                    const badge = isToday ? '<span class="bg-blue-500 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ml-2 shadow-sm">Today</span>' : '';
+                    
+                    let tasksList = day.tasks.map((t, tIndex) => `
+                        <label class="flex items-start gap-3 text-sm py-3 border-b border-slate-50 last:border-0 cursor-pointer group hover:bg-slate-50 px-2 rounded-lg transition-colors">
+                            <div class="relative flex items-center justify-center w-5 h-5 mt-0.5 shrink-0">
+                                <input type="checkbox" class="peer opacity-0 absolute inset-0 cursor-pointer" ${t.completed ? 'checked' : ''} onchange="toggleTask(this, ${dayIndex}, ${tIndex})">
+                                <div class="pointer-events-none w-full h-full rounded border-2 border-slate-300 peer-checked:bg-blue-600 peer-checked:border-blue-600 flex items-center justify-center transition-all shadow-sm">
+                                    <i class="fa-solid fa-check text-white text-[10px] opacity-0 peer-checked:opacity-100 transition-opacity transform scale-50 peer-checked:scale-100"></i>
+                                </div>
+                            </div>
+                            <div class="flex-1 task-text transition-all ${t.completed ? 'line-through opacity-50' : ''}">
+                                <span class="font-bold text-slate-700 block">
+                                    ${t.subject} 
+                                    <span class="text-slate-400 font-normal text-xs ml-1">${t.grade === '+1' ? '<span class="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-semibold shadow-sm ml-1">+1 Improvement</span>' : 'Term ' + t.term}</span>
+                                </span>
+                                <span class="text-slate-600">${t.chapter} - ${t.topic}</span>
+                            </div>
+                        </label>
+                    `).join('');
+
+                    if(day.tasks.length === 0) tasksList = '<div class="text-sm text-slate-500 italic py-2 px-2">No tasks scheduled for this day.</div>';
+
+                    planHTML += `
+                        <div class="border border-slate-200 rounded-2xl mb-4 overflow-hidden shadow-sm transition-all hover:shadow-md">
+                            <div class="px-5 py-3 border-b flex justify-between items-center ${headerColor}">
+                                <h4 class="font-bold flex items-center text-md">Day ${day.dayNumber} <span class="text-xs font-medium ml-2 opacity-70">(${new Date(day.date).toLocaleDateString('en-US', {month: 'short', day: 'numeric'})})</span> ${badge}</h4>
+                            </div>
+                            <div class="p-2 bg-white">
+                                ${tasksList}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = `
+                    <div class="max-w-3xl mx-auto pb-10 animate-fade-in-up">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+                            <div>
+                                <button onclick="goToDashboard()" class="text-slate-500 hover:text-blue-600 transition flex items-center gap-2 mb-2 font-bold text-sm bg-white px-4 py-2 rounded-lg shadow-sm border border-slate-200 hover:bg-slate-50">
+                                    <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+                                </button>
+                                <h2 class="text-3xl font-extrabold text-slate-800">Full Study Plan</h2>
+                                <p class="text-slate-500 mt-1">Review and manage your entire schedule.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-sm border border-slate-200 mb-8">
+                            <div class="max-h-[60vh] overflow-y-auto pr-2">
+                                ${planHTML}
+                            </div>
+                        </div>
+
+                        <div class="bg-red-50 rounded-3xl p-6 sm:p-8 border border-red-100 shadow-sm">
+                            <h3 class="text-xl font-bold text-red-800 mb-2"><i class="fa-solid fa-triangle-exclamation mr-2"></i> Danger Zone</h3>
+                            <p class="text-sm text-red-600 mb-6">Resetting the app will delete your current plan, deadline, and all progress tracking. You will need to start fresh.</p>
+                            <button onclick="resetApp()" class="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-xl transition shadow-md shadow-red-200 flex items-center justify-center gap-2">
+                                Reset Entire App
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // VIEW 2: Dashboard
+                const todayIndex = appState.plan.findIndex(d => d.date === TODAY_STR);
+                
+                let dashboardHTML = `
+                    <!-- Header Section -->
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                        <div>
+                            <h2 class="text-3xl font-bold text-slate-800">Welcome Back!</h2>
+                            <p class="text-slate-500 mt-1">Keep the momentum going. You're doing great.</p>
+                        </div>
+                        
+                        <div class="bg-white px-5 py-3 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4 hover:shadow-md transition-shadow cursor-pointer" onclick="goToSettings()">
+                            <div class="text-right">
+                                <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">Overall Progress</p>
+                                <p id="progress-text" class="text-lg font-bold text-blue-600">0%</p>
+                            </div>
+                            <div class="w-12 h-12 rounded-full border-4 border-slate-100 flex items-center justify-center relative">
+                                <svg class="w-full h-full absolute -rotate-90" viewBox="0 0 36 36">
+                                    <path id="progress-ring" class="text-blue-600 transition-all duration-700 ease-out" stroke-width="4" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" stroke-dasharray="0, 100" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                if (todayIndex === -1) {
+                    const isFinished = new Date(TODAY_STR) > new Date(appState.deadlineDate);
+                    dashboardHTML += `
+                        <div class="bg-white rounded-3xl p-10 text-center shadow-sm border border-slate-200">
+                            <div class="text-6xl text-emerald-500 mb-6 drop-shadow-lg"><i class="fa-solid fa-trophy"></i></div>
+                            <h3 class="text-3xl font-bold text-slate-800 mb-2">${isFinished ? 'Syllabus Deadline Passed!' : 'Plan starts soon!'}</h3>
+                            <p class="text-slate-600 mb-8 text-lg">Review your progress or create a new plan.</p>
+                            <button onclick="goToSettings()" class="bg-blue-50 text-blue-700 font-bold py-3 px-6 rounded-xl border border-blue-100 hover:bg-blue-100 transition mr-2">Full Plan</button>
+                            <button onclick="localStorage.removeItem('plusTwoPlanState'); location.reload();" class="bg-slate-800 text-white font-bold py-3 px-6 rounded-xl hover:bg-slate-900 transition shadow-lg">Start Fresh</button>
+                        </div>
+                    `;
+                } else {
+                    const todayData = appState.plan[todayIndex];
+                    
+                    let groupedTasks = {};
+                    todayData.tasks.forEach((task, tIndex) => {
+                        const key = `${task.subject} | ${task.grade} | ${task.chapter}`;
+                        if(!groupedTasks[key]) groupedTasks[key] = { subject: task.subject, chapter: task.chapter, topics: [], term: task.term, grade: task.grade };
+                        groupedTasks[key].topics.push({ ...task, originalIndex: tIndex });
+                    });
+
+                    let tasksHTML = '';
+                    if(Object.keys(groupedTasks).length === 0) {
+                         tasksHTML = `<div class="p-10 text-center text-emerald-600 bg-emerald-50 rounded-3xl border border-emerald-100 shadow-sm"><i class="fa-solid fa-check-double text-4xl mb-3"></i><br><span class="font-bold text-xl">All caught up!</span><br><span class="text-emerald-700 opacity-80 text-sm">No topics scheduled for today. Take a break!</span></div>`;
+                    } else {
+                        for (const [key, group] of Object.entries(groupedTasks)) {
+                            let subjectColor = group.subject === 'Physics' ? 'text-indigo-700 bg-indigo-50 border-indigo-200' : 
+                                               (group.subject === 'Chemistry' ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 
+                                               (group.subject === 'Mathematics' ? 'text-rose-700 bg-rose-50 border-rose-200' : 'text-cyan-700 bg-cyan-50 border-cyan-200'));
+                            
+                            let termBadge = group.grade === '+1' ? `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500 text-white ml-2 shadow-sm border border-amber-600 uppercase tracking-wider">+1 Imp</span>` : `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-white text-slate-600 opacity-90 ml-2 shadow-sm border uppercase tracking-wider">Term ${group.term}</span>`;
+                                               
+                            tasksHTML += `
+                                <div class="mb-5 last:mb-0 border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow">
+                                    <div class="px-5 py-3 ${subjectColor} border-b flex justify-between items-center">
+                                        <h4 class="font-bold text-md flex items-center">${group.subject} <i class="fa-solid fa-angle-right text-xs mx-2 opacity-50"></i> <span class="truncate max-w-[150px] sm:max-w-xs">${group.chapter}</span> ${termBadge}</h4>
+                                    </div>
+                                    <div class="p-2">
+                                        ${group.topics.map(t => `
+                                            <label class="flex items-start p-3 hover:bg-slate-50 rounded-xl cursor-pointer transition-colors group">
+                                                <div class="relative flex items-center justify-center w-6 h-6 mt-0.5 mr-4 shrink-0">
+                                                    <input type="checkbox" class="peer opacity-0 absolute inset-0 cursor-pointer" ${t.completed ? 'checked' : ''} onchange="toggleTask(this, ${todayIndex}, ${t.originalIndex})">
+                                                    <div class="pointer-events-none w-full h-full rounded-md border-2 border-slate-300 peer-checked:bg-blue-600 peer-checked:border-blue-600 flex items-center justify-center transition-all shadow-sm">
+                                                        <i class="fa-solid fa-check text-white text-[12px] opacity-0 peer-checked:opacity-100 transition-opacity transform scale-50 peer-checked:scale-100"></i>
+                                                    </div>
+                                                </div>
+                                                <div class="flex-1 task-text transition-all ${t.completed ? 'line-through opacity-50' : ''}">
+                                                    <p class="text-slate-800 font-bold">${t.topic}</p>
+                                                </div>
+                                            </label>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    }
+
+                    dashboardHTML += `
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            <div class="lg:col-span-2">
+                                <div class="flex items-center justify-between mb-5">
+                                    <h3 class="text-xl font-bold flex items-center gap-2"><i class="fa-solid fa-calendar-day text-blue-500"></i> Today's Target (Day ${todayData.dayNumber})</h3>
+                                    <span class="text-sm font-bold bg-blue-100 text-blue-800 py-1.5 px-3 rounded-lg border border-blue-200">${todayData.date}</span>
+                                </div>
+                                ${tasksHTML}
+                            </div>
+                            
+                            <div class="space-y-6">
+                                <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden group">
+                                    <div class="absolute -right-6 -top-6 text-slate-700 opacity-20 text-8xl group-hover:rotate-12 transition-transform duration-500"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                                    <h3 class="text-lg font-bold mb-2 relative z-10 text-white">Fell Behind?</h3>
+                                    <p class="text-slate-300 text-sm mb-6 relative z-10 leading-relaxed">Life happens. If you missed a few days, regenerate your plan to intelligently redistribute the remaining topics.</p>
+                                    <button onclick="openRegenerateModal()" class="w-full bg-white text-slate-900 font-extrabold py-3.5 rounded-xl hover:bg-slate-100 transition relative z-10 flex justify-center items-center gap-2 shadow-lg active:scale-95">
+                                        <i class="fa-solid fa-wrench text-blue-600"></i> Adjust Plan
+                                    </button>
+                                </div>
+
+                                <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 border-b border-slate-100 pb-2">Syllabus Overview</h3>
+                                    <div class="space-y-4">
+                                        <div class="flex justify-between items-center text-sm">
+                                            <span class="text-slate-600 font-medium">Total Topics</span>
+                                            <span class="font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded">${calculateTotalTasks()}</span>
+                                        </div>
+                                        <div class="flex justify-between items-center text-sm">
+                                            <span class="text-slate-600 font-medium">Deadline</span>
+                                            <span class="font-bold text-slate-800">${new Date(appState.deadlineDate).toLocaleDateString('en-GB', {day: 'numeric', month: 'short', year: 'numeric'})}</span>
+                                        </div>
+                                         <div class="flex justify-between items-center text-sm">
+                                            <span class="text-slate-600 font-medium">Plan Day</span>
+                                            <span class="font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">Day ${todayData.dayNumber} / ${appState.plan[appState.plan.length-1].dayNumber}</span>
+                                        </div>
+                                    </div>
+                                    <button onclick="goToSettings()" class="w-full mt-6 bg-slate-50 text-slate-700 font-bold py-3 px-4 rounded-xl border border-slate-200 hover:bg-slate-100 hover:border-slate-300 transition flex justify-center items-center gap-2 text-sm shadow-sm active:scale-95">
+                                        <i class="fa-solid fa-list-check text-blue-500"></i> View Full Plan
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                container.innerHTML = dashboardHTML;
+                updateProgress();
+            }
+        }
+
+        function calculateTotalTasks() {
+            let total = PLUS_TWO_DATA.length;
+            if (appState && appState.improvementConfig) {
+                appState.improvementConfig.forEach(conf => {
+                    total += PLUS_ONE_DATA.filter(t => t.subject === conf.subject).length;
+                });
+            }
+            return total;
+        }
+
+        function updateProgress() {
+            if(!appState) return;
+            
+            let totalTasks = calculateTotalTasks();
+            let completedTasksCount = 0;
+            
+            // Count from history
+            if(appState.historyCompletedTasks) {
+                appState.historyCompletedTasks.forEach(t => { if(t.completed) completedTasksCount++; });
+            }
+
+            // Count from current active plan
+            appState.plan.forEach(day => {
+                day.tasks.forEach(task => {
+                    if (task.completed) completedTasksCount++;
+                });
+            });
+
+            const percentage = Math.round((completedTasksCount / totalTasks) * 100) || 0;
+            
+            const progressText = document.getElementById('progress-text');
+            const progressRing = document.getElementById('progress-ring');
+            
+            if(progressText) progressText.innerText = `${percentage}%`;
+            if(progressRing) progressRing.setAttribute('stroke-dasharray', `${percentage}, 100`);
+        }
+
+        function openRegenerateModal() {
+            const select = document.getElementById('completed-day-select');
+            select.innerHTML = '';
+            
+            const todayIndex = appState.plan.findIndex(d => d.date === TODAY_STR);
+            const currentDayObj = todayIndex !== -1 ? appState.plan[todayIndex] : appState.plan[appState.plan.length-1];
+            
+            // Allow selecting any day up to yesterday (or today if they want)
+            const maxDay = currentDayObj ? currentDayObj.dayNumber - 1 : appState.plan[appState.plan.length-1].dayNumber;
+            const minDay = appState.plan[0].dayNumber;
+
+            if (maxDay < minDay) {
+                alert("You are on Day 1, no previous days to fall back to!");
+                return;
+            }
+
+            for(let i = minDay; i <= maxDay; i++) {
+                // Find date for label context
+                const dayPlan = appState.plan.find(p => p.dayNumber === i);
+                const dateLbl = dayPlan ? ` (${dayPlan.date})` : '';
+                
+                const option = document.createElement('option');
+                option.value = i;
+                option.text = `Day ${i} ${dateLbl}`;
+                // Select the most recent past day by default
+                if(i === maxDay) option.selected = true;
+                select.appendChild(option);
+            }
+
+            document.getElementById('regenerate-modal').style.display = 'flex';
+        }
+
+        function closeRegenerateModal() {
+            document.getElementById('regenerate-modal').style.display = 'none';
+        }
+
+        // Initialize App
+        renderApp();
+
+    </script>
+</body>
+</html>
