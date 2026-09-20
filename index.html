@@ -187,6 +187,43 @@
         ::-webkit-scrollbar-track { background: #f1f5f9; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Dedicated High-Quality Print Stylesheet */
+        .print-only { display: none; }
+        @media print {
+            header, #mobile-nav, #toast-banner, footer, .no-print, button, #auth-container, #regenerate-modal, section, nav, .viral-card {
+                display: none !important;
+            }
+            body {
+                background: #ffffff !important;
+                color: #0f172a !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                font-size: 11pt !important;
+            }
+            #app-container {
+                max-width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                width: 100% !important;
+            }
+            .print-only {
+                display: block !important;
+            }
+            .print-avoid-break {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+            .task-checkbox {
+                border: 1.5px solid #475569 !important;
+                background: transparent !important;
+                box-shadow: none !important;
+            }
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+        }
     </style>
 </head>
 <body class="text-slate-800 min-h-screen flex flex-col antialiased selection:bg-blue-100 selection:text-blue-900 pb-20 md:pb-12">
@@ -194,14 +231,14 @@
     <!-- Top Sticky Navigation Bar -->
     <header class="bg-white/95 backdrop-blur-md border-b border-slate-200 sticky top-0 z-30 transition-all">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-2">
-            <!-- App Branding -->
+            <!-- App Branding with Bilingual Malayalam Touchpoint -->
             <div class="flex items-center gap-3 cursor-pointer" onclick="goToDashboard()">
                 <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
                     <i class="fa-solid fa-graduation-cap text-lg"></i>
                 </div>
                 <div>
                     <h1 class="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight leading-none">Mission <span class="text-blue-600">PlusTwo</span></h1>
-                    <p class="text-[11px] font-medium text-slate-400 mt-0.5 hidden sm:block">Kerala DHSE Intelligent Study System</p>
+                    <p class="text-[11px] font-medium text-slate-400 mt-0.5 hidden sm:block">Kerala DHSE Study System • <span class="text-slate-500 font-semibold">കേരള DHSE സ്റ്റഡി പ്ലാനർ</span></p>
                 </div>
             </div>
 
@@ -992,6 +1029,85 @@
 
         const TODAY_STR = getLocalDateStr();
 
+        const getYesterdayStr = () => {
+            const d = new Date();
+            d.setDate(d.getDate() - 1);
+            return getLocalDateStr(d);
+        };
+
+        function getActiveStreak() {
+            if (!appState) return 0;
+            const streak = appState.streakCount || 0;
+            const lastDate = appState.lastCompletedDate;
+            if (!streak || !lastDate) return 0;
+
+            const today = TODAY_STR;
+            const yesterday = getYesterdayStr();
+            if (lastDate === today || lastDate === yesterday) {
+                return streak;
+            }
+            return 0; // Streak reset due to 2+ days inactivity
+        }
+
+        function updateStreakOnCompletion() {
+            if (!appState) return;
+            const today = TODAY_STR;
+            const yesterday = getYesterdayStr();
+            const last = appState.lastCompletedDate;
+
+            if (last === today) {
+                return; // Already progressed today
+            }
+
+            if (last === yesterday) {
+                appState.streakCount = (appState.streakCount || 0) + 1;
+            } else {
+                appState.streakCount = 1; // Start new streak
+            }
+            appState.lastCompletedDate = today;
+        }
+
+        function shareTodayCompletion(dayNumber) {
+            const shareTitle = `Mission PlusTwo: Day ${dayNumber} Complete!`;
+            const shareText = `🔥 100% of my Kerala DHSE Plus Two study targets for Day ${dayNumber} completed on Mission PlusTwo! 🎯 Free daily study timetable with guaranteed mock revision buffers. Generate yours here:`;
+            const shareUrl = 'https://sreyasts.github.io/intelligent-study-planner-for-plus-two-/';
+
+            if (navigator.share) {
+                navigator.share({
+                    title: shareTitle,
+                    text: shareText,
+                    url: shareUrl
+                }).then(() => {
+                    showToastMessage("Achievement shared with classmates!", "fa-trophy text-amber-300");
+                }).catch(() => {});
+            } else {
+                const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + '\n' + shareUrl)}`;
+                window.open(whatsappUrl, '_blank');
+            }
+        }
+
+        function printSchedule() {
+            const prevView = currentView;
+            if (currentView !== 'plan') {
+                currentView = 'plan';
+                currentPlanSubjectFilter = 'All';
+                renderApp();
+            }
+            setTimeout(() => {
+                window.print();
+                if (prevView !== 'plan') {
+                    currentView = prevView;
+                    renderApp();
+                }
+            }, 250);
+        }
+
+        let currentPlanSubjectFilter = 'All';
+        function setPlanSubjectFilter(sub) {
+            currentPlanSubjectFilter = sub;
+            renderApp();
+        }
+
         /* ==========================================================================
            3. PREMIUM AUDIO SYNTHESIS & HAPTIC FEEDBACK
            ========================================================================== */
@@ -1281,6 +1397,7 @@
 
             // Play celebratory feedback or untick sound
             if (targetTask.completed) {
+                updateStreakOnCompletion();
                 playCelebrationSound();
 
                 // Calculate today's status
@@ -1289,7 +1406,16 @@
                     const completedToday = todayPlan.tasks.filter(t => t.completed).length;
                     const totalToday = todayPlan.tasks.length;
                     if (completedToday === totalToday && totalToday > 0) {
+                        try {
+                            if (typeof confetti === 'function') {
+                                confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
+                            }
+                        } catch(e) {}
                         showToastMessage("🎉 Awesome! All of today's targets completed!", "fa-trophy text-amber-300");
+                        if (currentView === 'today') {
+                            renderApp();
+                            return;
+                        }
                     } else {
                         const remaining = totalToday - completedToday;
                         showToastMessage(`🎯 Good job! ${remaining} more to finish today's goal.`, "fa-fire text-amber-400");
@@ -1343,7 +1469,7 @@
 
         function shareApp() {
             const shareTitle = 'Mission PlusTwo - Kerala DHSE Study Planner';
-            const shareText = '🔥 Hey! Check out Mission PlusTwo — it creates an adaptive day-by-day study schedule for Kerala DHSE Plus Two (+2) & Plus One Improvement with guaranteed mock revision days! Try it free:';
+            const shareText = '📚 Mission PlusTwo: കേരള ഹയർ സെക്കൻഡറി DHSE പ്ലസ് ടു & +1 ഇംപ്രൂവ്മെൻ്റ് പരീക്ഷകൾക്കായി ദിവസേനയുള്ള സ്റ്റഡി ടൈംടേബിൾ സൗജന്യമായി ഉണ്ടാക്കൂ! Free interactive daily study planner with guaranteed revision buffer:';
             const shareUrl = 'https://sreyasts.github.io/intelligent-study-planner-for-plus-two-/';
 
             if (navigator.share) {
@@ -1355,7 +1481,7 @@
                     showToastMessage("Thanks for sharing with classmates!", "fa-heart text-rose-400");
                 }).catch(() => {});
             } else {
-                const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`;
+                const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + '\n' + shareUrl)}`;
                 window.open(whatsappUrl, '_blank');
             }
         }
@@ -2074,8 +2200,32 @@
                 } else {
                     const totalToday = todayPlan.tasks.length;
                     const doneToday = todayPlan.tasks.filter(t => t.completed).length;
+                    const isAllDoneToday = (totalToday > 0 && doneToday === totalToday);
+
+                    const milestoneCardHTML = isAllDoneToday ? `
+                        <div class="bg-gradient-to-r from-amber-500/15 via-orange-500/15 to-emerald-500/15 border-2 border-amber-300/90 rounded-2xl p-4 sm:p-5 mb-5 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
+                            <div class="flex items-center gap-3 text-center sm:text-left">
+                                <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white flex items-center justify-center text-xl font-black shrink-0 shadow-md shadow-orange-500/20">
+                                    🏆
+                                </div>
+                                <div>
+                                    <div class="flex items-center justify-center sm:justify-start gap-2">
+                                        <h4 class="text-sm sm:text-base font-extrabold text-slate-900">Today's Mission 100% Completed!</h4>
+                                        <span class="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">Day ${todayPlan.dayNumber} Cleared</span>
+                                    </div>
+                                    <p class="text-xs text-slate-600 mt-0.5">You finished all scheduled chapters for today! Keep this momentum alive.</p>
+                                </div>
+                            </div>
+                            <button onclick="shareTodayCompletion(${todayPlan.dayNumber})" class="w-full sm:w-auto bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs py-2.5 px-4 rounded-xl shadow-md shadow-emerald-500/25 transition flex items-center justify-center gap-2 active:scale-95 shrink-0">
+                                <i class="fa-brands fa-whatsapp text-base"></i>
+                                <span>Share on WhatsApp Status</span>
+                            </button>
+                        </div>
+                    ` : '';
 
                     todayTasksHTML = `
+                        ${milestoneCardHTML}
+
                         <div class="flex items-center justify-between mb-4">
                             <div>
                                 <h3 class="text-lg sm:text-xl font-extrabold text-slate-900 flex items-center gap-2">
@@ -2131,7 +2281,7 @@
                 container.innerHTML = `
                     <!-- Google Account Backup Callout Banner for Existing Users -->
                     ${!currentUser ? `
-                        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/80 rounded-2xl p-4 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
+                        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/80 rounded-2xl p-4 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm no-print">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-xl bg-white text-blue-600 border border-blue-100 flex items-center justify-center text-lg shadow-sm shrink-0">
                                     <i class="fa-solid fa-cloud-arrow-up"></i>
@@ -2152,7 +2302,7 @@
                             </button>
                         </div>
                     ` : `
-                        <div class="bg-emerald-50/70 border border-emerald-200/80 rounded-2xl px-4 py-2.5 mb-6 flex items-center justify-between text-xs text-emerald-800 shadow-sm">
+                        <div class="bg-emerald-50/70 border border-emerald-200/80 rounded-2xl px-4 py-2.5 mb-6 flex items-center justify-between text-xs text-emerald-800 shadow-sm no-print">
                             <span class="flex items-center gap-2">
                                 <i class="fa-solid fa-cloud-check text-emerald-600"></i>
                                 <span>Cloud Sync Active for <strong>${currentUser.displayName || currentUser.email}</strong> • Progress automatically synced</span>
@@ -2161,24 +2311,48 @@
                         </div>
                     `}
 
-                    <!-- Quick Stats Header -->
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
-                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-                            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">Overall Done</span>
+                    <!-- Quick Stats Header (5-Card Grid including Daily Streak Flame) -->
+                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5 sm:gap-3 mb-6">
+                        <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Overall Done</span>
                             <span class="text-xl sm:text-2xl font-extrabold text-blue-600">${overallStats.percentage}%</span>
                         </div>
-                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-                            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">Chapters Done</span>
+                        <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Chapters Done</span>
                             <span class="text-xl sm:text-2xl font-extrabold text-slate-800">${overallStats.completedCount} / ${overallStats.totalCount}</span>
                         </div>
-                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-                            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">Deadline</span>
+                        <div class="bg-white p-3.5 rounded-2xl border border-amber-200 bg-amber-50/40 shadow-sm flex flex-col justify-between">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-amber-700 block flex items-center gap-1">
+                                <i class="fa-solid fa-fire text-amber-500 animate-pulse"></i> Daily Streak
+                            </span>
+                            <span class="text-xl sm:text-2xl font-extrabold text-amber-600">${getActiveStreak()} <span class="text-xs font-semibold text-amber-700">Days</span></span>
+                        </div>
+                        <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Deadline</span>
                             <span class="text-xs sm:text-sm font-bold text-slate-800 mt-1 block">${new Date(appState.deadlineDate).toLocaleDateString('en-US', {month: 'short', day: 'numeric'})}</span>
                         </div>
-                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-                            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">Revision Days</span>
+                        <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Mock Buffer</span>
                             <span class="text-xl sm:text-2xl font-extrabold text-purple-600">${appState.revisionDaysCount || 0}d</span>
                         </div>
+                    </div>
+
+                    <!-- Quick Action Bar -->
+                    <div class="flex flex-wrap items-center justify-between gap-2.5 mb-4 no-print">
+                        <div class="flex items-center gap-2">
+                            <button onclick="printSchedule()" class="flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-bold text-xs py-2 px-3 sm:px-3.5 rounded-xl shadow-sm transition active:scale-95" title="Print full schedule or save as PDF">
+                                <i class="fa-solid fa-print text-blue-600"></i>
+                                <span>Print / Save PDF</span>
+                            </button>
+                            <button onclick="openRegenerateModal()" class="flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-semibold text-xs py-2 px-3 rounded-xl shadow-sm transition active:scale-95" title="Recalculate schedule if you missed days">
+                                <i class="fa-solid fa-wrench text-slate-500"></i>
+                                <span>Adjust Plan</span>
+                            </button>
+                        </div>
+                        <button onclick="shareApp()" class="flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200/80 font-bold text-xs py-2 px-3 sm:px-3.5 rounded-xl shadow-sm transition active:scale-95" title="Share with Classmates on WhatsApp">
+                            <i class="fa-brands fa-whatsapp text-emerald-600"></i>
+                            <span>Share with Friends</span>
+                        </button>
                     </div>
 
                     <!-- Main Section: Today's Targets -->
@@ -2256,29 +2430,43 @@
                 return;
             }
 
-            // View 2: Detailed Full Plan View (With working checkmarks on every task)
+            // View 2: Detailed Full Plan View (With subject filters & printable PDF export)
             if (currentView === 'plan') {
                 let planDaysHTML = '';
+                let matchingDaysCount = 0;
 
                 appState.plan.forEach(day => {
                     const isToday = (day.date === TODAY_STR);
                     const isPast = (new Date(day.date) < new Date(TODAY_STR));
 
+                    let displayedTasks = day.tasks;
+                    if (currentPlanSubjectFilter === '+1 Improvement') {
+                        displayedTasks = day.tasks.filter(t => t.grade === '+1');
+                    } else if (currentPlanSubjectFilter !== 'All') {
+                        displayedTasks = day.tasks.filter(t => t.subject === currentPlanSubjectFilter);
+                    }
+
+                    // If a specific subject is filtered and this day has none, don't clutter the view
+                    if (currentPlanSubjectFilter !== 'All' && displayedTasks.length === 0) {
+                        return;
+                    }
+                    matchingDaysCount++;
+
                     planDaysHTML += `
-                        <div class="bg-white rounded-2xl border ${isToday ? 'border-blue-300 ring-2 ring-blue-100' : 'border-slate-200'} shadow-sm overflow-hidden mb-4 transition-all">
+                        <div class="bg-white rounded-2xl border ${isToday ? 'border-blue-300 ring-2 ring-blue-100' : 'border-slate-200'} shadow-sm overflow-hidden mb-4 transition-all print-avoid-break">
                             <div class="p-3.5 sm:p-4 bg-slate-50/80 border-b border-slate-100 flex items-center justify-between">
                                 <div class="flex items-center gap-2">
                                     <span class="text-xs font-extrabold text-slate-900">Day ${day.dayNumber}</span>
                                     <span class="text-[11px] font-semibold text-slate-400">(${day.date})</span>
-                                    ${isToday ? '<span class="text-[10px] font-extrabold bg-blue-600 text-white px-2 py-0.5 rounded-full">TODAY</span>' : ''}
+                                    ${isToday ? '<span class="text-[10px] font-extrabold bg-blue-600 text-white px-2 py-0.5 rounded-full no-print">TODAY</span>' : ''}
                                     ${day.isRevisionDay ? '<span class="text-[10px] font-bold bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full">Revision Day</span>' : ''}
                                 </div>
-                                <span class="text-[11px] font-bold text-slate-500">${day.tasks.filter(t => t.completed).length}/${day.tasks.length} Done</span>
+                                <span class="text-[11px] font-bold text-slate-500">${displayedTasks.filter(t => t.completed).length}/${displayedTasks.length} Done</span>
                             </div>
 
                             <div class="p-3 sm:p-4 divide-y divide-slate-100">
-                                ${day.tasks.length === 0 ? '<p class="text-xs text-slate-400 italic py-1">Free / Buffer Day</p>' : ''}
-                                ${day.tasks.map(task => {
+                                ${displayedTasks.length === 0 ? '<p class="text-xs text-slate-400 italic py-1">Free / Buffer Day</p>' : ''}
+                                ${displayedTasks.map(task => {
                                     const badgeColor = getSubjectColorBadge(task.subject);
                                     return `
                                         <div class="task-item-container py-2.5 first:pt-0 last:pb-0 flex items-start gap-3">
@@ -2305,23 +2493,81 @@
                     `;
                 });
 
+                if (!planDaysHTML) {
+                    planDaysHTML = `
+                        <div class="bg-white rounded-2xl border border-slate-200 p-8 text-center text-slate-400">
+                            <i class="fa-solid fa-filter text-2xl mb-2 text-slate-300"></i>
+                            <p class="text-xs font-semibold">No scheduled tasks found under "${currentPlanSubjectFilter}".</p>
+                            <button onclick="setPlanSubjectFilter('All')" class="mt-3 text-xs font-bold text-blue-600 hover:underline">Show All Subjects</button>
+                        </div>
+                    `;
+                }
+
                 container.innerHTML = `
-                    <div class="flex items-center justify-between mb-6">
+                    <!-- Print-Only Page Header -->
+                    <div class="print-only mb-6 border-b-2 border-slate-900 pb-3">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h1 class="text-2xl font-black text-slate-900 tracking-tight">Mission PlusTwo — Daily Study Schedule</h1>
+                                <p class="text-xs text-slate-600 font-semibold mt-0.5">Kerala DHSE Class 12 (+2) & +1 Improvement Scheme of Work</p>
+                            </div>
+                            <div class="text-right text-xs">
+                                <span class="font-bold text-slate-900 block">Deadline: ${new Date(appState.deadlineDate).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'})}</span>
+                                <span class="text-slate-500">Generated: ${new Date().toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'})}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Screen Header -->
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 no-print">
                         <div>
                             <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900">Complete Study Schedule</h2>
                             <p class="text-xs text-slate-500">Every single day planned out until your deadline.</p>
                         </div>
-                        <button onclick="goToDashboard()" class="text-xs font-bold bg-white border border-slate-200 hover:bg-slate-50 px-3.5 py-2 rounded-xl text-slate-700 transition">
-                            <i class="fa-solid fa-arrow-left mr-1"></i> Back to Today
-                        </button>
+                        <div class="flex items-center gap-2">
+                            <button onclick="window.print()" class="text-xs font-bold bg-white border border-slate-200 hover:bg-slate-50 px-3 sm:px-3.5 py-2 rounded-xl text-slate-700 transition flex items-center gap-1.5 shadow-sm active:scale-95" title="Print schedule or save as PDF">
+                                <i class="fa-solid fa-print text-blue-600"></i>
+                                <span>Print / Save PDF</span>
+                            </button>
+                            <button onclick="goToDashboard()" class="text-xs font-bold bg-blue-600 hover:bg-blue-700 px-3.5 py-2 rounded-xl text-white transition flex items-center gap-1.5 shadow-sm active:scale-95">
+                                <i class="fa-solid fa-arrow-left"></i>
+                                <span>Back to Today</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Subject Filter Tabs (Horizontal Scrollable Pills) -->
+                    <div class="no-print flex items-center gap-1.5 overflow-x-auto pb-2 mb-4 scrollbar-none text-xs">
+                        ${[
+                            { id: 'All', label: 'All Subjects', icon: 'fa-layer-group' },
+                            { id: 'Physics', label: 'Physics', icon: 'fa-atom' },
+                            { id: 'Chemistry', label: 'Chemistry', icon: 'fa-flask' },
+                            { id: 'Mathematics', label: 'Maths', icon: 'fa-calculator' },
+                            { id: 'Computer Science', label: 'CS', icon: 'fa-laptop-code' },
+                            { id: '+1 Improvement', label: '+1 Improvement', icon: 'fa-arrow-up-right-dots' }
+                        ].map(f => {
+                            const isActive = (currentPlanSubjectFilter === f.id);
+                            return `
+                                <button onclick="setPlanSubjectFilter('${f.id}')" class="py-1.5 px-3 rounded-xl font-bold transition-all shrink-0 flex items-center gap-1.5 ${isActive ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/20' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'}">
+                                    <i class="fa-solid ${f.icon} text-[11px]"></i>
+                                    <span>${f.label}</span>
+                                </button>
+                            `;
+                        }).join('')}
                     </div>
 
                     <div class="space-y-4">
                         ${planDaysHTML}
                     </div>
 
+                    <!-- Print-Only Viral Attribution Watermark Footer -->
+                    <div class="print-only mt-8 pt-4 border-t border-slate-300 text-center text-xs text-slate-600">
+                        <p class="font-bold">Generated for free by Mission PlusTwo (https://sreyasts.github.io/intelligent-study-planner-for-plus-two-/)</p>
+                        <p class="text-[10px] text-slate-500 mt-0.5">Kerala DHSE Class 12 (+2) & +1 Improvement Free Daily Study Planner • Open Source on GitHub</p>
+                    </div>
+
                     <!-- Subtle Bottom Rebalance -->
-                    <div class="mt-8 pt-4 border-t border-slate-200 flex justify-between items-center text-xs text-slate-500">
+                    <div class="mt-8 pt-4 border-t border-slate-200 flex justify-between items-center text-xs text-slate-500 no-print">
                         <button onclick="openRegenerateModal()" class="py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition flex items-center gap-1.5">
                             <i class="fa-solid fa-wrench"></i> Adjust Schedule
                         </button>
