@@ -23,6 +23,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
+    <!-- Firebase SDK (v10 Compat) for Auth & Cloud Firestore Sync -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
     <style>
         * { -webkit-tap-highlight-color: transparent; }
         body { font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif; background-color: #f8fafc; }
@@ -130,6 +135,47 @@
                         <i class="fa-solid fa-book-open mr-1"></i> Syllabus
                     </button>
                 </nav>
+
+                <!-- Google Account Auth Control -->
+                <div id="auth-container" class="relative">
+                    <!-- Signed Out Button -->
+                    <button id="auth-signin-btn" onclick="signInWithGoogle()" class="flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 text-xs font-bold py-1.5 px-2.5 sm:px-3 rounded-xl shadow-sm transition active:scale-95">
+                        <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24">
+                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                        </svg>
+                        <span class="hidden xs:inline">Sign in</span>
+                    </button>
+
+                    <!-- Signed In Profile Avatar & Dropdown -->
+                    <div id="auth-user-menu" class="hidden items-center">
+                        <button onclick="toggleUserDropdown()" class="flex items-center gap-1.5 p-1 rounded-xl hover:bg-slate-100 border border-slate-200 transition">
+                            <img id="user-avatar-img" src="" alt="User" class="w-7 h-7 rounded-lg object-cover border border-slate-200 bg-slate-200">
+                            <span id="user-name-short" class="text-xs font-bold text-slate-700 hidden md:inline max-w-[80px] truncate"></span>
+                            <i class="fa-solid fa-chevron-down text-[9px] text-slate-400 mr-1"></i>
+                        </button>
+                        <!-- User Dropdown Card -->
+                        <div id="user-dropdown" class="hidden absolute right-0 top-11 w-64 bg-white rounded-2xl shadow-xl border border-slate-200 p-4 z-50 text-xs animate-fade-in-up">
+                            <div class="flex items-center gap-2.5 pb-3 border-b border-slate-100 mb-3">
+                                <img id="dropdown-avatar-img" src="" alt="Avatar" class="w-9 h-9 rounded-xl object-cover bg-slate-200">
+                                <div class="truncate">
+                                    <span id="dropdown-user-name" class="font-bold text-slate-800 block truncate"></span>
+                                    <span id="dropdown-user-email" class="text-[11px] text-slate-400 block truncate"></span>
+                                </div>
+                            </div>
+                            <div class="bg-emerald-50 text-emerald-800 p-2.5 rounded-xl border border-emerald-100 mb-3 flex items-center gap-2">
+                                <i class="fa-solid fa-cloud-arrow-up text-emerald-600 text-sm"></i>
+                                <span class="font-semibold text-[11px]">Cloud Sync Active (Auto-saved)</span>
+                            </div>
+                            <button onclick="signOutUser()" class="w-full py-2 px-3 bg-slate-100 hover:bg-red-50 hover:text-red-600 text-slate-700 font-bold rounded-xl transition flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-right-from-bracket"></i>
+                                <span>Sign Out</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Date display -->
                 <div id="date-display" class="text-xs font-semibold text-slate-500 bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-200/80 hidden md:block"></div>
@@ -445,11 +491,197 @@
         let currentView = 'today'; // 'today', 'plan', 'syllabus', 'setup'
         let activeSetupSubjectTab = 'Physics';
 
-        // Save State helper - saves to v2 and keeps backup in v1 key
-        function saveAppState() {
+        /* ==========================================================================
+           2.5 FIREBASE AUTHENTICATION & REAL-TIME CLOUD SYNC
+           ========================================================================== */
+        const firebaseConfig = {
+            apiKey: "AIzaSyDPcQQkOABPaZAv1lc9-u4Xm5UvMcI0g1A",
+            authDomain: "mission-plustwo.firebaseapp.com",
+            projectId: "mission-plustwo",
+            storageBucket: "mission-plustwo.firebasestorage.app",
+            messagingSenderId: "376961059569",
+            appId: "1:376961059569:web:4519080be63d1069a57750",
+            measurementId: "G-12KPP3ZZ80"
+        };
+
+        let auth = null;
+        let db = null;
+        let currentUser = null;
+        let cloudSyncUnsubscribe = null;
+
+        try {
+            if (window.firebase) {
+                firebase.initializeApp(firebaseConfig);
+                auth = firebase.auth();
+                db = firebase.firestore();
+                db.enablePersistence().catch(() => {});
+            }
+        } catch(err) {
+            console.warn("Firebase initialization note:", err);
+        }
+
+        function saveAppStateLocally() {
             if (!appState) return;
             localStorage.setItem('plusTwoMissionState_v2', JSON.stringify(appState));
             localStorage.setItem('plusTwoPlanState', JSON.stringify(appState));
+        }
+
+        // Save State helper - saves to local storage AND syncs to Firebase Cloud Firestore!
+        function saveAppState() {
+            if (!appState) return;
+            saveAppStateLocally();
+
+            if (currentUser && db) {
+                try {
+                    db.collection('users').doc(currentUser.uid).set({
+                        ...appState,
+                        userEmail: currentUser.email,
+                        displayName: currentUser.displayName || 'Student',
+                        lastSynced: new Date().toISOString()
+                    }).catch(err => {
+                        console.warn("Cloud save note:", err);
+                    });
+                } catch(e) {
+                    console.warn("Cloud sync error:", e);
+                }
+            }
+        }
+
+        // Handle user authentication and real-time syncing
+        if (auth) {
+            auth.onAuthStateChanged(async (user) => {
+                currentUser = user;
+                updateAuthHeaderUI();
+
+                if (user) {
+                    if (cloudSyncUnsubscribe) cloudSyncUnsubscribe();
+
+                    const userDocRef = db.collection('users').doc(user.uid);
+
+                    // Listen to cloud updates in real-time across devices
+                    cloudSyncUnsubscribe = userDocRef.onSnapshot(async (docSnap) => {
+                        if (docSnap.exists) {
+                            const cloudData = docSnap.data();
+                            if (cloudData && Array.isArray(cloudData.plan) && cloudData.plan.length > 0) {
+                                appState = cloudData;
+                                saveAppStateLocally();
+                                renderApp();
+                                updateAuthHeaderUI();
+                            }
+                        } else {
+                            // Cloud document does not exist yet!
+                            // If user already has local progress, automatically backup to cloud!
+                            if (appState && Array.isArray(appState.plan) && appState.plan.length > 0) {
+                                try {
+                                    await userDocRef.set({
+                                        ...appState,
+                                        userEmail: user.email,
+                                        displayName: user.displayName || 'Student',
+                                        syncedAt: new Date().toISOString()
+                                    });
+                                    showToastMessage("☁️ Progress backed up to Google Account!", "fa-cloud-arrow-up text-emerald-400");
+                                } catch(e) {
+                                    console.warn("Error uploading initial local progress to cloud:", e);
+                                }
+                            }
+                        }
+                    }, (err) => {
+                        console.warn("Firestore listener note:", err);
+                    });
+                } else {
+                    if (cloudSyncUnsubscribe) {
+                        cloudSyncUnsubscribe();
+                        cloudSyncUnsubscribe = null;
+                    }
+                }
+                renderApp();
+            });
+        }
+
+        function updateAuthHeaderUI() {
+            const signinBtn = document.getElementById('auth-signin-btn');
+            const userMenu = document.getElementById('auth-user-menu');
+            const userAvatarImg = document.getElementById('user-avatar-img');
+            const userNameShort = document.getElementById('user-name-short');
+            const dropdownAvatarImg = document.getElementById('dropdown-avatar-img');
+            const dropdownUserName = document.getElementById('dropdown-user-name');
+            const dropdownUserEmail = document.getElementById('dropdown-user-email');
+
+            if (currentUser) {
+                signinBtn?.classList.add('hidden');
+                userMenu?.classList.remove('hidden');
+                userMenu?.classList.add('flex');
+
+                const photoUrl = currentUser.photoURL || 'icon.png';
+                const displayName = currentUser.displayName || currentUser.email?.split('@')[0] || 'Student';
+
+                if (userAvatarImg) userAvatarImg.src = photoUrl;
+                if (dropdownAvatarImg) dropdownAvatarImg.src = photoUrl;
+                if (userNameShort) userNameShort.innerText = displayName;
+                if (dropdownUserName) dropdownUserName.innerText = displayName;
+                if (dropdownUserEmail) dropdownUserEmail.innerText = currentUser.email || '';
+            } else {
+                signinBtn?.classList.remove('hidden');
+                userMenu?.classList.add('hidden');
+                userMenu?.classList.remove('flex');
+                closeUserDropdown();
+            }
+        }
+
+        function toggleUserDropdown() {
+            const dropdown = document.getElementById('user-dropdown');
+            dropdown?.classList.toggle('hidden');
+        }
+
+        function closeUserDropdown() {
+            const dropdown = document.getElementById('user-dropdown');
+            dropdown?.classList.add('hidden');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            const container = document.getElementById('auth-container');
+            if (container && !container.contains(e.target)) {
+                closeUserDropdown();
+            }
+        });
+
+        async function signInWithGoogle() {
+            if (!auth) {
+                alert("Authentication service is not available. Please check your internet connection.");
+                return;
+            }
+            try {
+                const provider = new firebase.auth.GoogleAuthProvider();
+                provider.setCustomParameters({ prompt: 'select_account' });
+                await auth.signInWithPopup(provider);
+                showToastMessage("Signed in with Google! Cloud sync active.", "fa-circle-check text-emerald-400");
+            } catch(err) {
+                console.error("Sign-in error:", err);
+                if (err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-user') {
+                    try {
+                        const provider = new firebase.auth.GoogleAuthProvider();
+                        await auth.signInWithRedirect(provider);
+                    } catch(e) {
+                        alert("Popup was blocked. Please allow popups or use Google Chrome.");
+                    }
+                } else if (err.code === 'auth/unauthorized-domain') {
+                    alert("This domain is not authorized yet in Firebase Console. Please add 'sreyasts.github.io' to Authentication -> Settings -> Authorized Domains.");
+                } else {
+                    alert("Sign-in error: " + (err.message || err));
+                }
+            }
+        }
+
+        async function signOutUser() {
+            if (!auth) return;
+            if (confirm("Sign out of your Google account? (Your progress remains safely saved in the cloud).")) {
+                await auth.signOut();
+                currentUser = null;
+                closeUserDropdown();
+                showToastMessage("Signed out of Google Account.");
+                renderApp();
+            }
         }
 
         const getLocalDateStr = (d = new Date()) => {
@@ -1067,6 +1299,28 @@
                             <p class="text-xs sm:text-sm text-slate-500 mt-1 max-w-md mx-auto">
                                 Turn your Kerala DHSE Plus Two syllabus into an adaptive, day-by-day study schedule with built-in revision buffer.
                             </p>
+                        <!-- Google Sign-in Prompt for New Users -->
+                        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/80 rounded-2xl p-4 mb-6 text-center">
+                            <p class="text-xs font-bold text-slate-800 mb-2 flex items-center justify-center gap-1.5">
+                                <i class="fa-solid fa-cloud text-blue-600"></i> Sync study plan across Phone & PC
+                            </p>
+                            ${!currentUser ? `
+                                <button onclick="signInWithGoogle()" class="w-full sm:w-auto mx-auto bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 font-bold text-xs py-2.5 px-5 rounded-xl shadow-sm transition flex items-center justify-center gap-2 active:scale-95">
+                                    <svg class="w-4 h-4" viewBox="0 0 24 24">
+                                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                                    </svg>
+                                    <span>Sign in with Google First</span>
+                                </button>
+                                <p class="text-[10px] text-slate-400 mt-1.5">Or continue setting up as guest (local only)</p>
+                            ` : `
+                                <div class="inline-flex items-center gap-2 text-xs font-semibold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200">
+                                    <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                                    <span>Signed in as <strong>${currentUser.displayName || currentUser.email}</strong> (Cloud Backup Active)</span>
+                                </div>
+                            `}
                         </div>
 
                         <div class="space-y-6">
@@ -1264,6 +1518,38 @@
                 }
 
                 container.innerHTML = `
+                    <!-- Google Account Backup Callout Banner for Existing Users -->
+                    ${!currentUser ? `
+                        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/80 rounded-2xl p-4 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-white text-blue-600 border border-blue-100 flex items-center justify-center text-lg shadow-sm shrink-0">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-xs sm:text-sm font-bold text-slate-800">Save Progress Across Devices</h4>
+                                    <p class="text-[11px] text-slate-500">Sign in with Google so you can switch between phone and PC, or restore progress if you lose browser files.</p>
+                                </div>
+                            </div>
+                            <button onclick="signInWithGoogle()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-md shadow-blue-500/20 transition flex items-center justify-center gap-2 shrink-0 active:scale-95">
+                                <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24">
+                                    <path fill="#ffffff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                    <path fill="#ffffff" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                    <path fill="#ffffff" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                                    <path fill="#ffffff" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                                </svg>
+                                <span>Sign in with Google</span>
+                            </button>
+                        </div>
+                    ` : `
+                        <div class="bg-emerald-50/70 border border-emerald-200/80 rounded-2xl px-4 py-2.5 mb-6 flex items-center justify-between text-xs text-emerald-800 shadow-sm">
+                            <span class="flex items-center gap-2">
+                                <i class="fa-solid fa-cloud-check text-emerald-600"></i>
+                                <span>Cloud Sync Active for <strong>${currentUser.displayName || currentUser.email}</strong> • Progress automatically synced</span>
+                            </span>
+                            <span class="text-[10px] bg-emerald-100/80 text-emerald-700 px-2 py-0.5 rounded-md font-bold">Auto-saved</span>
+                        </div>
+                    `}
+
                     <!-- Quick Stats Header -->
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
                         <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
