@@ -1068,8 +1068,12 @@
         }
 
         function shareTodayCompletion(dayNumber) {
-            const shareTitle = `Mission PlusTwo: Day ${dayNumber} Complete!`;
-            const shareText = `🔥 100% of my Kerala DHSE Plus Two study targets for Day ${dayNumber} completed on Mission PlusTwo! 🎯 Free daily study timetable with guaranteed mock revision buffers. Generate yours here:`;
+            const shareTitle = `Day ${dayNumber} Targets Cleared!`;
+            const shareText = `Day ${dayNumber} targets തീർത്തു മക്കളെ! ✅ ഇങ്ങനെയൊക്കെ പോയാൽ പരീക്ഷയ്ക്ക് രക്ഷപ്പെടാം 😌🔥
+
+Syllabus തീർക്കാൻ കഷ്ടപ്പെടുന്നവർ ഇതൊന്നു നോക്കിക്കോ. നമ്മൾ കൊടുക്കുന്ന deadline അനുസരിച്ച് daily പഠിക്കേണ്ട portions automatic ആയി set ചെയ്തു തരുന്ന കിടു planner ആണിത് (+1 Improvement-ഉം ഉണ്ട്).
+
+Free ആണ്, browser-ൽ direct open ചെയ്യാം 👇`;
             const shareUrl = 'https://sreyasts.github.io/intelligent-study-planner-for-plus-two-/';
 
             if (navigator.share) {
@@ -1078,7 +1082,7 @@
                     text: shareText,
                     url: shareUrl
                 }).then(() => {
-                    showToastMessage("Achievement shared with classmates!", "fa-trophy text-amber-300");
+                    showToastMessage("Status shared! കൂട്ടുകാർക്കും ഉപകാരപ്പെടട്ടെ 🔥", "fa-fire text-amber-400");
                 }).catch(() => {});
             } else {
                 const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + '\n' + shareUrl)}`;
@@ -1469,7 +1473,17 @@
 
         function shareApp() {
             const shareTitle = 'Mission PlusTwo - Kerala DHSE Study Planner';
-            const shareText = '📚 Mission PlusTwo: കേരള ഹയർ സെക്കൻഡറി DHSE പ്ലസ് ടു & +1 ഇംപ്രൂവ്മെൻ്റ് പരീക്ഷകൾക്കായി ദിവസേനയുള്ള സ്റ്റഡി ടൈംടേബിൾ സൗജന്യമായി ഉണ്ടാക്കൂ! Free interactive daily study planner with guaranteed revision buffer:';
+            const shareText = `ഡേയ് പരീക്ഷ അടുത്തെടാ, syllabus കണ്ട് പേടിച്ചിരിക്കുവാണോ? 😅🚨
+
+Telegram-ലെ ചവറ് PDF timetable-കൾ നോക്കി തല പുകയണ്ട. ഇത് നമ്മുടെ Kerala DHSE പ്ലസ് ടു & +1 ഇംപ്രൂവ്മെന്റ് syllabus വെച്ച് daily എന്തൊക്കെ പഠിക്കണം എന്ന് automatic ആയി set ചെയ്തു തരുന്ന കിടു സാധനമാ! 🔥
+
+✨ ഇതാണ് ഇതിന്റെ real scene:
+• നമ്മുടെ target date കൊടുത്താൽ daily പഠിക്കേണ്ട chapters കൃത്യമായി തരും
+• ഏതെങ്കിലും ദിവസം miss ആയാലും 'Adjust Plan' അടിച്ചാൽ ബാക്കി portions വീണ്ടും distribute ചെയ്യും! (No guilt!)
+• Exam-ന് തൊട്ടുമുമ്പ് PYQ & revision-ന് buffer days തനിയെ reserve ചെയ്യും
+• +1 Improvement ഉള്ളവർക്ക് ആ subjects കൂടെ ഇതിൽ ഒരുമിച്ച് balance ചെയ്യാം!
+
+App ഒന്നും install ചെയ്യണ്ട, browser-ൽ direct open ആകും. ഇപ്പൊത്തന്നെ ഒന്നു try ചെയ്തു നോക്ക്, life saver ആണ് 👇`;
             const shareUrl = 'https://sreyasts.github.io/intelligent-study-planner-for-plus-two-/';
 
             if (navigator.share) {
@@ -1478,7 +1492,7 @@
                     text: shareText,
                     url: shareUrl
                 }).then(() => {
-                    showToastMessage("Thanks for sharing with classmates!", "fa-heart text-rose-400");
+                    showToastMessage("Thanks for sharing! കൂട്ടുകാർക്കും ഉപകാരപ്പെടട്ടെ 🔥", "fa-fire text-amber-400");
                 }).catch(() => {});
             } else {
                 const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + '\n' + shareUrl)}`;
@@ -2351,7 +2365,7 @@
                         </div>
                         <button onclick="shareApp()" class="flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200/80 font-bold text-xs py-2 px-3 sm:px-3.5 rounded-xl shadow-sm transition active:scale-95" title="Share with Classmates on WhatsApp">
                             <i class="fa-brands fa-whatsapp text-emerald-600"></i>
-                            <span>Share with Friends</span>
+                            <span>Share in WhatsApp 🔥</span>
                         </button>
                     </div>
 
@@ -2363,17 +2377,20 @@
                     <!-- Viral Study Group Share Card -->
                     <div class="bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-blue-500/10 border border-emerald-200/80 rounded-2xl p-4 mb-6 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
                         <div class="flex items-center gap-3 text-center sm:text-left">
-                            <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-lg shadow-sm shrink-0">
-                                <i class="fa-solid fa-users"></i>
+                            <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-xl shadow-sm shrink-0">
+                                <i class="fa-brands fa-whatsapp"></i>
                             </div>
                             <div>
-                                <h4 class="text-xs sm:text-sm font-extrabold text-slate-900">Study with Friends & Classmates</h4>
-                                <p class="text-[11px] text-slate-600">Share Mission PlusTwo in your school or tuition WhatsApp group so everyone stays on track.</p>
+                                <h4 class="text-xs sm:text-sm font-extrabold text-slate-900 flex items-center gap-2 justify-center sm:justify-start">
+                                    <span>കൂട്ടുകാർക്കും അയച്ചു കൊടുക്കൂ! 🚀</span>
+                                    <span class="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded">Life Saver</span>
+                                </h4>
+                                <p class="text-[11px] text-slate-600 mt-0.5">School / Tuition WhatsApp ഗ്രൂപ്പിൽ ഷെയർ ചെയ്യൂ. ആർക്കെങ്കിലും പരീക്ഷ ജയിക്കാൻ ഇത് വലിയൊരു സഹായമാകും!</p>
                             </div>
                         </div>
                         <button onclick="shareApp()" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 px-4 rounded-xl shadow-md shadow-emerald-600/20 transition flex items-center justify-center gap-2 active:scale-95 shrink-0">
                             <i class="fa-brands fa-whatsapp text-sm"></i>
-                            <span>Share in WhatsApp</span>
+                            <span>Share in WhatsApp 🔥</span>
                         </button>
                     </div>
 
