@@ -169,6 +169,10 @@
                                 <i class="fa-solid fa-cloud-arrow-up text-emerald-600 text-sm"></i>
                                 <span class="font-semibold text-[11px]">Cloud Sync Active (Auto-saved)</span>
                             </div>
+                            <button onclick="triggerManualSync()" class="w-full py-2 px-3 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold rounded-xl transition flex items-center justify-center gap-2 mb-2">
+                                <i class="fa-solid fa-rotate"></i>
+                                <span>Sync with Cloud Now</span>
+                            </button>
                             <button onclick="signOutUser()" class="w-full py-2 px-3 bg-slate-100 hover:bg-red-50 hover:text-red-600 text-slate-700 font-bold rounded-xl transition flex items-center justify-center gap-2">
                                 <i class="fa-solid fa-right-from-bracket"></i>
                                 <span>Sign Out</span>
@@ -520,6 +524,13 @@
             console.warn("Firebase initialization note:", err);
         }
 
+        function getFirestoreCleanData(state) {
+            if (!state) return null;
+            const clean = JSON.parse(JSON.stringify(state));
+            clean.lastSynced = new Date().toISOString();
+            return clean;
+        }
+
         function saveAppStateLocally() {
             if (!appState) return;
             localStorage.setItem('plusTwoMissionState_v2', JSON.stringify(appState));
@@ -527,22 +538,88 @@
         }
 
         // Save State helper - saves to local storage AND syncs to Firebase Cloud Firestore!
-        function saveAppState() {
+        async function saveAppState() {
             if (!appState) return;
             saveAppStateLocally();
 
             if (currentUser && db) {
                 try {
-                    db.collection('users').doc(currentUser.uid).set({
+                    const userDocRef = db.collection('users').doc(currentUser.uid);
+                    const payload = getFirestoreCleanData({
                         ...appState,
                         userEmail: currentUser.email,
-                        displayName: currentUser.displayName || 'Student',
-                        lastSynced: new Date().toISOString()
-                    }).catch(err => {
-                        console.warn("Cloud save note:", err);
+                        displayName: currentUser.displayName || 'Student'
                     });
-                } catch(e) {
-                    console.warn("Cloud sync error:", e);
+                    await userDocRef.set(payload);
+                } catch(err) {
+                    console.error("Cloud save failed:", err);
+                    if (err.message && err.message.includes("database (default) does not exist")) {
+                        alert("⚠️ Cloud Sync Notice: Firestore Database has not been created yet in your Firebase console! Go to Firebase Console -> Databases -> Firestore Database -> Create database.");
+                    }
+                }
+            }
+        }
+
+        async function performCloudSync(user, explicitTrigger = false) {
+            if (!user || !db) return;
+            try {
+                if (explicitTrigger) showToastMessage("Checking cloud sync...", "fa-rotate text-blue-400");
+                const userDocRef = db.collection('users').doc(user.uid);
+                const docSnap = await userDocRef.get();
+
+                if (docSnap.exists) {
+                    const cloudData = docSnap.data();
+                    if (cloudData && Array.isArray(cloudData.plan) && cloudData.plan.length > 0) {
+                        // If local also has a plan, merge completed items bidirectionally
+                        if (appState && Array.isArray(appState.plan) && appState.plan.length > 0) {
+                            let localHasNewerTicks = false;
+                            cloudData.plan.forEach(cloudDay => {
+                                const localDay = appState.plan.find(d => d.date === cloudDay.date);
+                                if (localDay) {
+                                    cloudDay.tasks.forEach(ct => {
+                                        const lt = localDay.tasks.find(t => t.id === ct.id);
+                                        if (lt) {
+                                            if (lt.completed && !ct.completed) {
+                                                ct.completed = true;
+                                                localHasNewerTicks = true;
+                                            } else if (ct.completed && !lt.completed) {
+                                                lt.completed = true;
+                                            }
+                                        }
+                                    });
+                                }
+                            });
+                            appState = cloudData;
+                            saveAppStateLocally();
+                            if (localHasNewerTicks) {
+                                await userDocRef.set(getFirestoreCleanData(appState));
+                            }
+                        } else {
+                            // Local was empty (e.g. freshly opened on PC!)
+                            appState = cloudData;
+                            saveAppStateLocally();
+                        }
+                        renderApp();
+                        updateAuthHeaderUI();
+                        if (explicitTrigger) showToastMessage("✓ Cloud sync complete!", "fa-circle-check text-emerald-400");
+                    }
+                } else {
+                    // Document doesn't exist on server yet!
+                    // If local has progress (e.g. Phone with existing study plan), upload it now!
+                    if (appState && Array.isArray(appState.plan) && appState.plan.length > 0) {
+                        const payload = getFirestoreCleanData({
+                            ...appState,
+                            userEmail: user.email,
+                            displayName: user.displayName || 'Student'
+                        });
+                        await userDocRef.set(payload);
+                        showToastMessage("☁️ Progress backed up to Google Cloud!", "fa-cloud-arrow-up text-emerald-400");
+                    }
+                }
+            } catch(err) {
+                console.error("Cloud sync error:", err);
+                if (err.message && err.message.includes("database (default) does not exist")) {
+                    alert("⚠️ Cloud Sync Notice: Firestore Database has not been created yet in your Firebase console! Please go to Firebase Console -> Firestore Database -> Click 'Create database'.");
                 }
             }
         }
@@ -554,35 +631,22 @@
                 updateAuthHeaderUI();
 
                 if (user) {
-                    if (cloudSyncUnsubscribe) cloudSyncUnsubscribe();
+                    // 1. Immediately perform initial cloud fetch/merge
+                    await performCloudSync(user);
 
+                    // 2. Setup real-time listener for multi-device sync
+                    if (cloudSyncUnsubscribe) cloudSyncUnsubscribe();
                     const userDocRef = db.collection('users').doc(user.uid);
 
-                    // Listen to cloud updates in real-time across devices
-                    cloudSyncUnsubscribe = userDocRef.onSnapshot(async (docSnap) => {
+                    cloudSyncUnsubscribe = userDocRef.onSnapshot((docSnap) => {
                         if (docSnap.exists) {
                             const cloudData = docSnap.data();
                             if (cloudData && Array.isArray(cloudData.plan) && cloudData.plan.length > 0) {
+                                // If cloud has different completed status, update local
                                 appState = cloudData;
                                 saveAppStateLocally();
                                 renderApp();
                                 updateAuthHeaderUI();
-                            }
-                        } else {
-                            // Cloud document does not exist yet!
-                            // If user already has local progress, automatically backup to cloud!
-                            if (appState && Array.isArray(appState.plan) && appState.plan.length > 0) {
-                                try {
-                                    await userDocRef.set({
-                                        ...appState,
-                                        userEmail: user.email,
-                                        displayName: user.displayName || 'Student',
-                                        syncedAt: new Date().toISOString()
-                                    });
-                                    showToastMessage("☁️ Progress backed up to Google Account!", "fa-cloud-arrow-up text-emerald-400");
-                                } catch(e) {
-                                    console.warn("Error uploading initial local progress to cloud:", e);
-                                }
                             }
                         }
                     }, (err) => {
@@ -596,6 +660,14 @@
                 }
                 renderApp();
             });
+        }
+
+        function triggerManualSync() {
+            if (currentUser) {
+                performCloudSync(currentUser, true);
+            } else {
+                signInWithGoogle();
+            }
         }
 
         function updateAuthHeaderUI() {
