@@ -2,8 +2,8 @@
 
 <img src="icon.png" alt="Mission PlusTwo Logo" width="120" style="border-radius: 24px; box-shadow: 0 10px 25px rgba(37,99,235,0.25);" />
 
-# 🎓 Mission PlusTwo
-### 🚀 The Intelligent Daily Study Planner for Kerala Higher Secondary (+2) & +1 Improvement Students
+# 🎓 Plus Two Study Planner (Mission PlusTwo)
+### 🚀 The Intelligent Daily Study Planner & Timetable Generator for Kerala Higher Secondary (+2) & +1 Improvement Students
 
 [![🚀 Open Web App](https://img.shields.io/badge/🚀_LAUNCH_WEB_APP-CLICK_HERE_TO_OPEN-2563eb?style=for-the-badge&logo=googlechrome&logoColor=white)](https://sreyasts.github.io/intelligent-study-planner-for-plus-two-/)
 [![GitHub Stars](https://img.shields.io/github/stars/sreyasts/intelligent-study-planner-for-plus-two-?style=for-the-badge&logo=github&color=f59e0b)](https://github.com/sreyasts/intelligent-study-planner-for-plus-two-/stargazers)
