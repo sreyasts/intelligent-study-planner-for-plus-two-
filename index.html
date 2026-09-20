@@ -526,22 +526,42 @@
     <!-- Application JavaScript Logic -->
     <script>
         /* ==========================================================================
-           1. ACCURATE KERALA DHSE SCHEME OF WORK & SYLLABUS DATA
-           Verified against official DHSE rationalized curriculum & HSSLive scheme:
-           - Plus Two: Physics (14 ch), Chemistry (9 ch), Maths (13 ch), CS (10 ch)
-           - Plus One: Physics (14 ch), Chemistry (9 ch), Maths (14 ch), CS (10 ch)
+           1. CANONICAL KERALA DHSE SCHEME OF WORK & SYLLABUS DATA (v3.0)
+           Audited against official Kerala DHSE/SCERT rationalized curriculum:
+           - Plus Two: Physics (14 ch), Chemistry (10 ch with Amines & Biomolecules), Maths (13 ch), CS (10 ch), Botany (6 ch), Zoology (7 ch)
+           - Plus One: Physics (13 ch), Chemistry (9 ch), Maths (14 ch), CS (10 ch), Botany (9 ch), Zoology (10 ch)
            ========================================================================== */
 
-        const createTasks = (subject, grade, chapters) => {
+        const PLANNER_ENGINE_VERSION = 3;
+        const PLAN_MIGRATION_VERSION = 3;
+
+        const createCanonicalTasks = (subject, grade, chapters) => {
             let list = [];
             chapters.forEach((ch, idx) => {
                 const chapNumber = idx + 1;
                 const totalParts = ch.parts || 2;
                 const chapId = `${grade}_${subject.replace(/\s+/g, '_')}_${chapNumber}`;
+                const effort = ch.effort || (totalParts >= 3 ? 'HIGH' : 'MEDIUM');
                 
                 for (let p = 1; p <= totalParts; p++) {
+                    const taskId = `${chapId}_P${p}`;
+                    const prereqId = p > 1 ? `${chapId}_P${p - 1}` : null;
+                    
+                    let topicTitle = '';
+                    if (totalParts === 1) {
+                        topicTitle = 'Complete Chapter Concepts, Derivations & Key Problem Solving';
+                    } else if (p === 1) {
+                        topicTitle = `Part 1 of ${totalParts}: Foundational Concepts, Core Theory & First Principles`;
+                    } else if (p === totalParts) {
+                        topicTitle = `Part ${p} of ${totalParts}: Advanced Applications, Exercise Problems & Board PYQs`;
+                    } else {
+                        topicTitle = `Part ${p} of ${totalParts}: In-Depth Mechanisms, Formulae & Problem Practice`;
+                    }
+
+                    let taskType = (p === totalParts || p > 1) ? 'PRACTICE' : 'LEARN';
+
                     list.push({
-                        id: `${chapId}_P${p}`,
+                        id: taskId,
                         chapId: chapId,
                         grade: grade,
                         subject: subject,
@@ -549,196 +569,209 @@
                         chapterName: ch.name,
                         part: p,
                         totalParts: totalParts,
-                        topicTitle: totalParts === 1 ? 'Full Chapter Concept & Practice' : `Part ${p} of ${totalParts} (Theory & Problem Solving)`,
-                        term: ch.term || 1
+                        topicTitle: topicTitle,
+                        term: ch.term || 1,
+                        taskType: taskType,
+                        prerequisiteId: prereqId,
+                        estimatedEffort: effort,
+                        effortScore: effort === 'VERY_HIGH' ? 4 : effort === 'HIGH' ? 3 : effort === 'MEDIUM' ? 2 : 1,
+                        isRevision: false,
+                        completed: false
                     });
                 }
             });
             return list;
         };
 
+        // Backward compatibility alias
+        const createTasks = createCanonicalTasks;
+
         // Official Plus Two (+2) DHSE Rationalized Syllabus
         const PLUS_TWO_SYLLABUS = [
             // Physics: 14 Chapters
-            ...createTasks('Physics', '+2', [
-                { name: 'Electric Charges and Fields', parts: 2, term: 1 },
-                { name: 'Electrostatic Potential and Capacitance', parts: 2, term: 1 },
-                { name: 'Current Electricity', parts: 3, term: 1 },
-                { name: 'Moving Charges and Magnetism', parts: 2, term: 1 },
-                { name: 'Magnetism and Matter', parts: 1, term: 1 },
-                { name: 'Electromagnetic Induction', parts: 2, term: 2 },
-                { name: 'Alternating Current', parts: 2, term: 2 },
-                { name: 'Electromagnetic Waves', parts: 1, term: 2 },
-                { name: 'Ray Optics and Optical Instruments', parts: 3, term: 2 },
-                { name: 'Wave Optics', parts: 2, term: 2 },
-                { name: 'Dual Nature of Radiation and Matter', parts: 2, term: 3 },
-                { name: 'Atoms', parts: 2, term: 3 },
-                { name: 'Nuclei', parts: 1, term: 3 },
-                { name: 'Semiconductor Electronics: Materials, Devices and Simple Circuits', parts: 3, term: 3 }
+            ...createCanonicalTasks('Physics', '+2', [
+                { name: 'Electric Charges and Fields', parts: 2, term: 1, effort: 'HIGH' },
+                { name: 'Electrostatic Potential and Capacitance', parts: 2, term: 1, effort: 'MEDIUM' },
+                { name: 'Current Electricity', parts: 3, term: 1, effort: 'HIGH' },
+                { name: 'Moving Charges and Magnetism', parts: 2, term: 1, effort: 'HIGH' },
+                { name: 'Magnetism and Matter', parts: 1, term: 1, effort: 'LOW' },
+                { name: 'Electromagnetic Induction', parts: 2, term: 2, effort: 'MEDIUM' },
+                { name: 'Alternating Current', parts: 2, term: 2, effort: 'HIGH' },
+                { name: 'Electromagnetic Waves', parts: 1, term: 2, effort: 'LOW' },
+                { name: 'Ray Optics and Optical Instruments', parts: 3, term: 2, effort: 'VERY_HIGH' },
+                { name: 'Wave Optics', parts: 2, term: 2, effort: 'HIGH' },
+                { name: 'Dual Nature of Radiation and Matter', parts: 2, term: 3, effort: 'MEDIUM' },
+                { name: 'Atoms', parts: 2, term: 3, effort: 'MEDIUM' },
+                { name: 'Nuclei', parts: 1, term: 3, effort: 'LOW' },
+                { name: 'Semiconductor Electronics: Materials, Devices and Simple Circuits', parts: 3, term: 3, effort: 'HIGH' }
             ]),
 
-            // Chemistry: 9 Chapters
-            ...createTasks('Chemistry', '+2', [
-                { name: 'Solutions', parts: 3, term: 1 },
-                { name: 'Electrochemistry', parts: 3, term: 1 },
-                { name: 'Chemical Kinetics', parts: 2, term: 1 },
-                { name: 'The d- and f-Block Elements', parts: 2, term: 2 },
-                { name: 'Coordination Compounds', parts: 2, term: 2 },
-                { name: 'Haloalkanes and Haloarenes', parts: 3, term: 2 },
-                { name: 'Alcohols, Phenols and Ethers', parts: 3, term: 3 },
-                { name: 'Aldehydes, Ketones and Carboxylic Acids', parts: 3, term: 3 },
-                { name: 'Biomolecules', parts: 2, term: 3 }
+            // Chemistry: 10 Chapters (Restored official Chapter 9: Amines & Chapter 10: Biomolecules)
+            ...createCanonicalTasks('Chemistry', '+2', [
+                { name: 'Solutions', parts: 3, term: 1, effort: 'HIGH' },
+                { name: 'Electrochemistry', parts: 3, term: 1, effort: 'HIGH' },
+                { name: 'Chemical Kinetics', parts: 2, term: 1, effort: 'MEDIUM' },
+                { name: 'The d- and f-Block Elements', parts: 2, term: 2, effort: 'MEDIUM' },
+                { name: 'Coordination Compounds', parts: 2, term: 2, effort: 'HIGH' },
+                { name: 'Haloalkanes and Haloarenes', parts: 3, term: 2, effort: 'HIGH' },
+                { name: 'Alcohols, Phenols and Ethers', parts: 3, term: 3, effort: 'HIGH' },
+                { name: 'Aldehydes, Ketones and Carboxylic Acids', parts: 3, term: 3, effort: 'VERY_HIGH' },
+                { name: 'Amines', parts: 2, term: 3, effort: 'MEDIUM' },
+                { name: 'Biomolecules', parts: 2, term: 3, effort: 'MEDIUM' }
             ]),
 
             // Mathematics: 13 Chapters
-            ...createTasks('Mathematics', '+2', [
-                { name: 'Relations and Functions', parts: 2, term: 1 },
-                { name: 'Inverse Trigonometric Functions', parts: 1, term: 1 },
-                { name: 'Matrices', parts: 2, term: 1 },
-                { name: 'Determinants', parts: 2, term: 1 },
-                { name: 'Continuity and Differentiability', parts: 3, term: 1 },
-                { name: 'Application of Derivatives', parts: 2, term: 2 },
-                { name: 'Integrals', parts: 4, term: 2 },
-                { name: 'Application of Integrals', parts: 1, term: 2 },
-                { name: 'Differential Equations', parts: 2, term: 2 },
-                { name: 'Vector Algebra', parts: 2, term: 3 },
-                { name: 'Three Dimensional Geometry', parts: 2, term: 3 },
-                { name: 'Linear Programming', parts: 1, term: 3 },
-                { name: 'Probability', parts: 3, term: 3 }
+            ...createCanonicalTasks('Mathematics', '+2', [
+                { name: 'Relations and Functions', parts: 2, term: 1, effort: 'MEDIUM' },
+                { name: 'Inverse Trigonometric Functions', parts: 1, term: 1, effort: 'LOW' },
+                { name: 'Matrices', parts: 2, term: 1, effort: 'MEDIUM' },
+                { name: 'Determinants', parts: 2, term: 1, effort: 'MEDIUM' },
+                { name: 'Continuity and Differentiability', parts: 3, term: 1, effort: 'HIGH' },
+                { name: 'Application of Derivatives', parts: 2, term: 2, effort: 'HIGH' },
+                { name: 'Integrals', parts: 4, term: 2, effort: 'VERY_HIGH' },
+                { name: 'Application of Integrals', parts: 1, term: 2, effort: 'MEDIUM' },
+                { name: 'Differential Equations', parts: 2, term: 2, effort: 'HIGH' },
+                { name: 'Vector Algebra', parts: 2, term: 3, effort: 'MEDIUM' },
+                { name: 'Three Dimensional Geometry', parts: 2, term: 3, effort: 'HIGH' },
+                { name: 'Linear Programming', parts: 1, term: 3, effort: 'LOW' },
+                { name: 'Probability', parts: 3, term: 3, effort: 'HIGH' }
             ]),
 
             // Computer Science: 10 Chapters
-            ...createTasks('Computer Science', '+2', [
-                { name: 'Structures and Pointers', parts: 2, term: 1 },
-                { name: 'Concepts of Object-Oriented Programming', parts: 1, term: 1 },
-                { name: 'Data Structures and Operations', parts: 3, term: 1 },
-                { name: 'Web Technology', parts: 2, term: 1 },
-                { name: 'Web Designing using HTML', parts: 3, term: 2 },
-                { name: 'Client Side Scripting using JavaScript', parts: 3, term: 2 },
-                { name: 'Web Hosting', parts: 1, term: 2 },
-                { name: 'Database Management System', parts: 2, term: 2 },
-                { name: 'Structured Query Language (SQL)', parts: 3, term: 3 },
-                { name: 'Server Side Scripting using PHP', parts: 3, term: 3 }
+            ...createCanonicalTasks('Computer Science', '+2', [
+                { name: 'Structures and Pointers', parts: 2, term: 1, effort: 'MEDIUM' },
+                { name: 'Concepts of Object-Oriented Programming', parts: 1, term: 1, effort: 'LOW' },
+                { name: 'Data Structures and Operations', parts: 3, term: 1, effort: 'HIGH' },
+                { name: 'Web Technology', parts: 2, term: 1, effort: 'LOW' },
+                { name: 'Web Designing using HTML', parts: 3, term: 2, effort: 'MEDIUM' },
+                { name: 'Client Side Scripting using JavaScript', parts: 3, term: 2, effort: 'HIGH' },
+                { name: 'Web Hosting', parts: 1, term: 2, effort: 'LOW' },
+                { name: 'Database Management System', parts: 2, term: 2, effort: 'MEDIUM' },
+                { name: 'Structured Query Language (SQL)', parts: 3, term: 3, effort: 'HIGH' },
+                { name: 'Server Side Scripting using PHP', parts: 3, term: 3, effort: 'HIGH' }
             ]),
 
-            // Botany: 6 Chapters (Rationalized SCERT / Kerala DHSE Scheme of Work)
-            ...createTasks('Botany', '+2', [
-                { name: 'Sexual Reproduction in Flowering Plants', parts: 3, term: 1 },
-                { name: 'Biotechnology: Principles and Processes', parts: 2, term: 1 },
-                { name: 'Biotechnology and its Applications', parts: 2, term: 2 },
-                { name: 'Organisms and Populations', parts: 2, term: 2 },
-                { name: 'Ecosystem', parts: 2, term: 3 },
-                { name: 'Biodiversity and Conservation', parts: 2, term: 3 }
+            // Botany: 6 Chapters
+            ...createCanonicalTasks('Botany', '+2', [
+                { name: 'Sexual Reproduction in Flowering Plants', parts: 3, term: 1, effort: 'HIGH' },
+                { name: 'Biotechnology: Principles and Processes', parts: 2, term: 1, effort: 'MEDIUM' },
+                { name: 'Biotechnology and its Applications', parts: 2, term: 2, effort: 'MEDIUM' },
+                { name: 'Organisms and Populations', parts: 2, term: 2, effort: 'MEDIUM' },
+                { name: 'Ecosystem', parts: 2, term: 3, effort: 'LOW' },
+                { name: 'Biodiversity and Conservation', parts: 2, term: 3, effort: 'LOW' }
             ]),
 
-            // Zoology: 7 Chapters (Rationalized SCERT / Kerala DHSE Scheme of Work)
-            ...createTasks('Zoology', '+2', [
-                { name: 'Human Reproduction', parts: 3, term: 1 },
-                { name: 'Reproductive Health', parts: 2, term: 1 },
-                { name: 'Principles of Inheritance and Variation', parts: 3, term: 1 },
-                { name: 'Molecular Basis of Inheritance', parts: 3, term: 2 },
-                { name: 'Evolution', parts: 2, term: 2 },
-                { name: 'Human Health and Disease', parts: 3, term: 2 },
-                { name: 'Microbes in Human Welfare', parts: 2, term: 3 }
+            // Zoology: 7 Chapters
+            ...createCanonicalTasks('Zoology', '+2', [
+                { name: 'Human Reproduction', parts: 3, term: 1, effort: 'HIGH' },
+                { name: 'Reproductive Health', parts: 2, term: 1, effort: 'LOW' },
+                { name: 'Principles of Inheritance and Variation', parts: 3, term: 1, effort: 'VERY_HIGH' },
+                { name: 'Molecular Basis of Inheritance', parts: 3, term: 2, effort: 'VERY_HIGH' },
+                { name: 'Evolution', parts: 2, term: 2, effort: 'MEDIUM' },
+                { name: 'Human Health and Disease', parts: 3, term: 2, effort: 'HIGH' },
+                { name: 'Microbes in Human Welfare', parts: 2, term: 3, effort: 'LOW' }
             ])
         ];
 
         // Official Plus One (+1) DHSE Rationalized Syllabus for Improvement Exams
         const PLUS_ONE_SYLLABUS = [
-            // Physics: 14 Chapters (Sets up to Waves)
-            ...createTasks('Physics', '+1', [
-                { name: 'Units and Measurements', parts: 1 },
-                { name: 'Motion in a Straight Line', parts: 2 },
-                { name: 'Motion in a Plane', parts: 2 },
-                { name: 'Laws of Motion', parts: 2 },
-                { name: 'Work, Energy and Power', parts: 2 },
-                { name: 'System of Particles and Rotational Motion', parts: 2 },
-                { name: 'Gravitation', parts: 2 },
-                { name: 'Mechanical Properties of Solids', parts: 1 },
-                { name: 'Mechanical Properties of Fluids', parts: 2 },
-                { name: 'Thermal Properties of Matter', parts: 2 },
-                { name: 'Thermodynamics', parts: 2 },
-                { name: 'Kinetic Theory', parts: 1 },
-                { name: 'Oscillations', parts: 2 },
-                { name: 'Waves', parts: 2 }
+            // Physics: 13 Chapters (Units and Measurements to Waves)
+            ...createCanonicalTasks('Physics', '+1', [
+                { name: 'Units and Measurements', parts: 1, effort: 'LOW' },
+                { name: 'Motion in a Straight Line', parts: 2, effort: 'MEDIUM' },
+                { name: 'Motion in a Plane', parts: 2, effort: 'MEDIUM' },
+                { name: 'Laws of Motion', parts: 2, effort: 'HIGH' },
+                { name: 'Work, Energy and Power', parts: 2, effort: 'HIGH' },
+                { name: 'System of Particles and Rotational Motion', parts: 2, effort: 'VERY_HIGH' },
+                { name: 'Gravitation', parts: 2, effort: 'MEDIUM' },
+                { name: 'Mechanical Properties of Solids', parts: 1, effort: 'LOW' },
+                { name: 'Mechanical Properties of Fluids', parts: 2, effort: 'HIGH' },
+                { name: 'Thermal Properties of Matter', parts: 2, effort: 'MEDIUM' },
+                { name: 'Thermodynamics', parts: 2, effort: 'HIGH' },
+                { name: 'Kinetic Theory', parts: 1, effort: 'LOW' },
+                { name: 'Oscillations', parts: 2, effort: 'HIGH' },
+                { name: 'Waves', parts: 2, effort: 'HIGH' }
             ]),
 
             // Chemistry: 9 Chapters
-            ...createTasks('Chemistry', '+1', [
-                { name: 'Some Basic Concepts of Chemistry', parts: 2 },
-                { name: 'Structure of Atom', parts: 3 },
-                { name: 'Classification of Elements & Periodicity', parts: 1 },
-                { name: 'Chemical Bonding and Molecular Structure', parts: 3 },
-                { name: 'Chemical Thermodynamics', parts: 2 },
-                { name: 'Equilibrium', parts: 3 },
-                { name: 'Redox Reactions', parts: 1 },
-                { name: 'Organic Chemistry: Basic Principles & Techniques', parts: 3 },
-                { name: 'Hydrocarbons', parts: 3 }
+            ...createCanonicalTasks('Chemistry', '+1', [
+                { name: 'Some Basic Concepts of Chemistry', parts: 2, effort: 'HIGH' },
+                { name: 'Structure of Atom', parts: 3, effort: 'HIGH' },
+                { name: 'Classification of Elements & Periodicity', parts: 1, effort: 'LOW' },
+                { name: 'Chemical Bonding and Molecular Structure', parts: 3, effort: 'VERY_HIGH' },
+                { name: 'Chemical Thermodynamics', parts: 2, effort: 'HIGH' },
+                { name: 'Equilibrium', parts: 3, effort: 'VERY_HIGH' },
+                { name: 'Redox Reactions', parts: 1, effort: 'LOW' },
+                { name: 'Organic Chemistry: Basic Principles & Techniques', parts: 3, effort: 'VERY_HIGH' },
+                { name: 'Hydrocarbons', parts: 3, effort: 'HIGH' }
             ]),
 
-            // Mathematics: 14 Chapters (Sets is 1, Probability is 14)
-            ...createTasks('Mathematics', '+1', [
-                { name: 'Sets', parts: 2 },
-                { name: 'Relations and Functions', parts: 2 },
-                { name: 'Trigonometric Functions', parts: 3 },
-                { name: 'Complex Numbers and Quadratic Equations', parts: 2 },
-                { name: 'Linear Inequalities', parts: 1 },
-                { name: 'Permutations and Combinations', parts: 2 },
-                { name: 'Binomial Theorem', parts: 1 },
-                { name: 'Sequences and Series', parts: 2 },
-                { name: 'Straight Lines', parts: 2 },
-                { name: 'Conic Sections', parts: 2 },
-                { name: 'Introduction to Three Dimensional Geometry', parts: 1 },
-                { name: 'Limits and Derivatives', parts: 2 },
-                { name: 'Statistics', parts: 2 },
-                { name: 'Probability', parts: 2 }
+            // Mathematics: 14 Chapters
+            ...createCanonicalTasks('Mathematics', '+1', [
+                { name: 'Sets', parts: 2, effort: 'LOW' },
+                { name: 'Relations and Functions', parts: 2, effort: 'MEDIUM' },
+                { name: 'Trigonometric Functions', parts: 3, effort: 'VERY_HIGH' },
+                { name: 'Complex Numbers and Quadratic Equations', parts: 2, effort: 'MEDIUM' },
+                { name: 'Linear Inequalities', parts: 1, effort: 'LOW' },
+                { name: 'Permutations and Combinations', parts: 2, effort: 'HIGH' },
+                { name: 'Binomial Theorem', parts: 1, effort: 'MEDIUM' },
+                { name: 'Sequences and Series', parts: 2, effort: 'MEDIUM' },
+                { name: 'Straight Lines', parts: 2, effort: 'HIGH' },
+                { name: 'Conic Sections', parts: 2, effort: 'HIGH' },
+                { name: 'Introduction to Three Dimensional Geometry', parts: 1, effort: 'LOW' },
+                { name: 'Limits and Derivatives', parts: 2, effort: 'HIGH' },
+                { name: 'Statistics', parts: 2, effort: 'MEDIUM' },
+                { name: 'Probability', parts: 2, effort: 'MEDIUM' }
             ]),
 
             // Computer Science: 10 Chapters
-            ...createTasks('Computer Science', '+1', [
-                { name: 'The Discipline of Computing', parts: 1 },
-                { name: 'Data Representation and Boolean Logic', parts: 2 },
-                { name: 'Components of the Computer System', parts: 2 },
-                { name: 'Principles of Programming & Problem Solving', parts: 2 },
-                { name: 'Introduction to C++ Programming', parts: 2 },
-                { name: 'Data Types and Operators', parts: 2 },
-                { name: 'Control Statements', parts: 2 },
-                { name: 'Arrays', parts: 2 },
-                { name: 'Functions', parts: 2 },
-                { name: 'Computer Networks', parts: 2 }
+            ...createCanonicalTasks('Computer Science', '+1', [
+                { name: 'The Discipline of Computing', parts: 1, effort: 'LOW' },
+                { name: 'Data Representation and Boolean Logic', parts: 2, effort: 'MEDIUM' },
+                { name: 'Components of the Computer System', parts: 2, effort: 'LOW' },
+                { name: 'Principles of Programming & Problem Solving', parts: 2, effort: 'HIGH' },
+                { name: 'Introduction to C++ Programming', parts: 2, effort: 'MEDIUM' },
+                { name: 'Data Types and Operators', parts: 2, effort: 'MEDIUM' },
+                { name: 'Control Statements', parts: 2, effort: 'HIGH' },
+                { name: 'Arrays', parts: 2, effort: 'HIGH' },
+                { name: 'Functions', parts: 2, effort: 'HIGH' },
+                { name: 'Computer Networks', parts: 2, effort: 'MEDIUM' }
             ]),
 
-            // Botany: 9 Chapters (Rationalized SCERT / Kerala DHSE Scheme of Work for +1 Improvement)
-            ...createTasks('Botany', '+1', [
-                { name: 'Biological Classification', parts: 2 },
-                { name: 'Plant Kingdom', parts: 2 },
-                { name: 'Morphology of Flowering Plants', parts: 2 },
-                { name: 'Anatomy of Flowering Plants', parts: 2 },
-                { name: 'Cell: The Unit of Life', parts: 2 },
-                { name: 'Cell Cycle and Cell Division', parts: 2 },
-                { name: 'Photosynthesis in Higher Plants', parts: 3 },
-                { name: 'Respiration in Plants', parts: 2 },
-                { name: 'Plant Growth and Development', parts: 2 }
+            // Botany: 9 Chapters
+            ...createCanonicalTasks('Botany', '+1', [
+                { name: 'Biological Classification', parts: 2, effort: 'MEDIUM' },
+                { name: 'Plant Kingdom', parts: 2, effort: 'HIGH' },
+                { name: 'Morphology of Flowering Plants', parts: 2, effort: 'HIGH' },
+                { name: 'Anatomy of Flowering Plants', parts: 2, effort: 'MEDIUM' },
+                { name: 'Cell: The Unit of Life', parts: 2, effort: 'MEDIUM' },
+                { name: 'Cell Cycle and Cell Division', parts: 2, effort: 'MEDIUM' },
+                { name: 'Photosynthesis in Higher Plants', parts: 3, effort: 'VERY_HIGH' },
+                { name: 'Respiration in Plants', parts: 2, effort: 'HIGH' },
+                { name: 'Plant Growth and Development', parts: 2, effort: 'LOW' }
             ]),
 
-            // Zoology: 10 Chapters (Rationalized SCERT / Kerala DHSE Scheme of Work for +1 Improvement)
-            ...createTasks('Zoology', '+1', [
-                { name: 'The Living World', parts: 1 },
-                { name: 'Animal Kingdom', parts: 3 },
-                { name: 'Structural Organisation in Animals', parts: 2 },
-                { name: 'Biomolecules', parts: 2 },
-                { name: 'Breathing and Exchange of Gases', parts: 2 },
-                { name: 'Body Fluids and Circulation', parts: 2 },
-                { name: 'Excretory Products and their Elimination', parts: 2 },
-                { name: 'Locomotion and Movement', parts: 2 },
-                { name: 'Neural Control and Coordination', parts: 2 },
-                { name: 'Chemical Coordination and Integration', parts: 2 }
+            // Zoology: 10 Chapters
+            ...createCanonicalTasks('Zoology', '+1', [
+                { name: 'The Living World', parts: 1, effort: 'LOW' },
+                { name: 'Animal Kingdom', parts: 3, effort: 'VERY_HIGH' },
+                { name: 'Structural Organisation in Animals', parts: 2, effort: 'MEDIUM' },
+                { name: 'Biomolecules', parts: 2, effort: 'HIGH' },
+                { name: 'Breathing and Exchange of Gases', parts: 2, effort: 'MEDIUM' },
+                { name: 'Body Fluids and Circulation', parts: 2, effort: 'HIGH' },
+                { name: 'Excretory Products and their Elimination', parts: 2, effort: 'MEDIUM' },
+                { name: 'Locomotion and Movement', parts: 2, effort: 'MEDIUM' },
+                { name: 'Neural Control and Coordination', parts: 2, effort: 'HIGH' },
+                { name: 'Chemical Coordination and Integration', parts: 2, effort: 'MEDIUM' }
             ])
         ];
 
         /* ==========================================================================
-           2. STATE, MIGRATION & PERSISTENCE
-           Guarantees 100% data preservation for existing users from previous version!
+           2. STATE, MIGRATION & PERSISTENCE (v3.0)
+           Guarantees 100% data preservation for existing users:
+           - Automatically repairs fragmented/round-robin plans with new v3 engine once.
+           - Fully idempotent: never repeatedly rearranges an already-migrated plan.
+           - Preserves all checkmarks, historical completion, and cloud sync integrity.
            ========================================================================== */
         function migrateOldState(oldState) {
             if (!oldState || !Array.isArray(oldState.plan)) return null;
@@ -775,38 +808,147 @@
             };
         }
 
+        function migrateLegacyUserPlan(existingState) {
+            if (!existingState || !Array.isArray(existingState.plan)) return null;
+
+            // Idempotency: If already upgraded to v3 or higher, do not re-run migration
+            if (existingState.engineVersion && existingState.engineVersion >= PLANNER_ENGINE_VERSION) {
+                return existingState;
+            }
+
+            // 1. Gather all completed task IDs and completed chapter IDs
+            const completedTaskIds = new Set();
+            const completedChapterIds = new Set(existingState.completedChaptersOnInit || []);
+
+            existingState.plan.forEach(day => {
+                (day.tasks || []).forEach(t => {
+                    if (t.completed) {
+                        completedTaskIds.add(t.id);
+                    }
+                });
+            });
+
+            // 2. Identify user configuration
+            const hasBio = existingState.stream === 'bio' || existingState.plan.some(d => (d.tasks || []).some(t => t.subject === 'Botany' || t.subject === 'Zoology'));
+            const userStream = existingState.stream || (hasBio ? 'bio' : 'cs');
+            const targetTerm = existingState.targetTerm || 3;
+            const deadlineDate = existingState.deadlineDate || '2026-11-30';
+            const improvementConfig = existingState.improvementConfig || [];
+            const todayStr = getLocalDateStr();
+
+            // 3. Keep historical days (strictly before today) with completed tasks intact
+            const historicalKeptDays = [];
+            existingState.plan.forEach(day => {
+                if (day.date < todayStr && day.tasks && day.tasks.some(t => t.completed)) {
+                    historicalKeptDays.push(day);
+                }
+            });
+
+            // 4. Reconstruct remaining syllabus workload
+            const allowedSubjects = userStream === 'bio'
+                ? ['Physics', 'Chemistry', 'Mathematics', 'Botany', 'Zoology']
+                : ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'];
+
+            // Unfinished Plus Two tasks
+            let remainingTasks = PLUS_TWO_SYLLABUS.filter(t => 
+                allowedSubjects.includes(t.subject) &&
+                t.term <= targetTerm &&
+                !completedChapterIds.has(t.chapId) &&
+                !completedTaskIds.has(t.id)
+            );
+
+            // Unfinished Plus One Improvement tasks
+            if (improvementConfig.length > 0) {
+                improvementConfig.forEach(cfg => {
+                    const impTasks = PLUS_ONE_SYLLABUS.filter(t => 
+                        t.subject === cfg.subject &&
+                        !completedChapterIds.has(t.chapId) &&
+                        !completedTaskIds.has(t.id)
+                    );
+                    remainingTasks.push(...impTasks);
+                });
+            }
+
+            // If no remaining tasks, simply upgrade version tag
+            if (remainingTasks.length === 0) {
+                return {
+                    ...existingState,
+                    engineVersion: PLANNER_ENGINE_VERSION,
+                    _migratedV3: true
+                };
+            }
+
+            // 5. Build intelligent plan for remaining tasks starting from today (or start date if all in future)
+            const startDate = (todayStr < deadlineDate) ? todayStr : (existingState.startDate || todayStr);
+            const planResult = buildIntelligentPlan(deadlineDate, remainingTasks, startDate, improvementConfig, userStream);
+
+            let newPlanDays = [];
+            if (planResult && planResult.planDays) {
+                const lastDayNum = historicalKeptDays.length > 0 ? historicalKeptDays[historicalKeptDays.length - 1].dayNumber : 0;
+                planResult.planDays.forEach((d, idx) => {
+                    d.dayNumber = lastDayNum + idx + 1;
+                });
+                newPlanDays = [...historicalKeptDays, ...planResult.planDays];
+            } else {
+                newPlanDays = existingState.plan;
+            }
+
+            return {
+                ...existingState,
+                stream: userStream,
+                engineVersion: PLANNER_ENGINE_VERSION,
+                plan: newPlanDays,
+                revisionDaysCount: planResult ? planResult.revisionDaysCount : (existingState.revisionDaysCount || 0),
+                diagnostics: planResult ? planResult.diagnostics : null,
+                _migratedV3: true
+            };
+        }
+
         function loadInitialState() {
+            let loaded = null;
             // 1. Check v2 state
             try {
                 const v2Raw = localStorage.getItem('plusTwoMissionState_v2');
                 if (v2Raw) {
                     const parsed = JSON.parse(v2Raw);
                     if (parsed && Array.isArray(parsed.plan) && parsed.plan.length > 0) {
-                        return parsed;
+                        loaded = parsed;
                     }
                 }
             } catch(e) { console.warn("V2 load error:", e); }
 
             // 2. Check and migrate v1 state from previous app version ('plusTwoPlanState')
-            try {
-                const v1Raw = localStorage.getItem('plusTwoPlanState');
-                if (v1Raw) {
-                    const oldState = JSON.parse(v1Raw);
-                    if (oldState && Array.isArray(oldState.plan) && oldState.plan.length > 0) {
-                        const migrated = migrateOldState(oldState);
-                        if (migrated) {
-                            localStorage.setItem('plusTwoMissionState_v2', JSON.stringify(migrated));
-                            console.log("Migrated v1 study plan seamlessly without losing progress.");
-                            setTimeout(() => {
-                                showToastMessage("✨ Welcome back! Your study progress was seamlessly upgraded to the new experience.", "fa-wand-magic-sparkles text-blue-400");
-                            }, 500);
-                            return migrated;
+            if (!loaded) {
+                try {
+                    const v1Raw = localStorage.getItem('plusTwoPlanState');
+                    if (v1Raw) {
+                        const oldState = JSON.parse(v1Raw);
+                        if (oldState && Array.isArray(oldState.plan) && oldState.plan.length > 0) {
+                            loaded = migrateOldState(oldState);
                         }
                     }
-                }
-            } catch(e) { console.warn("V1 migration error:", e); }
+                } catch(e) { console.warn("V1 migration error:", e); }
+            }
 
-            return null;
+            // 3. One-Time Automatic Migration to Engine v3 (if loaded state has engineVersion < 3)
+            if (loaded && (!loaded.engineVersion || loaded.engineVersion < PLANNER_ENGINE_VERSION)) {
+                try {
+                    const migratedV3 = migrateLegacyUserPlan(loaded);
+                    if (migratedV3) {
+                        loaded = migratedV3;
+                        localStorage.setItem('plusTwoMissionState_v2', JSON.stringify(loaded));
+                        localStorage.setItem('plusTwoPlanState', JSON.stringify(loaded));
+                        console.log("One-time automatic upgrade to Planner Engine v3 completed.");
+                        setTimeout(() => {
+                            showToastMessage("✨ Your study plan was automatically upgraded to the intelligent v3 engine!", "fa-wand-magic-sparkles text-blue-400");
+                        }, 700);
+                    }
+                } catch(err) {
+                    console.error("V3 migration note:", err);
+                }
+            }
+
+            return loaded;
         }
 
         let appState = loadInitialState();
@@ -885,8 +1027,13 @@
                 const docSnap = await userDocRef.get();
 
                 if (docSnap.exists) {
-                    const cloudData = docSnap.data();
+                    let cloudData = docSnap.data();
                     if (cloudData && Array.isArray(cloudData.plan) && cloudData.plan.length > 0) {
+                        // Reconcile and upgrade cloud data to v3 if needed
+                        if (!cloudData.engineVersion || cloudData.engineVersion < PLANNER_ENGINE_VERSION) {
+                            cloudData = migrateLegacyUserPlan(cloudData);
+                        }
+
                         // If local also has a plan, merge completed items bidirectionally
                         if (appState && Array.isArray(appState.plan) && appState.plan.length > 0) {
                             let localHasNewerTicks = false;
@@ -957,9 +1104,11 @@
 
                     cloudSyncUnsubscribe = userDocRef.onSnapshot((docSnap) => {
                         if (docSnap.exists) {
-                            const cloudData = docSnap.data();
+                            let cloudData = docSnap.data();
                             if (cloudData && Array.isArray(cloudData.plan) && cloudData.plan.length > 0) {
-                                // If cloud has different completed status, update local
+                                if (!cloudData.engineVersion || cloudData.engineVersion < PLANNER_ENGINE_VERSION) {
+                                    cloudData = migrateLegacyUserPlan(cloudData);
+                                }
                                 appState = cloudData;
                                 saveAppStateLocally();
                                 renderApp();
@@ -1264,12 +1413,14 @@
         }
 
         /* ==========================================================================
-           4. INTELLIGENT MULTI-SUBJECT PACING & REVISION ALGORITHM
-           Solves:
-           - Interleaves subjects sensibly (never 10 days of physics in a row)
-           - Breaks chapters into halves (Part 1, Part 2) with balanced pacing
-           - Reserving 5 to 10 dedicated Revision Days before deadline
-           - Weaves in Plus One improvement tasks smoothly before their exam dates
+           4. INTELLIGENT DEPENDENCY-AWARE PLANNING ENGINE & VALIDATOR (v3.0)
+           Features:
+           - Strict Prerequisite Order (P1 < P2 < P3 for every chapter)
+           - Chapter State Machine & Chapter Continuity
+           - Intelligent Subject Interleaving (interleaves active chapter chunks, never prerequisites)
+           - Spaced Retrieval & Tailored Syllabus-Linked Revision
+           - Workload Capacity Modeling & Infeasible Plan Detection
+           - Formal Constraint Validation
            ========================================================================== */
 
         function calculateDaysBetween(startDateStr, endDateStr) {
@@ -1279,29 +1430,165 @@
             return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
         }
 
-        function buildIntelligentPlan(deadlineStr, tasksToSchedule, startDateStr = TODAY_STR, improvementConfig = [], stream = null) {
-            const totalDaysAvailable = calculateDaysBetween(startDateStr, deadlineStr);
-            if (totalDaysAvailable <= 0) {
+        function validatePlan(planDays, originalTasks, options = {}) {
+            const issues = [];
+            const scheduledTaskMap = new Map();
+            const chapterPartDays = new Map();
+            
+            planDays.forEach((day, dayIndex) => {
+                if (!day.tasks) return;
+                day.tasks.forEach((t) => {
+                    if (!scheduledTaskMap.has(t.id)) {
+                        scheduledTaskMap.set(t.id, []);
+                    }
+                    scheduledTaskMap.get(t.id).push({
+                        dayIndex,
+                        dayNumber: day.dayNumber,
+                        date: day.date,
+                        task: t
+                    });
+
+                    if (t.chapId && t.part) {
+                        if (!chapterPartDays.has(t.chapId)) {
+                            chapterPartDays.set(t.chapId, []);
+                        }
+                        chapterPartDays.get(t.chapId).push({
+                            part: t.part,
+                            dayIndex,
+                            dayNumber: day.dayNumber,
+                            taskId: t.id
+                        });
+                    }
+                });
+            });
+
+            let duplicateTasks = 0;
+            let orderingViolations = 0;
+            let deadlineViolations = 0;
+            let emptyWorkDays = 0;
+
+            scheduledTaskMap.forEach((occurrences, taskId) => {
+                if (taskId.startsWith('REV_DAY_')) return;
+                if (occurrences.length > 1) {
+                    duplicateTasks += (occurrences.length - 1);
+                    issues.push(`Duplicate task detected: ${taskId}`);
+                }
+            });
+
+            chapterPartDays.forEach((parts, chapId) => {
+                parts.sort((a, b) => a.part - b.part);
+                for (let i = 0; i < parts.length - 1; i++) {
+                    const current = parts[i];
+                    const next = parts[i + 1];
+                    if (next.dayIndex < current.dayIndex) {
+                        orderingViolations++;
+                        issues.push(`Ordering violation in ${chapId}: Part ${next.part} scheduled before Part ${current.part}`);
+                    }
+                }
+            });
+
+            let omittedTasks = 0;
+            const applicableTasks = Array.isArray(originalTasks)
+                ? (options.stream
+                    ? originalTasks.filter(t => (options.stream === 'cs' ? (t.subject !== 'Botany' && t.subject !== 'Zoology') : (t.subject !== 'Computer Science')))
+                    : originalTasks)
+                : [];
+
+            applicableTasks.forEach(reqTask => {
+                if (!scheduledTaskMap.has(reqTask.id)) {
+                    omittedTasks++;
+                    issues.push(`Omitted task: ${reqTask.id}`);
+                }
+            });
+
+            if (options.improvementConfig && Array.isArray(options.improvementConfig)) {
+                options.improvementConfig.forEach(cfg => {
+                    const examDateStr = cfg.examDate;
+                    if (!examDateStr) return;
+                    planDays.forEach(day => {
+                        if (day.date > examDateStr) {
+                            const lateImpTasks = (day.tasks || []).filter(t => t.grade === '+1' && t.subject === cfg.subject);
+                            if (lateImpTasks.length > 0) {
+                                deadlineViolations += lateImpTasks.length;
+                                issues.push(`Deadline violation: ${lateImpTasks.length} task(s) for ${cfg.subject} scheduled after exam date.`);
+                            }
+                        }
+                    });
+                });
+            }
+
+            for (let i = 0; i < planDays.length; i++) {
+                const day = planDays[i];
+                if (i > 0) {
+                    const prev = planDays[i - 1];
+                    if (day.dayNumber !== prev.dayNumber + 1) {
+                        issues.push(`Chronology error: Day numbering broken.`);
+                    }
+                }
+                if (!day.isRevisionDay && (!day.tasks || day.tasks.length === 0)) {
+                    const hasFutureSyllabusTasks = planDays.slice(i + 1).some(d => !d.isRevisionDay && d.tasks && d.tasks.some(t => !t.isRevision));
+                    if (hasFutureSyllabusTasks) {
+                        emptyWorkDays++;
+                        issues.push(`Blank study day on Day ${day.dayNumber}.`);
+                    }
+                }
+            }
+
+            const totalScheduled = scheduledTaskMap.size;
+            const requestedCount = applicableTasks.length > 0 ? applicableTasks.length : totalScheduled;
+            const coverageRate = requestedCount > 0 ? Math.max(0, Math.min(100, Math.round(((requestedCount - omittedTasks) / requestedCount) * 100))) : 100;
+            const isValid = (orderingViolations === 0 && duplicateTasks === 0 && omittedTasks === 0 && deadlineViolations === 0);
+
+            return {
+                isValid: isValid,
+                scorecard: {
+                    coverageRate: coverageRate,
+                    orderingViolations: orderingViolations,
+                    duplicateTasks: duplicateTasks,
+                    omittedTasks: omittedTasks,
+                    deadlineViolations: deadlineViolations,
+                    emptyWorkDays: emptyWorkDays,
+                    totalScheduledTasks: totalScheduled,
+                    totalPlanDays: planDays.length
+                },
+                issues: issues
+            };
+        }
+
+        function buildIntelligentPlan(
+            deadlineStr,
+            tasksToSchedule,
+            startDateStr = TODAY_STR,
+            improvementConfig = [],
+            stream = null,
+            capacityOptions = {}
+        ) {
+            const totalDaysCount = calculateDaysBetween(startDateStr, deadlineStr) + 1;
+            if (totalDaysCount <= 1) {
                 alert("Please select a target deadline date in the future.");
                 return null;
             }
 
-            // Detect stream if not explicitly provided
             const effectiveStream = stream || (tasksToSchedule.some(t => t.subject === 'Botany' || t.subject === 'Zoology') ? 'bio' : 'cs');
+            const streamSubjects = effectiveStream === 'bio'
+                ? ['Physics', 'Chemistry', 'Mathematics', 'Botany', 'Zoology']
+                : ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'];
 
-            // Calculate Dedicated Revision Buffer Days based on timeline length
+            const applicableTasks = tasksToSchedule.filter(t => streamSubjects.includes(t.subject));
+
             let revisionDaysCount = 0;
-            if (totalDaysAvailable >= 75) revisionDaysCount = 10;
-            else if (totalDaysAvailable >= 45) revisionDaysCount = 7;
-            else if (totalDaysAvailable >= 25) revisionDaysCount = 4;
-            else if (totalDaysAvailable >= 14) revisionDaysCount = 2;
-            else if (totalDaysAvailable >= 7) revisionDaysCount = 1;
+            if (totalDaysCount >= 75) revisionDaysCount = 10;
+            else if (totalDaysCount >= 45) revisionDaysCount = 7;
+            else if (totalDaysCount >= 25) revisionDaysCount = 4;
+            else if (totalDaysCount >= 14) revisionDaysCount = 2;
+            else if (totalDaysCount >= 7) revisionDaysCount = 1;
 
-            const syllabusStudyDays = Math.max(1, totalDaysAvailable - revisionDaysCount);
+            if (totalDaysCount <= 5) revisionDaysCount = 0;
 
-            // Initialize day schedule buckets
-            let planDays = [];
-            for (let i = 0; i <= totalDaysAvailable; i++) {
+            const syllabusStudyDays = Math.max(1, totalDaysCount - revisionDaysCount);
+
+            const planDays = [];
+            for (let i = 0; i < totalDaysCount; i++) {
                 let d = new Date(startDateStr);
                 d.setDate(d.getDate() + i);
                 const isRevisionDay = (i >= syllabusStudyDays);
@@ -1309,127 +1596,280 @@
                     dayNumber: i + 1,
                     date: getLocalDateStr(d),
                     isRevisionDay: isRevisionDay,
+                    dayOfWeek: d.getDay(),
                     tasks: []
                 });
             }
 
-            // Separate tasks: Plus One Improvement vs Plus Two Regular
-            const p1Tasks = tasksToSchedule.filter(t => t.grade === '+1');
-            const p2Tasks = tasksToSchedule.filter(t => t.grade === '+2');
+            // Workload & Capacity Calculation
+            const intensity = capacityOptions.intensity || (appState && appState.studyIntensity) || 'balanced';
+            const baseWeekdayCapacity = capacityOptions.weekdayDailyTasks || (intensity === 'light' ? 1.5 : intensity === 'intense' ? 3.5 : 2.5);
+            const baseWeekendCapacity = capacityOptions.weekendDailyTasks || (intensity === 'light' ? 2 : intensity === 'intense' ? 4.5 : 3.5);
 
-            // 1. Schedule Plus One Improvement subjects (prioritize before their specific exam dates)
-            improvementConfig.forEach(cfg => {
-                const subP1 = p1Tasks.filter(t => t.subject === cfg.subject);
-                if (subP1.length === 0) return;
+            let totalStandardCapacity = 0;
+            for (let i = 0; i < syllabusStudyDays; i++) {
+                const dow = planDays[i].dayOfWeek;
+                const isWeekend = (dow === 0 || dow === 6);
+                totalStandardCapacity += isWeekend ? baseWeekendCapacity : baseWeekdayCapacity;
+            }
 
-                const daysUntilExam = calculateDaysBetween(startDateStr, cfg.examDate);
-                const targetEndDay = Math.min(
-                    daysUntilExam > 1 ? daysUntilExam - 1 : 1,
-                    syllabusStudyDays
-                );
+            const totalTasksCount = applicableTasks.length;
+            const isInfeasible = (totalTasksCount > (totalStandardCapacity * 1.25));
+            const overloadFactor = totalStandardCapacity > 0 ? (totalTasksCount / totalStandardCapacity) : 1;
 
-                // Distribute on alternating days to avoid overload
-                let taskIdx = 0;
-                let dayPtr = 0;
-                while (taskIdx < subP1.length && dayPtr < targetEndDay) {
-                    // Spread across alternating days
-                    planDays[dayPtr].tasks.push({ ...subP1[taskIdx], completed: false });
-                    taskIdx++;
-                    dayPtr = (dayPtr + 2) % targetEndDay;
-                    // If all days visited once, increment offset
-                    if (dayPtr === 0 && taskIdx < subP1.length) dayPtr = 1;
-                }
-                // Any leftover tasks placed before exam
-                while (taskIdx < subP1.length) {
-                    const fallbackDay = Math.min(targetEndDay - 1, planDays.length - 1);
-                    planDays[fallbackDay].tasks.push({ ...subP1[taskIdx], completed: false });
-                    taskIdx++;
-                }
+            const diagnostics = {
+                isInfeasible: isInfeasible,
+                totalDaysAvailable: totalDaysCount,
+                syllabusStudyDays: syllabusStudyDays,
+                revisionDaysCount: revisionDaysCount,
+                totalTasksCount: totalTasksCount,
+                standardCapacity: Math.round(totalStandardCapacity),
+                overloadFactor: Number(overloadFactor.toFixed(2)),
+                warningMessage: isInfeasible
+                    ? `The current deadline requires more study capacity (${totalTasksCount} units) than standard availability (~${Math.round(totalStandardCapacity)} units). The plan prioritizes the nearest exam and preserves the final revision buffer.`
+                    : null
+            };
+
+            // Canonical Sorting: Grade -> Subject -> ChapNumber -> Part
+            const sortedTasks = [...applicableTasks].sort((a, b) => {
+                if (a.grade !== b.grade) return a.grade.localeCompare(b.grade);
+                if (a.subject !== b.subject) return a.subject.localeCompare(b.subject);
+                if (a.chapNumber !== b.chapNumber) return a.chapNumber - b.chapNumber;
+                return a.part - b.part;
             });
 
-            // 2. Intelligent Interleaving of Plus Two Tasks
-            // Dynamic queues and rotation based strictly on selected stream
-            const streamSubjects = effectiveStream === 'bio'
-                ? ['Physics', 'Chemistry', 'Mathematics', 'Botany', 'Zoology']
-                : ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'];
+            const p1Tasks = sortedTasks.filter(t => t.grade === '+1');
+            const p2Tasks = sortedTasks.filter(t => t.grade === '+2');
 
-            const p2Queues = {};
-            streamSubjects.forEach(s => {
-                p2Queues[s] = p2Tasks.filter(t => t.subject === s);
-            });
+            // Phase 1: Plus One Improvement Tasks
+            if (improvementConfig && improvementConfig.length > 0) {
+                improvementConfig.forEach(cfg => {
+                    const subTasks = p1Tasks.filter(t => t.subject === cfg.subject);
+                    if (subTasks.length === 0) return;
 
-            const subjectRotation = [...streamSubjects];
-            let currentSubjIdx = 0;
-            let remainingP2Count = p2Tasks.length;
+                    const daysUntilExam = calculateDaysBetween(startDateStr, cfg.examDate);
+                    const latestStudyDay = Math.max(0, Math.min(daysUntilExam > 1 ? daysUntilExam - 2 : 0, syllabusStudyDays - 1));
+                    const availableImpDaysCount = latestStudyDay + 1;
 
-            // Target tasks per active study day
-            const dailyPacing = remainingP2Count / syllabusStudyDays;
-            let pacingAccumulator = 0;
-
-            for (let dayIdx = 0; dayIdx < syllabusStudyDays; dayIdx++) {
-                pacingAccumulator += dailyPacing;
-                let tasksForThisDay = Math.floor(pacingAccumulator);
-                pacingAccumulator -= tasksForThisDay;
-
-                // Ensure final study day captures any rounding difference
-                if (dayIdx === syllabusStudyDays - 1 && remainingP2Count > 0) {
-                    tasksForThisDay += remainingP2Count;
-                }
-
-                let scheduledToday = 0;
-                while (scheduledToday < tasksForThisDay && remainingP2Count > 0) {
-                    let attempts = 0;
-                    let selectedTask = null;
-
-                    // Rotate across subjects so student studies diverse subjects
-                    while (attempts < subjectRotation.length && !selectedTask) {
-                        const candidateSubject = subjectRotation[currentSubjIdx];
-                        if (p2Queues[candidateSubject] && p2Queues[candidateSubject].length > 0) {
-                            selectedTask = p2Queues[candidateSubject].shift();
+                    const partsCount = subTasks.length;
+                    subTasks.forEach((task, tIdx) => {
+                        let targetDayIndex;
+                        if (availableImpDaysCount <= 1) {
+                            targetDayIndex = 0;
+                        } else {
+                            targetDayIndex = Math.min(
+                                latestStudyDay,
+                                Math.floor((tIdx / partsCount) * availableImpDaysCount)
+                            );
                         }
-                        currentSubjIdx = (currentSubjIdx + 1) % subjectRotation.length;
-                        attempts++;
+
+                        if (tIdx > 0) {
+                            const prevTaskId = subTasks[tIdx - 1].id;
+                            const prevDayIndex = planDays.findIndex(d => d.tasks.some(pt => pt.id === prevTaskId));
+                            if (prevDayIndex !== -1 && targetDayIndex < prevDayIndex) {
+                                targetDayIndex = prevDayIndex;
+                            }
+                        }
+
+                        planDays[targetDayIndex].tasks.push({
+                            ...task,
+                            completed: false,
+                            isImprovement: true
+                        });
+                    });
+                });
+            }
+
+            // Phase 2: Plus Two Regular Tasks (Sequential Chapter State Machine & Interleaving)
+            const subjectChapterMap = {};
+            streamSubjects.forEach(s => subjectChapterMap[s] = []);
+
+            p2Tasks.forEach(task => {
+                if (!subjectChapterMap[task.subject]) subjectChapterMap[task.subject] = [];
+                let ch = subjectChapterMap[task.subject].find(c => c.chapNumber === task.chapNumber);
+                if (!ch) {
+                    ch = {
+                        chapNumber: task.chapNumber,
+                        chapId: task.chapId,
+                        chapterName: task.chapterName,
+                        subject: task.subject,
+                        term: task.term,
+                        parts: []
+                    };
+                    subjectChapterMap[task.subject].push(ch);
+                }
+                ch.parts.push(task);
+            });
+
+            Object.keys(subjectChapterMap).forEach(s => {
+                subjectChapterMap[s].sort((a, b) => a.chapNumber - b.chapNumber);
+                subjectChapterMap[s].forEach(ch => ch.parts.sort((a, b) => a.part - b.part));
+            });
+
+            const subjectState = {};
+            streamSubjects.forEach(s => {
+                subjectState[s] = {
+                    subject: s,
+                    chapterIndex: 0,
+                    partIndex: 0,
+                    lastScheduledDay: -1
+                };
+            });
+
+            const remainingP2TasksCount = p2Tasks.length;
+            let p2DailyTarget = remainingP2TasksCount / syllabusStudyDays;
+            let p2Accumulator = 0;
+            let subjectTurnIndex = 0;
+
+            for (let dayIndex = 0; dayIndex < syllabusStudyDays; dayIndex++) {
+                const day = planDays[dayIndex];
+                p2Accumulator += p2DailyTarget;
+                let p2TasksToScheduleToday = Math.floor(p2Accumulator);
+                p2Accumulator -= p2TasksToScheduleToday;
+
+                if (dayIndex === syllabusStudyDays - 1) {
+                    let totalUnscheduledP2 = 0;
+                    streamSubjects.forEach(s => {
+                        const state = subjectState[s];
+                        const chapters = subjectChapterMap[s];
+                        for (let c = state.chapterIndex; c < chapters.length; c++) {
+                            const startP = (c === state.chapterIndex) ? state.partIndex : 0;
+                            totalUnscheduledP2 += (chapters[c].parts.length - startP);
+                        }
+                    });
+                    p2TasksToScheduleToday = Math.max(p2TasksToScheduleToday, totalUnscheduledP2);
+                }
+
+                let scheduledTodayCount = 0;
+                let subjectAttempts = 0;
+                const subjectsStudiedToday = new Set();
+
+                while (scheduledTodayCount < p2TasksToScheduleToday && subjectAttempts < (streamSubjects.length * 2)) {
+                    const candidateSubject = streamSubjects[subjectTurnIndex];
+                    subjectTurnIndex = (subjectTurnIndex + 1) % streamSubjects.length;
+                    subjectAttempts++;
+
+                    const state = subjectState[candidateSubject];
+                    const chapters = subjectChapterMap[candidateSubject];
+                    if (state.chapterIndex >= chapters.length) continue;
+
+                    const currentChapter = chapters[state.chapterIndex];
+                    const nextPart = currentChapter.parts[state.partIndex];
+                    if (!nextPart) {
+                        state.chapterIndex++;
+                        state.partIndex = 0;
+                        continue;
                     }
 
-                    if (selectedTask) {
-                        planDays[dayIdx].tasks.push({ ...selectedTask, completed: false });
-                        remainingP2Count--;
-                        scheduledToday++;
-                    } else {
-                        break;
+                    const alreadyStudiedThisSubjectToday = subjectsStudiedToday.has(candidateSubject);
+                    if (alreadyStudiedThisSubjectToday && subjectsStudiedToday.size < streamSubjects.filter(s => subjectState[s].chapterIndex < subjectChapterMap[s].length).length) {
+                        continue;
                     }
+
+                    day.tasks.push({
+                        ...nextPart,
+                        completed: false
+                    });
+
+                    subjectsStudiedToday.add(candidateSubject);
+                    state.lastScheduledDay = dayIndex;
+                    state.partIndex++;
+
+                    if (state.partIndex >= currentChapter.parts.length) {
+                        state.chapterIndex++;
+                        state.partIndex = 0;
+                    }
+
+                    scheduledTodayCount++;
+                    subjectAttempts = 0;
                 }
             }
 
-            // 3. Populate Dedicated Revision Days (100% Stream Isolated)
+            // Fallback for any leftover tasks
+            streamSubjects.forEach(s => {
+                const state = subjectState[s];
+                const chapters = subjectChapterMap[s];
+                while (state.chapterIndex < chapters.length) {
+                    const currentChapter = chapters[state.chapterIndex];
+                    while (state.partIndex < currentChapter.parts.length) {
+                        const task = currentChapter.parts[state.partIndex];
+                        const targetDay = Math.min(syllabusStudyDays - 1, planDays.length - 1);
+                        planDays[targetDay].tasks.push({
+                            ...task,
+                            completed: false
+                        });
+                        state.partIndex++;
+                    }
+                    state.chapterIndex++;
+                    state.partIndex = 0;
+                }
+            });
+
+            // Phase 3: Tailored Spaced Revision Days
             if (revisionDaysCount > 0) {
-                const revisionModules = effectiveStream === 'bio' ? [
-                    { subject: 'Physics', title: 'Comprehensive Formula Sheet & Core Derivations' },
-                    { subject: 'Chemistry', title: 'Named Reactions, Reagents & Numerical Problems' },
-                    { subject: 'Mathematics', title: 'High-Weightage Calculus & Vectors Problem Sets' },
-                    { subject: 'Botany', title: 'Plant Reproduction, Biotechnology & Ecology Rapid Notes' },
-                    { subject: 'Zoology', title: 'Genetics, Human Physiology & Evolution Key Drills' },
-                    { subject: 'All Subjects', title: 'Full Previous Year Question (PYQ) Mock Examination' },
-                    { subject: 'All Subjects', title: 'Final Self-Evaluation & Weakness Reinforcement' }
-                ] : [
-                    { subject: 'Physics', title: 'Comprehensive Formula Sheet & Core Derivations' },
-                    { subject: 'Chemistry', title: 'Named Reactions, Reagents & Numerical Problems' },
-                    { subject: 'Mathematics', title: 'High-Weightage Calculus & Vectors Problem Sets' },
-                    { subject: 'Computer Science', title: 'Programs, Pointers, SQL Queries & Theory Review' },
-                    { subject: 'All Subjects', title: 'Full Previous Year Question (PYQ) Mock Examination' },
-                    { subject: 'All Subjects', title: 'Final Self-Evaluation & Weakness Reinforcement' }
-                ];
+                const completedChaptersBySubject = {};
+                streamSubjects.forEach(s => completedChaptersBySubject[s] = []);
+                
+                planDays.forEach(d => {
+                    (d.tasks || []).forEach(t => {
+                        if (t.grade === '+2' && t.chapterName && !completedChaptersBySubject[t.subject]?.includes(t.chapterName)) {
+                            if (completedChaptersBySubject[t.subject]) completedChaptersBySubject[t.subject].push(t.chapterName);
+                        }
+                    });
+                });
 
                 for (let r = 0; r < revisionDaysCount; r++) {
                     const revDayIndex = syllabusStudyDays + r;
-                    if (revDayIndex < planDays.length) {
-                        const mod = revisionModules[r % revisionModules.length];
+                    if (revDayIndex >= planDays.length) break;
+
+                    const isFinalMock = (r === revisionDaysCount - 1);
+                    const isPenultimateMock = (r === revisionDaysCount - 2 && revisionDaysCount >= 4);
+
+                    if (isFinalMock) {
                         planDays[revDayIndex].tasks.push({
-                            id: `REV_DAY_${r + 1}`,
+                            id: `REV_DAY_${r + 1}_MOCK`,
                             grade: '+2',
-                            subject: mod.subject,
-                            chapterName: `Revision Phase (Day ${r + 1} of ${revisionDaysCount})`,
-                            topicTitle: mod.title,
+                            subject: 'All Subjects',
+                            chapterName: `Final Examination Simulation (Day ${r + 1} of ${revisionDaysCount})`,
+                            topicTitle: 'Full 3-Hour Model Exam Simulation under timed board exam conditions & self-evaluation',
+                            taskType: 'MOCK',
+                            isRevision: true,
+                            completed: false,
+                            term: 3
+                        });
+                    } else if (isPenultimateMock) {
+                        planDays[revDayIndex].tasks.push({
+                            id: `REV_DAY_${r + 1}_PYQ`,
+                            grade: '+2',
+                            subject: 'All Subjects',
+                            chapterName: `Previous Year Questions (PYQ) Sprint (Day ${r + 1} of ${revisionDaysCount})`,
+                            topicTitle: 'High-frequency 3-mark & 5-mark repeated questions from past 5 years DHSE board papers',
+                            taskType: 'PYQ',
+                            isRevision: true,
+                            completed: false,
+                            term: 3
+                        });
+                    } else {
+                        const subIndex = r % streamSubjects.length;
+                        const activeSub = streamSubjects[subIndex];
+                        const chaps = completedChaptersBySubject[activeSub] || [];
+                        const chSummary = chaps.length > 0 ? `(${chaps.slice(0, 3).join(', ')}${chaps.length > 3 ? ' & more' : ''})` : '';
+
+                        let topicTitle = '';
+                        if (activeSub === 'Physics') topicTitle = `Comprehensive Derivations, Formula Sheet & Circuit Diagrams ${chSummary}`;
+                        else if (activeSub === 'Chemistry') topicTitle = `Organic Reactions, Reagents, Named Conversions & Physical Numericals ${chSummary}`;
+                        else if (activeSub === 'Mathematics') topicTitle = `Calculus, Vectors & 3D High-Yield Problem Sets with Step-by-Step Solutions ${chSummary}`;
+                        else if (activeSub === 'Computer Science') topicTitle = `C++ Programs, Pointers, SQL Queries & Theory Rapid Retrieval ${chSummary}`;
+                        else if (activeSub === 'Botany') topicTitle = `Diagrams, Key Terminologies, Reproduction & Biotechnology Quick Flashcards ${chSummary}`;
+                        else if (activeSub === 'Zoology') topicTitle = `Physiology Processes, Genetics Punnett Squares & Evolutionary Milestones ${chSummary}`;
+
+                        planDays[revDayIndex].tasks.push({
+                            id: `REV_DAY_${r + 1}_${activeSub.replace(/\s+/g, '_')}`,
+                            grade: '+2',
+                            subject: activeSub,
+                            chapterName: `Targeted Revision: ${activeSub} (Day ${r + 1} of ${revisionDaysCount})`,
+                            topicTitle: topicTitle,
+                            taskType: 'REVISION',
                             isRevision: true,
                             completed: false,
                             term: 3
@@ -1438,10 +1878,16 @@
                 }
             }
 
+            const valResult = validatePlan(planDays, applicableTasks, { improvementConfig, stream: effectiveStream });
+
             return {
                 planDays: planDays,
                 revisionDaysCount: revisionDaysCount,
-                syllabusDaysCount: syllabusStudyDays
+                syllabusDaysCount: syllabusStudyDays,
+                diagnostics: diagnostics,
+                scorecard: valResult.scorecard,
+                isValid: valResult.isValid,
+                validationIssues: valResult.issues
             };
         }
 
@@ -1559,8 +2005,7 @@
 
         function shareApp() {
             const shareTitle = 'Mission PlusTwo — Kerala DHSE Study Planner';
-            const shareText = `Bro, found a lifesaver to finish Plus Two portions before exams! 🔥
-Set your target date, get a daily study plan. Miss a day? Adjust and carry on. (+1 Improvement included) 👇`;
+            const shareText = 'Mission PlusTwo: Free intelligent daily study planner for Kerala DHSE Plus Two and Plus One Improvement with built-in revision buffer. Plan your syllabus here:';
             const shareUrl = 'https://sreyasts.github.io/intelligent-study-planner-for-plus-two-/';
 
             if (navigator.share) {
@@ -1569,7 +2014,7 @@ Set your target date, get a daily study plan. Miss a day? Adjust and carry on. (
                     text: shareText,
                     url: shareUrl
                 }).then(() => {
-                    showToastMessage("Thanks for sharing! 🔥", "fa-fire text-amber-400");
+                    showToastMessage("Thanks for sharing!", "fa-circle-check text-emerald-400");
                 }).catch(() => {});
             } else {
                 const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + '\n' + shareUrl)}`;
@@ -1974,6 +2419,7 @@ Set your target date, get a daily study plan. Miss a day? Adjust and carry on. (
         function handleInitialSetup() {
             const deadlineInput = document.getElementById('deadline-date').value;
             const targetTerm = parseInt(document.getElementById('target-term').value || "2");
+            const studyIntensity = document.getElementById('study-intensity')?.value || 'balanced';
 
             if (!deadlineInput) {
                 alert("Please select a target deadline date.");
@@ -2027,11 +2473,15 @@ Set your target date, get a daily study plan. Miss a day? Adjust and carry on. (
                 return;
             }
 
-            const planResult = buildIntelligentPlan(deadlineInput, tasksToPlan, TODAY_STR, improvementConfig, selectedStream);
+            const planResult = buildIntelligentPlan(deadlineInput, tasksToPlan, TODAY_STR, improvementConfig, selectedStream, {
+                intensity: studyIntensity
+            });
 
-            if (planResult) {
+            if (planResult && planResult.planDays) {
                 appState = {
+                    engineVersion: PLANNER_ENGINE_VERSION,
                     stream: selectedStream,
+                    studyIntensity: studyIntensity,
                     startDate: TODAY_STR,
                     deadlineDate: deadlineInput,
                     targetTerm: targetTerm,
@@ -2039,7 +2489,8 @@ Set your target date, get a daily study plan. Miss a day? Adjust and carry on. (
                     improvementConfig: improvementConfig,
                     plan: planResult.planDays,
                     revisionDaysCount: planResult.revisionDaysCount,
-                    totalConfiguredTasks: tasksToPlan.length
+                    totalConfiguredTasks: tasksToPlan.length,
+                    diagnostics: planResult.diagnostics
                 };
                 saveAppState();
                 goToDashboard();
@@ -2082,16 +2533,21 @@ Set your target date, get a daily study plan. Miss a day? Adjust and carry on. (
             const completedUpTo = parseInt(document.getElementById('completed-day-select').value);
 
             let keptDays = [];
-            let uncompletedTasks = [];
+            const completedTaskIds = new Set();
+            const completedChapterIds = new Set(appState.completedChaptersOnInit || []);
 
             appState.plan.forEach(day => {
                 if (day.dayNumber <= completedUpTo) {
-                    day.tasks.forEach(t => t.completed = true);
+                    day.tasks.forEach(t => {
+                        t.completed = true;
+                        completedTaskIds.add(t.id);
+                    });
                     keptDays.push(day);
                 } else {
+                    // Preserve tasks completed ahead of schedule in future days!
                     day.tasks.forEach(t => {
-                        if (!t.completed && !t.isRevision) {
-                            uncompletedTasks.push(t);
+                        if (t.completed) {
+                            completedTaskIds.add(t.id);
                         }
                     });
                 }
@@ -2103,20 +2559,47 @@ Set your target date, get a daily study plan. Miss a day? Adjust and carry on. (
             const tomorrowStr = getLocalDateStr(tomorrow);
 
             const userStream = appState.stream || (appState.plan.some(d => d.tasks.some(t => t.subject === 'Botany' || t.subject === 'Zoology')) ? 'bio' : 'cs');
-            const result = buildIntelligentPlan(appState.deadlineDate, uncompletedTasks, tomorrowStr, appState.improvementConfig || [], userStream);
+            const targetTerm = appState.targetTerm || 3;
+            const allowedSubjects = getStreamSubjects(userStream);
 
-            if (result) {
-                // Adjust day numbering seamlessly
+            // Reconstruct remaining Plus Two tasks in canonical prerequisite order
+            let uncompletedTasks = PLUS_TWO_SYLLABUS.filter(t =>
+                allowedSubjects.includes(t.subject) &&
+                t.term <= targetTerm &&
+                !completedChapterIds.has(t.chapId) &&
+                !completedTaskIds.has(t.id)
+            );
+
+            // Reconstruct remaining Plus One Improvement tasks in canonical prerequisite order
+            if (appState.improvementConfig && appState.improvementConfig.length > 0) {
+                appState.improvementConfig.forEach(cfg => {
+                    const incompleteP1 = PLUS_ONE_SYLLABUS.filter(t =>
+                        t.subject === cfg.subject &&
+                        !completedChapterIds.has(t.chapId) &&
+                        !completedTaskIds.has(t.id)
+                    );
+                    uncompletedTasks.push(...incompleteP1);
+                });
+            }
+
+            const result = buildIntelligentPlan(appState.deadlineDate, uncompletedTasks, tomorrowStr, appState.improvementConfig || [], userStream, {
+                intensity: appState.studyIntensity || 'balanced'
+            });
+
+            if (result && result.planDays) {
+                // Adjust day numbering seamlessly following keptDays
                 result.planDays.forEach((d, idx) => {
                     d.dayNumber = completedUpTo + idx + 1;
                 });
 
                 appState.plan = [...keptDays, ...result.planDays];
                 appState.revisionDaysCount = result.revisionDaysCount;
+                appState.diagnostics = result.diagnostics;
+                appState.engineVersion = PLANNER_ENGINE_VERSION;
                 saveAppState();
 
                 closeRegenerateModal();
-                showToastMessage("Schedule rebalanced intelligently!", "fa-wand-magic-sparkles text-blue-400");
+                showToastMessage("Schedule rebalanced with dependency tracking!", "fa-wand-magic-sparkles text-blue-400");
                 renderApp();
             }
         }
@@ -2335,6 +2818,22 @@ Set your target date, get a daily study plan. Miss a day? Adjust and carry on. (
 
                                 <!-- Live Calculation Feedback Box -->
                                 <div id="deadline-calc-label" class="mt-2.5 p-3 rounded-2xl bg-blue-50/70 border border-blue-100 text-xs text-slate-600"></div>
+
+                                <!-- Daily Study Pace / Capacity Selector -->
+                                <div class="mt-3 pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                    <div>
+                                        <label for="study-intensity" class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                                            <i class="fa-solid fa-gauge-high text-blue-600"></i>
+                                            <span>Daily Study Intensity</span>
+                                        </label>
+                                        <p class="text-[11px] text-slate-500">Adapts daily task pacing to your study capacity</p>
+                                    </div>
+                                    <select id="study-intensity" class="text-xs font-bold bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-blue-600 focus:bg-white transition cursor-pointer">
+                                        <option value="balanced" selected>Standard (2-3 parts/day)</option>
+                                        <option value="intense">Intensive (3-4+ parts/day)</option>
+                                        <option value="light">Relaxed (1-2 parts/day)</option>
+                                    </select>
+                                </div>
                             </div>
 
                             <!-- Step 4: Exclude Finished Chapters (+2 & +1 Improvement) -->
@@ -2626,9 +3125,9 @@ Set your target date, get a daily study plan. Miss a day? Adjust and carry on. (
                                 <span>Adjust Plan</span>
                             </button>
                         </div>
-                        <button onclick="shareApp()" class="flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200/80 font-bold text-xs py-2 px-3 sm:px-3.5 rounded-xl shadow-sm transition active:scale-95" title="Share with Classmates on WhatsApp">
-                            <i class="fa-brands fa-whatsapp text-emerald-600"></i>
-                            <span>Share in WhatsApp 🔥</span>
+                        <button onclick="shareApp()" class="flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-semibold text-xs py-2 px-3 sm:px-3.5 rounded-xl shadow-sm transition active:scale-95" title="Share with Classmates">
+                            <i class="fa-solid fa-arrow-up-from-bracket text-slate-500"></i>
+                            <span>Share Plan</span>
                         </button>
                     </div>
 
@@ -2637,53 +3136,29 @@ Set your target date, get a daily study plan. Miss a day? Adjust and carry on. (
                         ${todayTasksHTML}
                     </div>
 
-                    <!-- Viral Study Group Share Card -->
-                    <div class="bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-blue-500/10 border border-emerald-200/80 rounded-2xl p-4 mb-6 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
+                    <!-- Community & Classmates Share Card (Clean, Premium, Minimalist) -->
+                    <div class="bg-white rounded-2xl p-4 sm:p-5 mb-6 border border-slate-200/90 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
                         <div class="flex items-center gap-3 text-center sm:text-left">
-                            <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-xl shadow-sm shrink-0">
-                                <i class="fa-brands fa-whatsapp"></i>
+                            <div class="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center shrink-0 shadow-sm">
+                                <i class="fa-solid fa-graduation-cap text-base"></i>
                             </div>
                             <div>
-                                <h4 class="text-xs sm:text-sm font-extrabold text-slate-900 flex items-center gap-2 justify-center sm:justify-start">
-                                    <span>കൂട്ടുകാർക്കും അയച്ചു കൊടുക്കൂ! 🚀</span>
-                                    <span class="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded">Life Saver</span>
+                                <h4 class="text-xs sm:text-sm font-bold text-slate-900 flex items-center justify-center sm:justify-start gap-2">
+                                    <span>Share with Classmates & Study Groups</span>
+                                    <span class="text-[10px] bg-blue-50 text-blue-700 font-bold px-2 py-0.5 rounded-full border border-blue-200/60">Free Tool</span>
                                 </h4>
-                                <p class="text-[11px] text-slate-600 mt-0.5">School / Tuition WhatsApp ഗ്രൂപ്പിൽ ഷെയർ ചെയ്യൂ. ആർക്കെങ്കിലും പരീക്ഷ ജയിക്കാൻ ഇത് വലിയൊരു സഹായമാകും!</p>
-                            </div>
-                        </div>
-                        <button onclick="shareApp()" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 px-4 rounded-xl shadow-md shadow-emerald-600/20 transition flex items-center justify-center gap-2 active:scale-95 shrink-0">
-                            <i class="fa-brands fa-whatsapp text-sm"></i>
-                            <span>Share in WhatsApp 🔥</span>
-                        </button>
-                    </div>
-
-                    <!-- GitHub Open-Source Community & Traffic Conversion Card -->
-                    <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white rounded-2xl p-4 sm:p-5 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-md">
-                        <div class="flex items-center gap-3.5 text-center sm:text-left">
-                            <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-white shrink-0 border border-white/10 shadow-inner">
-                                <svg class="w-5 h-5 fill-white" viewBox="0 0 24 24" aria-hidden="true">
-                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
-                                </svg>
-                            </div>
-                            <div>
-                                <h4 class="text-xs sm:text-sm font-bold text-white flex items-center justify-center sm:justify-start gap-2">
-                                    <span>Support Mission PlusTwo on GitHub</span>
-                                    <span class="text-[10px] bg-amber-400/20 text-amber-300 font-bold px-1.5 py-0.5 rounded border border-amber-400/30">Free & Open Source</span>
-                                </h4>
-                                <p class="text-[11px] text-slate-300 mt-0.5">Help us reach more students across Kerala — star our repo or suggest improvements!</p>
+                                <p class="text-[11px] text-slate-500 mt-0.5">Help friends stay on track for Higher Secondary & Improvement exams.</p>
                             </div>
                         </div>
                         <div class="flex items-center gap-2 w-full sm:w-auto shrink-0">
-                            <a href="https://github.com/sreyasts/intelligent-study-planner-for-plus-two-" target="_blank" rel="noopener noreferrer" class="flex-1 sm:flex-initial bg-white hover:bg-slate-100 text-slate-900 font-extrabold text-xs py-2 px-3.5 rounded-xl shadow transition flex items-center justify-center gap-1.5 active:scale-95">
-                                <svg class="w-3.5 h-3.5 fill-slate-900" viewBox="0 0 24 24" aria-hidden="true">
-                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
-                                </svg>
-                                <span>Star Repo</span>
+                            <button onclick="shareApp()" class="flex-1 sm:flex-initial bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2 px-3.5 rounded-xl shadow-sm transition flex items-center justify-center gap-1.5 active:scale-95" title="Share with Classmates">
+                                <i class="fa-solid fa-arrow-up-from-bracket text-xs"></i>
+                                <span>Share Link</span>
+                            </button>
+                            <a href="https://github.com/sreyasts/intelligent-study-planner-for-plus-two-" target="_blank" rel="noopener noreferrer" class="flex-1 sm:flex-initial bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs py-2 px-3 rounded-xl border border-slate-200 transition flex items-center justify-center gap-1.5 active:scale-95" title="Star on GitHub">
+                                <svg class="w-3.5 h-3.5 fill-slate-700" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+                                <span>GitHub</span>
                                 <i class="fa-solid fa-star text-amber-500 text-[10px]"></i>
-                            </a>
-                            <a href="https://github.com/sreyasts/intelligent-study-planner-for-plus-two-/issues" target="_blank" rel="noopener noreferrer" class="flex-1 sm:flex-initial bg-white/10 hover:bg-white/20 text-white font-semibold text-xs py-2 px-3 rounded-xl border border-white/20 transition flex items-center justify-center gap-1.5 active:scale-95" title="Report issue or suggest a chapter update">
-                                <i class="fa-solid fa-bug text-xs text-slate-300"></i>
-                                <span class="hidden xs:inline">Feedback</span>
                             </a>
                         </div>
                     </div>
