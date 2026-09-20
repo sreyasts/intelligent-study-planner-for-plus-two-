@@ -493,7 +493,6 @@
 
         let appState = loadInitialState();
         let currentView = 'today'; // 'today', 'plan', 'syllabus', 'setup'
-        let activeSetupSubjectTab = 'Physics';
 
         /* ==========================================================================
            2.5 FIREBASE AUTHENTICATION & REAL-TIME CLOUD SYNC
@@ -1166,59 +1165,136 @@
 
             // 3. Reset in-memory state and re-render setup screen
             appState = null;
+            selectedCompletedChapters.clear();
             currentView = 'today';
             showToastMessage("Study plan reset. Ready to start fresh!", "fa-rotate text-blue-400");
             renderApp();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function switchSetupSubject(sub) {
-            activeSetupSubjectTab = sub;
+        let activeSetupSubjectTab = 'Physics';
+        let activeSetupGradeTab = '+2'; // '+2' or '+1'
+        const selectedCompletedChapters = new Set();
+
+        function switchSetupGrade(grade) {
+            activeSetupGradeTab = grade;
+            updateSetupTabsUI();
             const container = document.getElementById('setup-subject-chapters-list');
             if (container) {
-                container.innerHTML = renderSetupSubjectChapters(sub);
+                container.innerHTML = renderSetupSubjectChapters(activeSetupSubjectTab, activeSetupGradeTab);
             }
-            // Update tab button styles
+        }
+
+        function switchSetupSubject(sub) {
+            activeSetupSubjectTab = sub;
+            updateSetupTabsUI();
+            const container = document.getElementById('setup-subject-chapters-list');
+            if (container) {
+                container.innerHTML = renderSetupSubjectChapters(activeSetupSubjectTab, activeSetupGradeTab);
+            }
+        }
+
+        function updateSetupTabsUI() {
+            const btnP2 = document.getElementById('grade-tab-p2');
+            const btnP1 = document.getElementById('grade-tab-p1');
+            if (btnP2 && btnP1) {
+                if (activeSetupGradeTab === '+2') {
+                    btnP2.className = 'flex-1 py-2 px-3 text-xs font-bold rounded-xl bg-blue-600 text-white shadow-sm transition flex items-center justify-center gap-1.5';
+                    btnP1.className = 'flex-1 py-2 px-3 text-xs font-bold rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition flex items-center justify-center gap-1.5';
+                } else {
+                    btnP1.className = 'flex-1 py-2 px-3 text-xs font-bold rounded-xl bg-amber-600 text-white shadow-sm transition flex items-center justify-center gap-1.5';
+                    btnP2.className = 'flex-1 py-2 px-3 text-xs font-bold rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition flex items-center justify-center gap-1.5';
+                }
+            }
+
             ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'].forEach(s => {
                 const btn = document.getElementById(`setup-tab-${s.replace(/\s+/g, '-')}`);
                 if (btn) {
-                    if (s === sub) {
-                        btn.className = 'py-2 px-3 text-xs font-bold rounded-xl bg-blue-600 text-white shadow-sm transition';
+                    if (s === activeSetupSubjectTab) {
+                        btn.className = 'py-1.5 px-3 text-xs font-bold rounded-xl bg-slate-800 text-white shadow-sm transition';
                     } else {
-                        btn.className = 'py-2 px-3 text-xs font-bold rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition';
+                        btn.className = 'py-1.5 px-3 text-xs font-bold rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition';
                     }
                 }
             });
         }
 
-        function toggleAllSubjectChapters(sub, shouldCheck) {
-            const boxes = document.querySelectorAll(`.completed-chapter-cb[data-subject="${sub}"]`);
-            boxes.forEach(b => b.checked = shouldCheck);
+        function toggleChapterSelection(chapId, isChecked) {
+            if (isChecked) {
+                selectedCompletedChapters.add(chapId);
+            } else {
+                selectedCompletedChapters.delete(chapId);
+            }
+            updateCompletedChaptersCountBadge();
         }
 
-        function renderSetupSubjectChapters(subject) {
-            const chaps = PLUS_TWO_SYLLABUS.filter(t => t.subject === subject);
+        function toggleAllSubjectChapters(grade, sub, shouldCheck) {
+            const sourceSyllabus = grade === '+1' ? PLUS_ONE_SYLLABUS : PLUS_TWO_SYLLABUS;
+            const chaps = sourceSyllabus.filter(t => t.subject === sub);
             const uniqueChaps = [...new Map(chaps.map(item => [item.chapId, item])).values()];
 
+            uniqueChaps.forEach(ch => {
+                if (shouldCheck) {
+                    selectedCompletedChapters.add(ch.chapId);
+                } else {
+                    selectedCompletedChapters.delete(ch.chapId);
+                }
+            });
+
+            // Re-render current list so checked styling and state are updated
+            const container = document.getElementById('setup-subject-chapters-list');
+            if (container) {
+                container.innerHTML = renderSetupSubjectChapters(activeSetupSubjectTab, activeSetupGradeTab);
+            }
+            updateCompletedChaptersCountBadge();
+        }
+
+        function updateCompletedChaptersCountBadge() {
+            const badge = document.getElementById('completed-chaps-badge');
+            if (!badge) return;
+            const p2Count = Array.from(selectedCompletedChapters).filter(id => id.startsWith('+2_')).length;
+            const p1Count = Array.from(selectedCompletedChapters).filter(id => id.startsWith('+1_')).length;
+            const total = selectedCompletedChapters.size;
+            if (total === 0) {
+                badge.innerHTML = '0 excluded';
+                badge.className = 'text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500';
+            } else {
+                badge.innerHTML = `<i class="fa-solid fa-check mr-1"></i>${total} excluded (${p2Count} in +2, ${p1Count} in +1)`;
+                badge.className = 'text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200';
+            }
+        }
+
+        function renderSetupSubjectChapters(subject, grade = activeSetupGradeTab) {
+            const sourceSyllabus = grade === '+1' ? PLUS_ONE_SYLLABUS : PLUS_TWO_SYLLABUS;
+            const chaps = sourceSyllabus.filter(t => t.subject === subject);
+            const uniqueChaps = [...new Map(chaps.map(item => [item.chapId, item])).values()];
+            const markedCount = uniqueChaps.filter(c => selectedCompletedChapters.has(c.chapId)).length;
+
             let html = `
-                <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-100">
-                    <span class="text-xs font-bold text-slate-500">${subject} (${uniqueChaps.length} Chapters)</span>
+                <div class="flex items-center justify-between pb-2 mb-2.5 border-b border-slate-100">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold text-slate-700">
+                            ${grade === '+1' ? '<span class="text-amber-700 font-extrabold bg-amber-50 px-2 py-0.5 rounded border border-amber-200/60">+1 Improvement</span>' : '<span class="text-blue-700 font-extrabold bg-blue-50 px-2 py-0.5 rounded border border-blue-200/60">+2 Regular</span>'} • ${subject}
+                        </span>
+                        <span class="text-[11px] text-slate-400 font-medium">(${markedCount}/${uniqueChaps.length} excluded)</span>
+                    </div>
                     <div class="flex gap-2">
-                        <button type="button" onclick="toggleAllSubjectChapters('${subject}', true)" class="text-[11px] font-bold text-blue-600 hover:underline">Select All</button>
+                        <button type="button" onclick="toggleAllSubjectChapters('${grade}', '${subject}', true)" class="text-[11px] font-bold text-blue-600 hover:underline">Select All</button>
                         <span class="text-slate-300">|</span>
-                        <button type="button" onclick="toggleAllSubjectChapters('${subject}', false)" class="text-[11px] font-bold text-slate-500 hover:underline">Clear</button>
+                        <button type="button" onclick="toggleAllSubjectChapters('${grade}', '${subject}', false)" class="text-[11px] font-bold text-slate-500 hover:underline">Clear</button>
                     </div>
                 </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-52 overflow-y-auto pr-1">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1">
             `;
 
             uniqueChaps.forEach(ch => {
+                const isChecked = selectedCompletedChapters.has(ch.chapId);
                 html += `
-                    <label class="flex items-start gap-2.5 p-2 rounded-xl hover:bg-slate-50 border border-slate-100 cursor-pointer transition text-xs">
-                        <input type="checkbox" data-subject="${subject}" value="${ch.chapId}" class="completed-chapter-cb mt-0.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
-                        <div class="flex-1">
-                            <span class="font-bold text-slate-700 block">${ch.chapNumber}. ${ch.chapterName}</span>
-                            <span class="text-[10px] text-slate-400 font-medium">Term ${ch.term}</span>
+                    <label class="flex items-start gap-2.5 p-2 rounded-xl ${isChecked ? 'bg-emerald-50/70 border-emerald-200' : 'hover:bg-slate-50 border-slate-200/80'} border cursor-pointer transition text-xs select-none">
+                        <input type="checkbox" data-grade="${grade}" data-subject="${subject}" value="${ch.chapId}" ${isChecked ? 'checked' : ''} onchange="toggleChapterSelection('${ch.chapId}', this.checked); this.closest('label').classList.toggle('bg-emerald-50/70', this.checked); this.closest('label').classList.toggle('border-emerald-200', this.checked); this.closest('label').classList.toggle('border-slate-200/80', !this.checked);" class="completed-chapter-cb mt-0.5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4">
+                        <div class="flex-1 truncate">
+                            <span class="font-bold text-slate-800 block truncate" title="${ch.chapterName}">${ch.chapNumber}. ${ch.chapterName}</span>
+                            <span class="text-[10px] ${grade === '+1' ? 'text-amber-700' : 'text-slate-400'} font-medium">${grade === '+1' ? '+1 Paper' : 'Term ' + ch.term} • ${ch.totalParts} study parts</span>
                         </div>
                     </label>
                 `;
@@ -1228,31 +1304,106 @@
             return html;
         }
 
+        function setTermSelection(termNum) {
+            const input = document.getElementById('target-term');
+            if (input) input.value = termNum;
+            [1, 2, 3].forEach(n => {
+                const card = document.getElementById(`term-card-${n}`);
+                if (card) {
+                    const checkIcon = card.querySelector('.check-indicator');
+                    if (n === termNum) {
+                        card.className = 'cursor-pointer p-3.5 sm:p-4 rounded-2xl border-2 border-blue-600 bg-blue-50/60 ring-2 ring-blue-500/20 transition text-left flex flex-col justify-between relative shadow-sm';
+                        if (checkIcon) {
+                            checkIcon.className = 'w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center text-[9px] check-indicator';
+                            checkIcon.innerHTML = '<i class="fa-solid fa-check"></i>';
+                        }
+                    } else {
+                        card.className = 'cursor-pointer p-3.5 sm:p-4 rounded-2xl border-2 border-slate-200 bg-white hover:border-slate-300 transition text-left flex flex-col justify-between';
+                        if (checkIcon) {
+                            checkIcon.className = 'w-4 h-4 rounded-full border border-slate-300 flex items-center justify-center check-indicator';
+                            checkIcon.innerHTML = '';
+                        }
+                    }
+                }
+            });
+        }
+
+        function getPresetDate(month, day, nextYear = false) {
+            let now = new Date();
+            let year = now.getFullYear();
+            if (nextYear) year += 1;
+            const mStr = String(month).padStart(2, '0');
+            const dStr = String(day).padStart(2, '0');
+            return `${year}-${mStr}-${dStr}`;
+        }
+
+        function setDeadlinePreset(dateStr) {
+            const input = document.getElementById('deadline-date');
+            if (input) {
+                input.value = dateStr;
+                updateDeadlinePreview();
+            }
+        }
+
+        function updateDeadlinePreview() {
+            const input = document.getElementById('deadline-date');
+            const label = document.getElementById('deadline-calc-label');
+            if (!input || !label) return;
+            const days = calculateDaysBetween(TODAY_STR, input.value);
+            if (days <= 0) {
+                label.innerHTML = '<span class="text-rose-600 font-bold flex items-center gap-1.5"><i class="fa-solid fa-triangle-exclamation"></i> Selected date has passed! Please select a future target date.</span>';
+            } else {
+                let revDays = 0;
+                if (days >= 75) revDays = 10;
+                else if (days >= 45) revDays = 7;
+                else if (days >= 25) revDays = 4;
+                else if (days >= 14) revDays = 2;
+                else if (days >= 7) revDays = 1;
+                const studyDays = Math.max(1, days - revDays);
+                label.innerHTML = `
+                    <div class="flex flex-wrap items-center justify-between gap-1">
+                        <span class="font-bold text-slate-800 flex items-center gap-1.5">
+                            <i class="fa-solid fa-calculator text-blue-600"></i>
+                            <span><strong>${days}</strong> calendar days available</span>
+                        </span>
+                        <span class="text-purple-700 font-bold bg-purple-100/70 px-2 py-0.5 rounded-md text-[11px]">
+                            <i class="fa-solid fa-shield-check mr-1"></i>${revDays} days reserved for Mock Revision
+                        </span>
+                    </div>
+                    <div class="text-[11px] text-slate-500 mt-1">
+                        ${studyDays} active syllabus study days. Final ${revDays} days will strictly run PYQ sets and formula drills.
+                    </div>
+                `;
+            }
+        }
+
         function handleInitialSetup() {
             const deadlineInput = document.getElementById('deadline-date').value;
-            const targetTerm = parseInt(document.getElementById('target-term').value);
+            const targetTerm = parseInt(document.getElementById('target-term').value || "2");
 
             if (!deadlineInput) {
                 alert("Please select a target deadline date.");
                 return;
             }
 
-            // Collect excluded / already completed chapters
-            const checkedCompletedBoxes = Array.from(document.querySelectorAll('.completed-chapter-cb:checked')).map(cb => cb.value);
+            const days = calculateDaysBetween(TODAY_STR, deadlineInput);
+            if (days <= 0) {
+                alert("Please select a future target deadline date.");
+                return;
+            }
+
+            // Collect excluded / already completed chapters (both +2 and +1)
+            const checkedCompletedBoxes = Array.from(selectedCompletedChapters);
 
             // Filter Plus Two tasks: only include tasks up to selected Term, and exclude finished chapters
             let tasksToPlan = PLUS_TWO_SYLLABUS.filter(t => t.term <= targetTerm && !checkedCompletedBoxes.includes(t.chapId));
-
-            if (tasksToPlan.length === 0) {
-                alert("All chapters in the selected term were marked finished! Please select a higher term or uncheck some chapters.");
-                return;
-            }
 
             // Plus One Improvement Config
             let improvementConfig = [];
             const hasImp = document.getElementById('has-improvement')?.checked;
 
             if (hasImp) {
+                let hasError = false;
                 ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'].forEach(sub => {
                     const subId = sub.replace(/\s+/g, '-').toLowerCase();
                     const cb = document.getElementById(`imp-${subId}`);
@@ -1260,12 +1411,21 @@
                         const examDate = document.getElementById(`input-date-${subId}`).value;
                         if (!examDate) {
                             alert(`Please set an exam date for ${sub} improvement.`);
-                            throw new Error('Missing exam date');
+                            hasError = true;
+                            return;
                         }
                         improvementConfig.push({ subject: sub, examDate: examDate });
-                        tasksToPlan.push(...PLUS_ONE_SYLLABUS.filter(t => t.subject === sub));
+                        // Exclude finished Plus One chapters!
+                        const incompletePlusOne = PLUS_ONE_SYLLABUS.filter(t => t.subject === sub && !checkedCompletedBoxes.includes(t.chapId));
+                        tasksToPlan.push(...incompletePlusOne);
                     }
                 });
+                if (hasError) return;
+            }
+
+            if (tasksToPlan.length === 0) {
+                alert("All chapters in the selected term/improvement were marked finished! Please select a higher term or uncheck some chapters.");
+                return;
             }
 
             const planResult = buildIntelligentPlan(deadlineInput, tasksToPlan, TODAY_STR, improvementConfig);
@@ -1366,6 +1526,7 @@
 
         function renderApp() {
             const container = document.getElementById('app-container');
+            if (!container) return;
             const dateDisplay = document.getElementById('date-display');
             if (dateDisplay) {
                 dateDisplay.innerText = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
@@ -1380,111 +1541,211 @@
                 if (new Date() > defaultTarget) defaultTarget.setFullYear(defaultTarget.getFullYear() + 1);
 
                 container.innerHTML = `
-                    <div class="max-w-2xl mx-auto bg-white rounded-3xl p-6 sm:p-9 shadow-xl border border-slate-100 animate-fade-in-up">
-                        <div class="text-center mb-8">
-                            <div class="w-14 h-14 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center text-white text-2xl mx-auto mb-3 shadow-lg shadow-blue-500/25">
+                    <div class="max-w-2xl mx-auto bg-white rounded-3xl p-5 sm:p-8 shadow-xl border border-slate-100 animate-fade-in-up">
+                        <!-- Header -->
+                        <div class="text-center mb-6">
+                            <div class="w-13 h-13 sm:w-14 sm:h-14 bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 rounded-2xl flex items-center justify-center text-white text-2xl mx-auto mb-3 shadow-lg shadow-blue-500/25">
                                 <i class="fa-solid fa-graduation-cap"></i>
                             </div>
-                            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Mission Control Setup</h2>
+                            <h2 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Mission Control Setup</h2>
                             <p class="text-xs sm:text-sm text-slate-500 mt-1 max-w-md mx-auto">
-                                Turn your Kerala DHSE Plus Two syllabus into an adaptive, day-by-day study schedule with built-in revision buffer.
+                                Generate your day-by-day Kerala DHSE study schedule with built-in revision buffer and multi-device sync.
                             </p>
-                        <!-- Google Sign-in Prompt for New Users -->
-                        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/80 rounded-2xl p-4 mb-6 text-center">
-                            <p class="text-xs font-bold text-slate-800 mb-2 flex items-center justify-center gap-1.5">
-                                <i class="fa-solid fa-cloud text-blue-600"></i> Sync study plan across Phone & PC
-                            </p>
-                            ${!currentUser ? `
-                                <button onclick="signInWithGoogle()" class="w-full sm:w-auto mx-auto bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 font-bold text-xs py-2.5 px-5 rounded-xl shadow-sm transition flex items-center justify-center gap-2 active:scale-95">
-                                    <svg class="w-4 h-4" viewBox="0 0 24 24">
-                                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-                                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-                                    </svg>
-                                    <span>Sign in with Google First</span>
-                                </button>
-                                <p class="text-[10px] text-slate-400 mt-1.5">Or continue setting up as guest (local only)</p>
-                            ` : `
-                                <div class="inline-flex items-center gap-2 text-xs font-semibold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200">
-                                    <i class="fa-solid fa-circle-check text-emerald-600"></i>
-                                    <span>Signed in as <strong>${currentUser.displayName || currentUser.email}</strong> (Cloud Backup Active)</span>
+                        </div>
+
+                        <!-- Google Sign-in / Cloud Status Card -->
+                        <div class="bg-gradient-to-r from-blue-50 via-indigo-50/50 to-blue-50 border border-blue-200/80 rounded-2xl p-4 mb-6 shadow-sm">
+                            <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+                                <div class="flex items-center gap-3 text-center sm:text-left">
+                                    <div class="w-10 h-10 rounded-xl bg-white text-blue-600 flex items-center justify-center text-lg shadow-sm shrink-0">
+                                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-xs sm:text-sm font-bold text-slate-800">
+                                            ${currentUser ? 'Google Account Connected' : 'Sync Between Phone & Laptop'}
+                                        </h4>
+                                        <p class="text-[11px] text-slate-500">
+                                            ${currentUser ? `Signed in as <strong class="text-slate-700">${currentUser.displayName || currentUser.email}</strong> • Auto-saving to cloud` : 'Sign in so your tick marks & progress are saved on every device.'}
+                                        </p>
+                                    </div>
                                 </div>
-                            `}
+                                ${!currentUser ? `
+                                    <button onclick="signInWithGoogle()" class="w-full sm:w-auto bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 font-bold text-xs py-2.5 px-4 rounded-xl shadow-sm transition flex items-center justify-center gap-2 active:scale-95 shrink-0">
+                                        <svg class="w-4 h-4" viewBox="0 0 24 24">
+                                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                                        </svg>
+                                        <span>Sign in with Google</span>
+                                    </button>
+                                ` : `
+                                    <button onclick="signOutUser()" class="text-xs font-semibold text-slate-500 hover:text-slate-800 underline transition shrink-0">
+                                        Switch Account
+                                    </button>
+                                `}
+                            </div>
                         </div>
 
                         <div class="space-y-6">
-                            <!-- Target Term Selection -->
+                            <!-- Step 1: Target Scope Milestone -->
                             <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
-                                    <i class="fa-solid fa-bullseye text-blue-600 mr-1.5"></i> Target Milestone
-                                </label>
-                                <select id="target-term" class="w-full border-2 border-slate-200 rounded-2xl p-3.5 text-sm font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-50 outline-none transition cursor-pointer">
-                                    <option value="1">Term 1 Only (First Terminal / Onam Examination)</option>
-                                    <option value="2" selected>Term 1 & Term 2 (Half-Yearly / Christmas Exam - by Nov/Dec)</option>
-                                    <option value="3">Full Syllabus (Term 1, 2 & 3 - Final Public Board Exam)</option>
-                                </select>
-                                <p class="text-[11px] text-slate-400 mt-1.5 ml-1">
-                                    Select Term 2 if preparing for Half-Yearly. Term 3 portions will be kept for after Christmas exams.
-                                </p>
+                                <div class="flex items-center justify-between mb-2.5">
+                                    <label class="text-xs font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                                        <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[11px] font-black">1</span>
+                                        <span>Choose Your Target Syllabus</span>
+                                    </label>
+                                    <span class="text-[11px] text-slate-400 font-medium">Click a goal to select</span>
+                                </div>
+                                <input type="hidden" id="target-term" value="2">
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                    <!-- Card 1: Term 1 -->
+                                    <div id="term-card-1" onclick="setTermSelection(1)" class="cursor-pointer p-3.5 sm:p-4 rounded-2xl border-2 border-slate-200 bg-white hover:border-slate-300 transition text-left flex flex-col justify-between">
+                                        <div>
+                                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">First Terminal</span>
+                                            <h4 class="font-extrabold text-slate-900 text-sm">Term 1 Only</h4>
+                                            <p class="text-[11px] text-slate-500 mt-1">Onam Exams (~10 chapters). Rapid short-term focus.</p>
+                                        </div>
+                                        <div class="mt-3 flex items-center justify-between">
+                                            <span class="text-[10px] font-semibold text-slate-400">Unit 1 portions</span>
+                                            <span class="w-4 h-4 rounded-full border border-slate-300 flex items-center justify-center check-indicator"></span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Card 2: Term 1 & 2 (Recommended) -->
+                                    <div id="term-card-2" onclick="setTermSelection(2)" class="cursor-pointer p-3.5 sm:p-4 rounded-2xl border-2 border-blue-600 bg-blue-50/60 ring-2 ring-blue-500/20 transition text-left flex flex-col justify-between relative shadow-sm">
+                                        <div class="absolute -top-2.5 right-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-sm uppercase tracking-wider">
+                                            ★ Recommended
+                                        </div>
+                                        <div>
+                                            <span class="text-[10px] font-bold text-blue-600 uppercase tracking-wider block mb-1">Half-Yearly Target</span>
+                                            <h4 class="font-extrabold text-slate-900 text-sm">Term 1 & Term 2</h4>
+                                            <p class="text-[11px] text-slate-600 mt-1">Complete pre-Christmas portion (~30 chaps) before model exams.</p>
+                                        </div>
+                                        <div class="mt-3 flex items-center justify-between">
+                                            <span class="text-[10px] font-bold text-blue-600">By Nov/Dec 2026</span>
+                                            <span class="w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center text-[9px] check-indicator"><i class="fa-solid fa-check"></i></span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Card 3: Full Syllabus -->
+                                    <div id="term-card-3" onclick="setTermSelection(3)" class="cursor-pointer p-3.5 sm:p-4 rounded-2xl border-2 border-slate-200 bg-white hover:border-slate-300 transition text-left flex flex-col justify-between">
+                                        <div>
+                                            <span class="text-[10px] font-bold text-purple-600 uppercase tracking-wider block mb-1">Board Ready</span>
+                                            <h4 class="font-extrabold text-slate-900 text-sm">Full Syllabus</h4>
+                                            <p class="text-[11px] text-slate-500 mt-1">All 46 rationalized chapters (Term 1 + 2 + 3) for Public Exams.</p>
+                                        </div>
+                                        <div class="mt-3 flex items-center justify-between">
+                                            <span class="text-[10px] font-semibold text-slate-400">March Public Exam</span>
+                                            <span class="w-4 h-4 rounded-full border border-slate-300 flex items-center justify-center check-indicator"></span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
-                            <!-- Target Deadline Date -->
+                            <!-- Step 2: Target Completion Deadline -->
                             <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
-                                    <i class="fa-regular fa-calendar-check text-blue-600 mr-1.5"></i> Target Completion Deadline
-                                </label>
-                                <input type="date" id="deadline-date" value="${getLocalDateStr(defaultTarget)}" class="w-full border-2 border-slate-200 rounded-2xl p-3.5 text-sm font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-50 outline-none transition">
-                                <p class="text-[11px] text-emerald-600 font-medium mt-1.5 ml-1 flex items-center gap-1">
-                                    <i class="fa-solid fa-clock-rotate-left text-[10px]"></i> Intelligent Buffer: We reserve final days strictly for revision & mock questions.
-                                </p>
+                                <div class="flex items-center justify-between mb-2">
+                                    <label class="text-xs font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                                        <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[11px] font-black">2</span>
+                                        <span>Target Completion Deadline</span>
+                                    </label>
+                                    <span class="text-[11px] text-slate-400 font-medium">Quick presets:</span>
+                                </div>
+
+                                <!-- Preset Buttons -->
+                                <div class="flex flex-wrap gap-2 mb-2.5">
+                                    <button type="button" onclick="setDeadlinePreset('${getPresetDate(11, 30)}')" class="py-1.5 px-3 rounded-xl bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 text-xs font-semibold border border-slate-200 transition flex items-center gap-1.5">
+                                        <i class="fa-regular fa-calendar-check text-[11px] text-blue-600"></i>
+                                        <span>Nov 30 (Term 2 Target)</span>
+                                    </button>
+                                    <button type="button" onclick="setDeadlinePreset('${getPresetDate(12, 20)}')" class="py-1.5 px-3 rounded-xl bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 text-xs font-semibold border border-slate-200 transition flex items-center gap-1.5">
+                                        <i class="fa-regular fa-calendar-check text-[11px] text-blue-600"></i>
+                                        <span>Dec 20 (Christmas Break)</span>
+                                    </button>
+                                    <button type="button" onclick="setDeadlinePreset('${getPresetDate(2, 28, true)}')" class="py-1.5 px-3 rounded-xl bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 text-xs font-semibold border border-slate-200 transition flex items-center gap-1.5">
+                                        <i class="fa-regular fa-calendar-check text-[11px] text-blue-600"></i>
+                                        <span>Feb 28 (Public Exam Ready)</span>
+                                    </button>
+                                </div>
+
+                                <input type="date" id="deadline-date" value="${getLocalDateStr(defaultTarget)}" onchange="updateDeadlinePreview()" oninput="updateDeadlinePreview()" class="w-full border-2 border-slate-200 rounded-2xl p-3.5 text-sm font-bold text-slate-800 bg-slate-50 focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-50 outline-none transition">
+
+                                <!-- Live Calculation Feedback Box -->
+                                <div id="deadline-calc-label" class="mt-2.5 p-3 rounded-2xl bg-blue-50/70 border border-blue-100 text-xs text-slate-600"></div>
                             </div>
 
-                            <!-- Already Finished Chapters Selector -->
-                            <div class="border border-slate-200 rounded-2xl overflow-hidden bg-slate-50/50">
-                                <button type="button" onclick="document.getElementById('setup-chaps-wrapper').classList.toggle('hidden')" class="w-full p-4 flex items-center justify-between text-left hover:bg-slate-100/70 transition">
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold">
+                            <!-- Step 3: Exclude Finished Chapters (+2 & +1 Improvement) -->
+                            <div class="border-2 border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm transition">
+                                <button type="button" onclick="const w = document.getElementById('setup-chaps-wrapper'); w.classList.toggle('hidden'); const chv = document.getElementById('chaps-chevron'); chv.classList.toggle('rotate-180');" class="w-full p-4 flex items-center justify-between text-left hover:bg-slate-50 transition">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-sm font-bold shrink-0">
                                             <i class="fa-solid fa-check-double"></i>
                                         </div>
                                         <div>
-                                            <span class="text-xs sm:text-sm font-bold text-slate-800 block">Exclude Already Finished Chapters</span>
-                                            <span class="text-[11px] text-slate-500">Learned some chapters in school/tuition? Tick them here to skip.</span>
+                                            <div class="flex items-center gap-2">
+                                                <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[11px] font-black">3</span>
+                                                <span class="text-xs sm:text-sm font-extrabold text-slate-800">Exclude Already Finished Chapters</span>
+                                                <span id="completed-chaps-badge" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">0 excluded</span>
+                                            </div>
+                                            <span class="text-[11px] text-slate-500 mt-0.5 block">Learned chapters in school or tuition? Mark them in <strong>+2 Regular</strong> or <strong>+1 Improvement</strong> to skip them.</span>
                                         </div>
                                     </div>
-                                    <i class="fa-solid fa-chevron-down text-slate-400 text-xs"></i>
+                                    <i id="chaps-chevron" class="fa-solid fa-chevron-down text-slate-400 text-xs transition duration-200 shrink-0"></i>
                                 </button>
 
-                                <div id="setup-chaps-wrapper" class="hidden p-4 bg-white border-t border-slate-200">
-                                    <!-- Subject Tabs -->
+                                <div id="setup-chaps-wrapper" class="hidden p-4 bg-slate-50/50 border-t border-slate-200">
+                                    <!-- Grade Tabs Switcher (+2 vs +1) -->
+                                    <div class="flex bg-slate-200/80 p-1 rounded-2xl mb-3 gap-1">
+                                        <button type="button" id="grade-tab-p2" onclick="switchSetupGrade('+2')" class="flex-1 py-2 px-3 text-xs font-bold rounded-xl bg-blue-600 text-white shadow-sm transition flex items-center justify-center gap-1.5">
+                                            <i class="fa-solid fa-book-bookmark"></i>
+                                            <span>📘 Plus Two (+2 Regular)</span>
+                                        </button>
+                                        <button type="button" id="grade-tab-p1" onclick="switchSetupGrade('+1')" class="flex-1 py-2 px-3 text-xs font-bold rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition flex items-center justify-center gap-1.5">
+                                            <i class="fa-solid fa-star"></i>
+                                            <span>📙 Plus One Improvement (+1)</span>
+                                        </button>
+                                    </div>
+
+                                    <!-- Subject Tabs Switcher -->
                                     <div class="flex flex-wrap gap-1.5 mb-3">
                                         ${['Physics', 'Chemistry', 'Mathematics', 'Computer Science'].map(sub => `
-                                            <button type="button" id="setup-tab-${sub.replace(/\s+/g, '-')}" onclick="switchSetupSubject('${sub}')" class="py-2 px-3 text-xs font-bold rounded-xl ${sub === 'Physics' ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'} transition">
+                                            <button type="button" id="setup-tab-${sub.replace(/\s+/g, '-')}" onclick="switchSetupSubject('${sub}')" class="py-1.5 px-3 text-xs font-bold rounded-xl ${sub === 'Physics' ? 'bg-slate-800 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'} transition">
                                                 ${sub}
                                             </button>
                                         `).join('')}
                                     </div>
-                                    <div id="setup-subject-chapters-list">
-                                        ${renderSetupSubjectChapters('Physics')}
+
+                                    <!-- Active Chapter List Container -->
+                                    <div id="setup-subject-chapters-list" class="bg-white p-3 rounded-2xl border border-slate-200/80">
+                                        ${renderSetupSubjectChapters('Physics', '+2')}
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Plus One Improvement Section -->
-                            <div class="border border-slate-200 rounded-2xl overflow-hidden bg-slate-50/50">
-                                <label class="p-4 flex items-center justify-between cursor-pointer hover:bg-slate-100/70 transition">
+                            <!-- Step 4: Plus One Improvement Section -->
+                            <div class="border-2 border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm">
+                                <label class="p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition">
                                     <div class="flex items-center gap-3">
                                         <input type="checkbox" id="has-improvement" onchange="document.getElementById('improvement-options').classList.toggle('hidden', !this.checked)" class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
                                         <div>
-                                            <span class="text-xs sm:text-sm font-bold text-slate-800 block">Add Plus One Improvement Papers</span>
-                                            <span class="text-[11px] text-slate-500">Weaves +1 portions evenly before their official exam dates.</span>
+                                            <div class="flex items-center gap-2">
+                                                <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[11px] font-black">4</span>
+                                                <span class="text-xs sm:text-sm font-extrabold text-slate-800">Add Plus One Improvement Papers</span>
+                                                <span class="text-[10px] font-bold uppercase tracking-wider text-amber-700 bg-amber-100 px-2 py-0.5 rounded-md">Optional</span>
+                                            </div>
+                                            <span class="text-[11px] text-slate-500 mt-0.5 block">Re-appearing for +1 exams? Weaves +1 syllabus evenly before each paper's exam date.</span>
                                         </div>
                                     </div>
                                 </label>
 
-                                <div id="improvement-options" class="hidden p-4 bg-white border-t border-slate-200 space-y-3">
-                                    <div class="text-[11px] font-bold text-amber-700 bg-amber-50 p-2.5 rounded-xl border border-amber-200/60 flex items-center gap-1.5">
-                                        <i class="fa-solid fa-calendar-star"></i> Oct 2026 Tentative Dates Loaded
+                                <div id="improvement-options" class="hidden p-4 bg-slate-50/50 border-t border-slate-200 space-y-3">
+                                    <div class="text-[11px] font-semibold text-amber-900 bg-amber-50 p-3 rounded-xl border border-amber-200/80 flex items-start gap-2">
+                                        <i class="fa-solid fa-circle-info text-amber-600 mt-0.5 text-xs"></i>
+                                        <div>
+                                            <strong>Oct 2026 Examination Schedule:</strong> Select the papers you are appearing for.
+                                            <br><span class="text-amber-700">Tip: If you only need to revise specific chapters, go to <strong>Step 3</strong> above, select the <strong>Plus One Improvement</strong> tab, and mark the chapters you already know!</span>
+                                        </div>
                                     </div>
                                     ${[
                                         { sub: 'Physics', defaultDate: '2026-10-12' },
@@ -1494,14 +1755,14 @@
                                     ].map(item => {
                                         const subId = item.sub.replace(/\s+/g, '-').toLowerCase();
                                         return `
-                                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-slate-50 rounded-xl border border-slate-100">
-                                                <label class="flex items-center gap-2.5 cursor-pointer text-xs font-bold text-slate-700">
-                                                    <input type="checkbox" id="imp-${subId}" class="rounded border-slate-300 text-blue-600">
-                                                    <span>${item.sub}</span>
+                                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-white rounded-xl border border-slate-200 shadow-sm">
+                                                <label class="flex items-center gap-2.5 cursor-pointer text-xs font-bold text-slate-800">
+                                                    <input type="checkbox" id="imp-${subId}" class="rounded border-slate-300 text-blue-600 w-4 h-4">
+                                                    <span>${item.sub} Improvement</span>
                                                 </label>
                                                 <div class="flex items-center gap-2">
-                                                    <span class="text-[11px] text-slate-400">Exam:</span>
-                                                    <input type="date" id="input-date-${subId}" value="${item.defaultDate}" class="border border-slate-200 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-700 bg-white">
+                                                    <span class="text-[11px] text-slate-500 font-medium">Exam Date:</span>
+                                                    <input type="date" id="input-date-${subId}" value="${item.defaultDate}" class="border border-slate-300 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-700 bg-slate-50 focus:bg-white focus:border-blue-600 outline-none">
                                                 </div>
                                             </div>
                                         `;
@@ -1510,13 +1771,17 @@
                             </div>
 
                             <!-- Submit Button -->
-                            <button onclick="handleInitialSetup()" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold py-4 px-6 rounded-2xl shadow-xl shadow-blue-500/25 transform active:scale-[0.98] transition flex items-center justify-center gap-2 text-sm sm:text-base">
+                            <button onclick="handleInitialSetup()" class="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-800 text-white font-black py-4 px-6 rounded-2xl shadow-xl shadow-blue-500/25 transform active:scale-[0.98] transition flex items-center justify-center gap-2 text-sm sm:text-base">
                                 <span>Generate My Study Plan</span>
                                 <i class="fa-solid fa-arrow-right"></i>
                             </button>
                         </div>
                     </div>
                 `;
+                setTimeout(() => {
+                    updateDeadlinePreview();
+                    updateCompletedChaptersCountBadge();
+                }, 0);
                 return;
             }
 
