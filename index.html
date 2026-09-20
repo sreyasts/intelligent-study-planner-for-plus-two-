@@ -48,6 +48,7 @@
           "priceCurrency": "INR"
         },
         "description": "Free intelligent study planner and daily timetable generator tailored for Kerala DHSE Plus Two (Class 12) and Plus One Improvement students.",
+        "codeRepository": "https://github.com/sreyasts/intelligent-study-planner-for-plus-two-",
         "audience": {
           "@type": "EducationalAudience",
           "educationalRole": "student"
@@ -262,6 +263,11 @@
                                 <i class="fa-solid fa-rotate"></i>
                                 <span>Sync with Cloud Now</span>
                             </button>
+                            <a href="https://github.com/sreyasts/intelligent-study-planner-for-plus-two-" target="_blank" rel="noopener noreferrer" class="w-full py-2 px-3 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold rounded-xl transition flex items-center justify-center gap-2 mb-2">
+                                <i class="fa-brands fa-github text-sm"></i>
+                                <span>Star & View on GitHub</span>
+                                <i class="fa-solid fa-star text-[10px] text-amber-400"></i>
+                            </a>
                             <button onclick="signOutUser()" class="w-full py-2 px-3 bg-slate-100 hover:bg-red-50 hover:text-red-600 text-slate-700 font-bold rounded-xl transition flex items-center justify-center gap-2">
                                 <i class="fa-solid fa-right-from-bracket"></i>
                                 <span>Sign Out</span>
@@ -271,10 +277,19 @@
                 </div>
 
                 <!-- Share with Classmates Button -->
-                <button onclick="shareApp()" class="flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200/80 text-xs font-bold py-1.5 px-2.5 sm:px-3 rounded-xl shadow-sm transition active:scale-95" title="Share with Classmates on WhatsApp & Telegram">
+                <button onclick="shareApp()" class="flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200/80 text-xs font-bold py-1.5 px-2.5 sm:px-3 rounded-xl shadow-sm transition active:scale-95 shrink-0" title="Share with Classmates on WhatsApp & Telegram">
                     <i class="fa-solid fa-share-nodes text-emerald-600"></i>
                     <span class="hidden sm:inline">Share</span>
                 </button>
+
+                <!-- GitHub Repository & Star Button with Small GitHub Logo -->
+                <a href="https://github.com/sreyasts/intelligent-study-planner-for-plus-two-" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold py-1.5 px-2 sm:px-3 rounded-xl shadow-sm hover:shadow transition-all transform active:scale-95 group shrink-0" title="Visit GitHub Repository & Star Project">
+                    <svg class="w-3.5 h-3.5 fill-current text-white transition-transform group-hover:scale-110 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+                    </svg>
+                    <span class="hidden sm:inline font-bold">GitHub</span>
+                    <i class="fa-solid fa-star text-[9px] text-amber-400 hidden md:inline"></i>
+                </a>
 
                 <!-- Date display -->
                 <div id="date-display" class="text-xs font-semibold text-slate-500 bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-200/80 hidden md:block"></div>
@@ -367,6 +382,47 @@
             </div>
         </div>
     </section>
+
+    <!-- Dedicated Open-Source GitHub Conversion Footer -->
+    <footer class="bg-white border-t border-slate-200 py-10 px-4 sm:px-6 mb-16 sm:mb-6">
+        <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+            <div class="flex items-center gap-3.5 text-center md:text-left">
+                <div class="w-11 h-11 rounded-2xl bg-slate-900 text-white flex items-center justify-center shrink-0 shadow-md">
+                    <svg class="w-5 h-5 fill-white" viewBox="0 0 24 24" aria-hidden="true">
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="font-bold text-slate-900 text-sm flex items-center justify-center md:justify-start gap-2">
+                        <span>Mission PlusTwo is Free & Open Source</span>
+                        <span class="text-[10px] bg-slate-100 text-slate-600 font-bold px-2 py-0.5 rounded-md border border-slate-200">MIT</span>
+                    </h3>
+                    <p class="text-xs text-slate-500 mt-0.5">Built with ❤️ for Kerala Higher Secondary (+2) students. Star the repository to support new features!</p>
+                </div>
+            </div>
+
+            <!-- Conversion Action Buttons -->
+            <div class="flex flex-wrap items-center justify-center gap-2.5">
+                <a href="https://github.com/sreyasts/intelligent-study-planner-for-plus-two-" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-md transition-all hover:shadow-lg hover:-translate-y-0.5 active:scale-95">
+                    <svg class="w-4 h-4 fill-white shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+                    </svg>
+                    <span>Star on GitHub</span>
+                    <i class="fa-solid fa-star text-amber-400 text-xs"></i>
+                </a>
+
+                <a href="https://github.com/sreyasts/intelligent-study-planner-for-plus-two-/issues" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold py-2.5 px-3.5 rounded-xl border border-slate-200 transition active:scale-95" title="Report a problem or suggest a syllabus update">
+                    <i class="fa-solid fa-bug text-slate-500 text-xs"></i>
+                    <span>Report Issue</span>
+                </a>
+
+                <a href="https://github.com/sreyasts/intelligent-study-planner-for-plus-two-/fork" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold py-2.5 px-3.5 rounded-xl border border-slate-200 transition active:scale-95" title="Fork repository on GitHub">
+                    <i class="fa-solid fa-code-fork text-slate-500 text-xs"></i>
+                    <span>Fork Repo</span>
+                </a>
+            </div>
+        </div>
+    </footer>
 
     <!-- Mobile Bottom Navigation Bar -->
     <div id="mobile-nav" class="sm:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 z-30 px-4 py-2 flex justify-around items-center">
@@ -1743,6 +1799,13 @@
                             <p class="text-xs sm:text-sm text-slate-500 mt-1 max-w-md mx-auto">
                                 Generate your day-by-day Kerala DHSE study schedule with built-in revision buffer and multi-device sync.
                             </p>
+                            <div class="mt-2.5 flex items-center justify-center">
+                                <a href="https://github.com/sreyasts/intelligent-study-planner-for-plus-two-" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-200 px-2.5 py-1 rounded-full transition active:scale-95">
+                                    <svg class="w-3 h-3 fill-current" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+                                    <span>Free & Open Source</span>
+                                    <span class="text-amber-500 font-bold">★ Star on GitHub</span>
+                                </a>
+                            </div>
                         </div>
 
                         <!-- Google Sign-in / Cloud Status Card -->
@@ -2137,6 +2200,37 @@
                             <i class="fa-brands fa-whatsapp text-sm"></i>
                             <span>Share in WhatsApp</span>
                         </button>
+                    </div>
+
+                    <!-- GitHub Open-Source Community & Traffic Conversion Card -->
+                    <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white rounded-2xl p-4 sm:p-5 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-md">
+                        <div class="flex items-center gap-3.5 text-center sm:text-left">
+                            <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-white shrink-0 border border-white/10 shadow-inner">
+                                <svg class="w-5 h-5 fill-white" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="text-xs sm:text-sm font-bold text-white flex items-center justify-center sm:justify-start gap-2">
+                                    <span>Support Mission PlusTwo on GitHub</span>
+                                    <span class="text-[10px] bg-amber-400/20 text-amber-300 font-bold px-1.5 py-0.5 rounded border border-amber-400/30">Free & Open Source</span>
+                                </h4>
+                                <p class="text-[11px] text-slate-300 mt-0.5">Help us reach more students across Kerala — star our repo or suggest improvements!</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 w-full sm:w-auto shrink-0">
+                            <a href="https://github.com/sreyasts/intelligent-study-planner-for-plus-two-" target="_blank" rel="noopener noreferrer" class="flex-1 sm:flex-initial bg-white hover:bg-slate-100 text-slate-900 font-extrabold text-xs py-2 px-3.5 rounded-xl shadow transition flex items-center justify-center gap-1.5 active:scale-95">
+                                <svg class="w-3.5 h-3.5 fill-slate-900" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+                                </svg>
+                                <span>Star Repo</span>
+                                <i class="fa-solid fa-star text-amber-500 text-[10px]"></i>
+                            </a>
+                            <a href="https://github.com/sreyasts/intelligent-study-planner-for-plus-two-/issues" target="_blank" rel="noopener noreferrer" class="flex-1 sm:flex-initial bg-white/10 hover:bg-white/20 text-white font-semibold text-xs py-2 px-3 rounded-xl border border-white/20 transition flex items-center justify-center gap-1.5 active:scale-95" title="Report issue or suggest a chapter update">
+                                <i class="fa-solid fa-bug text-xs text-slate-300"></i>
+                                <span class="hidden xs:inline">Feedback</span>
+                            </a>
+                        </div>
                     </div>
 
                     <!-- Bottom Controls: Subtle Adjust & Reset (As Requested by User) -->
