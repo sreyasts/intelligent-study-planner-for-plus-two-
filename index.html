@@ -238,7 +238,7 @@
                 </div>
                 <div>
                     <h1 class="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight leading-none">Mission <span class="text-blue-600">PlusTwo</span></h1>
-                    <p class="text-[11px] font-medium text-slate-400 mt-0.5 hidden sm:block">Kerala DHSE Study System • <span class="text-slate-500 font-semibold">കേരള DHSE സ്റ്റഡി പ്ലാനർ</span></p>
+                    <p class="text-[11px] font-medium text-slate-400 mt-0.5 hidden sm:block">Kerala DHSE Intelligent Study System</p>
                 </div>
             </div>
 
@@ -315,7 +315,7 @@
                 </div>
 
                 <!-- Share with Classmates Button -->
-                <button onclick="shareApp()" class="flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200/80 text-xs font-bold py-1.5 px-2.5 sm:px-3 rounded-xl shadow-sm transition active:scale-95 shrink-0" title="Share with Classmates on WhatsApp & Telegram">
+                <button onclick="openShareModal()" class="flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200/80 text-xs font-bold py-1.5 px-2.5 sm:px-3 rounded-xl shadow-sm transition active:scale-95 shrink-0" title="Share with Classmates on WhatsApp & Telegram">
                     <i class="fa-solid fa-share-nodes text-emerald-600"></i>
                     <span class="hidden sm:inline">Share</span>
                 </button>
@@ -476,10 +476,65 @@
             <i class="fa-solid fa-book-open text-lg mb-0.5"></i>
             <span>Syllabus</span>
         </button>
-        <button onclick="shareApp()" class="flex flex-col items-center text-emerald-600 hover:text-emerald-700 font-semibold text-[11px]">
+        <button onclick="openShareModal()" class="flex flex-col items-center text-emerald-600 hover:text-emerald-700 font-semibold text-[11px]">
             <i class="fa-solid fa-share-nodes text-lg mb-0.5"></i>
             <span>Share</span>
         </button>
+    </div>
+
+    <!-- Quick Share Language / Options Modal -->
+    <div id="share-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 px-4">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-5 sm:p-6 border border-slate-100 animate-fade-in-up">
+            <div class="flex justify-between items-center mb-3">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+                        <i class="fa-brands fa-whatsapp text-base"></i>
+                    </div>
+                    <h3 class="text-base font-extrabold text-slate-900">Share with Friends</h3>
+                </div>
+                <button onclick="closeShareModal()" class="w-8 h-8 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 flex items-center justify-center transition">
+                    <i class="fa-solid fa-times text-sm"></i>
+                </button>
+            </div>
+            
+            <p class="text-xs text-slate-500 mb-4">
+                Choose your preferred message style:
+            </p>
+
+            <div class="space-y-3 mb-4">
+                <!-- Option 1: Malayalam / Manglish -->
+                <div class="p-3.5 rounded-2xl border-2 border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/40 transition cursor-pointer group" onclick="executeShare('ml')">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <span class="text-xs font-extrabold text-slate-900 group-hover:text-emerald-700 flex items-center gap-1.5">
+                            <span>🌴 മലയാളം / Manglish</span>
+                            <span class="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.2 rounded">Popular</span>
+                        </span>
+                        <i class="fa-brands fa-whatsapp text-emerald-600 text-base"></i>
+                    </div>
+                    <p class="text-[11px] text-slate-600 leading-relaxed font-medium bg-white p-2 rounded-xl border border-slate-100">
+                        "ഡാ പരീക്ഷയ്ക്ക് മുൻപ് portions തീർക്കാൻ ഒരു കിടു സാധനം കിട്ടിയിട്ടുണ്ട്! 🔥..."
+                    </p>
+                </div>
+
+                <!-- Option 2: English -->
+                <div class="p-3.5 rounded-2xl border-2 border-slate-200 hover:border-blue-500 hover:bg-blue-50/40 transition cursor-pointer group" onclick="executeShare('en')">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <span class="text-xs font-extrabold text-slate-900 group-hover:text-blue-700 flex items-center gap-1.5">
+                            <span>🌐 English</span>
+                        </span>
+                        <i class="fa-brands fa-whatsapp text-blue-600 text-base"></i>
+                    </div>
+                    <p class="text-[11px] text-slate-600 leading-relaxed font-medium bg-white p-2 rounded-xl border border-slate-100">
+                        "Bro, found a lifesaver to finish Plus Two portions before exams! 🔥..."
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-[11px] text-slate-400">
+                <span>Select to send via WhatsApp</span>
+                <button onclick="closeShareModal()" class="text-slate-500 hover:text-slate-800 font-bold">Cancel</button>
+            </div>
+        </div>
     </div>
 
     <!-- Rebalance / Adjust Schedule Modal -->
@@ -1068,9 +1123,8 @@
         }
 
         function shareTodayCompletion(dayNumber) {
-            const shareTitle = `Day ${dayNumber} Targets Cleared!`;
-            const shareText = `Day ${dayNumber} targets തീർത്തു മക്കളെ! 😌🔥
-Daily portions തീർക്കാൻ നോക്കുന്നവർ ഈ planner ഒന്നു try ചെയ്തു നോക്ക് 👇`;
+            const shareTitle = `Mission PlusTwo — Day ${dayNumber} Cleared!`;
+            const shareText = `🏆 Day ${dayNumber} study targets 100% completed on Mission PlusTwo! Free adaptive daily study planner for Kerala DHSE Plus Two & Plus One Improvement — with guaranteed mock revision buffer. Try it:`;
             const shareUrl = 'https://sreyasts.github.io/intelligent-study-planner-for-plus-two-/';
 
             if (navigator.share) {
@@ -1079,7 +1133,7 @@ Daily portions തീർക്കാൻ നോക്കുന്നവർ ഈ pl
                     text: shareText,
                     url: shareUrl
                 }).then(() => {
-                    showToastMessage("Status shared! കൂട്ടുകാർക്കും ഉപകാരപ്പെടട്ടെ 🔥", "fa-fire text-amber-400");
+                    showToastMessage("Achievement shared with classmates!", "fa-trophy text-amber-300");
                 }).catch(() => {});
             } else {
                 const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + '\n' + shareUrl)}`;
@@ -1468,25 +1522,49 @@ Daily portions തീർക്കാൻ നോക്കുന്നവർ ഈ pl
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function shareApp() {
-            const shareTitle = 'Mission PlusTwo - Kerala DHSE Study Planner';
-            const shareText = `ഡാ പരീക്ഷയ്ക്ക് മുൻപ് portions തീർക്കാൻ ഒരു കിടു സാധനം കിട്ടിയിട്ടുണ്ട്! 🔥
-നമ്മുടെ target date വെച്ച് daily study plan ഉണ്ടാക്കാം. Miss ആയാലും adjust ചെയ്യാം (+1 Improvement-ഉം ഉണ്ട്) 👇`;
+        function openShareModal() {
+            const modal = document.getElementById('share-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+        }
+
+        function closeShareModal() {
+            const modal = document.getElementById('share-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        }
+
+        function executeShare(lang) {
+            closeShareModal();
             const shareUrl = 'https://sreyasts.github.io/intelligent-study-planner-for-plus-two-/';
 
+            let shareTitle, shareText;
+            if (lang === 'ml') {
+                shareTitle = 'Mission PlusTwo - Kerala DHSE Study Planner';
+                shareText = `ഡാ പരീക്ഷയ്ക്ക് മുൻപ് portions തീർക്കാൻ ഒരു കിടു സാധനം കിട്ടിയിട്ടുണ്ട്! 🔥
+നമ്മുടെ target date വെച്ച് daily study plan ഉണ്ടാക്കാം. Miss ആയാലും adjust ചെയ്യാം (+1 Improvement-ഉം ഉണ്ട്) 👇`;
+            } else {
+                shareTitle = 'Mission PlusTwo - Kerala DHSE Study Planner';
+                shareText = `Bro, found a lifesaver to finish Plus Two portions before exams! 🔥
+Set your target date, get a daily study plan. Miss a day? Adjust and carry on. (+1 Improvement included) 👇`;
+            }
+
             if (navigator.share) {
-                navigator.share({
-                    title: shareTitle,
-                    text: shareText,
-                    url: shareUrl
-                }).then(() => {
-                    showToastMessage("Thanks for sharing! കൂട്ടുകാർക്കും ഉപകാരപ്പെടട്ടെ 🔥", "fa-fire text-amber-400");
-                }).catch(() => {});
+                navigator.share({ title: shareTitle, text: shareText, url: shareUrl })
+                    .then(() => { showToastMessage("Thanks for sharing! 🔥", "fa-fire text-amber-400"); })
+                    .catch(() => {});
             } else {
                 const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + '\n' + shareUrl)}`;
                 window.open(whatsappUrl, '_blank');
             }
         }
+
+        // Legacy alias — keeps any old inline onclick="shareApp()" working
+        function shareApp() { openShareModal(); }
 
         function updateActiveNavButtons() {
             const todayBtn = document.getElementById('nav-btn-today');
