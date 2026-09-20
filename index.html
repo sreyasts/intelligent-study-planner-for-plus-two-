@@ -1084,6 +1084,32 @@
 
         const TODAY_STR = getLocalDateStr();
 
+        // Auto-refresh: if date changes (e.g. page left open past midnight) reload so plan updates
+        (function setupAutoRefresh() {
+            // Check every 30 minutes; reload if the date has rolled over
+            setInterval(() => {
+                if (getLocalDateStr() !== TODAY_STR) {
+                    window.location.reload();
+                }
+            }, 30 * 60 * 1000); // 30 minutes
+
+            // Also reload when the tab becomes visible after being hidden
+            // (handles phone screen-off / next-day scenario)
+            let hiddenSince = null;
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    hiddenSince = Date.now();
+                } else if (hiddenSince !== null) {
+                    const awayMs = Date.now() - hiddenSince;
+                    // If hidden for >15 minutes AND date has changed, reload
+                    if (awayMs > 15 * 60 * 1000 && getLocalDateStr() !== TODAY_STR) {
+                        window.location.reload();
+                    }
+                    hiddenSince = null;
+                }
+            });
+        })();
+
         const getYesterdayStr = () => {
             const d = new Date();
             d.setDate(d.getDate() - 1);
@@ -1541,17 +1567,8 @@
         function executeShare(lang) {
             closeShareModal();
             const shareUrl = 'https://sreyasts.github.io/intelligent-study-planner-for-plus-two-/';
-
-            let shareTitle, shareText;
-            if (lang === 'ml') {
-                shareTitle = 'Mission PlusTwo - Kerala DHSE Study Planner';
-                shareText = `ഡാ പരീക്ഷയ്ക്ക് മുൻപ് portions തീർക്കാൻ ഒരു കിടു സാധനം കിട്ടിയിട്ടുണ്ട്! 🔥
-നമ്മുടെ target date വെച്ച് daily study plan ഉണ്ടാക്കാം. Miss ആയാലും adjust ചെയ്യാം (+1 Improvement-ഉം ഉണ്ട്) 👇`;
-            } else {
-                shareTitle = 'Mission PlusTwo - Kerala DHSE Study Planner';
-                shareText = `Bro, found a lifesaver to finish Plus Two portions before exams! 🔥
-Set your target date, get a daily study plan. Miss a day? Adjust and carry on. (+1 Improvement included) 👇`;
-            }
+            const shareTitle = 'Mission PlusTwo — Kerala DHSE Study Planner';
+            const shareText = '🔥 Free adaptive daily study planner for Kerala DHSE Plus Two (+2) & Plus One Improvement — personalised day-by-day timetable with guaranteed mock revision buffer. 100% free, no login needed. Try it:';
 
             if (navigator.share) {
                 navigator.share({ title: shareTitle, text: shareText, url: shareUrl })
@@ -2341,7 +2358,7 @@ Set your target date, get a daily study plan. Miss a day? Adjust and carry on. (
                                                 ${task.isRevision ? '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-100 text-purple-800">Buffer Revision</span>' : ''}
                                             </div>
                                             <h4 class="text-sm sm:text-base font-bold text-slate-800 task-text-content ${task.completed ? 'line-through opacity-50' : ''}">
-                                                ${task.chapterName}
+                                                ${task.chapNumber && !task.isRevision ? `<span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded mr-1">Ch.${task.chapNumber}</span>` : ''}${task.chapterName}
                                             </h4>
                                             <p class="text-xs text-slate-500 mt-0.5 font-medium">
                                                 ${task.topicTitle}
@@ -2565,7 +2582,7 @@ Set your target date, get a daily study plan. Miss a day? Adjust and carry on. (
                                                     ${task.grade === '+1' ? '<span class="text-[10px] font-bold text-amber-700 bg-amber-50 px-1 rounded">+1 Imp</span>' : `<span class="text-[10px] text-slate-400">Term ${task.term}</span>`}
                                                 </div>
                                                 <div class="text-xs sm:text-sm font-bold text-slate-800 task-text-content ${task.completed ? 'line-through opacity-50' : ''}">
-                                                    ${task.chapterName} - <span class="font-normal text-slate-500">${task.topicTitle}</span>
+                                                    ${task.chapNumber && !task.isRevision ? `<span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-1 py-0.5 rounded mr-1">Ch.${task.chapNumber}</span>` : ''}${task.chapterName} - <span class="font-normal text-slate-500">${task.topicTitle}</span>
                                                 </div>
                                             </div>
                                         </div>
