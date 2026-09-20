@@ -834,61 +834,43 @@
             const targetTerm = existingState.targetTerm || 3;
             const deadlineDate = existingState.deadlineDate || '2026-11-30';
             const improvementConfig = existingState.improvementConfig || [];
-            const todayStr = getLocalDateStr();
+            const startDate = existingState.startDate || getLocalDateStr();
 
-            // 3. Keep historical days (strictly before today) with completed tasks intact
-            const historicalKeptDays = [];
-            existingState.plan.forEach(day => {
-                if (day.date < todayStr && day.tasks && day.tasks.some(t => t.completed)) {
-                    historicalKeptDays.push(day);
-                }
-            });
-
-            // 4. Reconstruct remaining syllabus workload
+            // 3. Reconstruct canonical syllabus workload for the user
             const allowedSubjects = userStream === 'bio'
                 ? ['Physics', 'Chemistry', 'Mathematics', 'Botany', 'Zoology']
                 : ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'];
 
-            // Unfinished Plus Two tasks
-            let remainingTasks = PLUS_TWO_SYLLABUS.filter(t => 
+            let allTasksToPlan = PLUS_TWO_SYLLABUS.filter(t => 
                 allowedSubjects.includes(t.subject) &&
                 t.term <= targetTerm &&
-                !completedChapterIds.has(t.chapId) &&
-                !completedTaskIds.has(t.id)
+                !completedChapterIds.has(t.chapId)
             );
 
-            // Unfinished Plus One Improvement tasks
             if (improvementConfig.length > 0) {
                 improvementConfig.forEach(cfg => {
                     const impTasks = PLUS_ONE_SYLLABUS.filter(t => 
                         t.subject === cfg.subject &&
-                        !completedChapterIds.has(t.chapId) &&
-                        !completedTaskIds.has(t.id)
+                        !completedChapterIds.has(t.chapId)
                     );
-                    remainingTasks.push(...impTasks);
+                    allTasksToPlan.push(...impTasks);
                 });
             }
 
-            // If no remaining tasks, simply upgrade version tag
-            if (remainingTasks.length === 0) {
-                return {
-                    ...existingState,
-                    engineVersion: PLANNER_ENGINE_VERSION,
-                    _migratedV3: true
-                };
-            }
-
-            // 5. Build intelligent plan for remaining tasks starting from today (or start date if all in future)
-            const startDate = (todayStr < deadlineDate) ? todayStr : (existingState.startDate || todayStr);
-            const planResult = buildIntelligentPlan(deadlineDate, remainingTasks, startDate, improvementConfig, userStream);
+            // 4. Build new intelligent plan in prerequisite order
+            const planResult = buildIntelligentPlan(deadlineDate, allTasksToPlan, startDate, improvementConfig, userStream);
 
             let newPlanDays = [];
             if (planResult && planResult.planDays) {
-                const lastDayNum = historicalKeptDays.length > 0 ? historicalKeptDays[historicalKeptDays.length - 1].dayNumber : 0;
-                planResult.planDays.forEach((d, idx) => {
-                    d.dayNumber = lastDayNum + idx + 1;
+                // Restore completed status for all tasks previously completed!
+                planResult.planDays.forEach(day => {
+                    day.tasks.forEach(task => {
+                        if (completedTaskIds.has(task.id)) {
+                            task.completed = true;
+                        }
+                    });
                 });
-                newPlanDays = [...historicalKeptDays, ...planResult.planDays];
+                newPlanDays = planResult.planDays;
             } else {
                 newPlanDays = existingState.plan;
             }
@@ -2981,7 +2963,18 @@
                         </div>
                     ` : '';
 
+                    const warningBannerHTML = (appState.diagnostics && appState.diagnostics.isInfeasible) ? `
+                        <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-4 text-xs sm:text-sm text-amber-900 flex items-start gap-3 shadow-sm animate-fade-in-up">
+                            <i class="fa-solid fa-triangle-exclamation text-amber-600 text-base mt-0.5 shrink-0"></i>
+                            <div class="flex-1">
+                                <strong class="font-extrabold block mb-0.5">Study Pacing Advisory</strong>
+                                <span>${appState.diagnostics.warningMessage || "The current deadline requires more study capacity than standard availability. The engine has balanced the workload dynamically to prioritize nearest exams and preserve final revision buffers."}</span>
+                            </div>
+                        </div>
+                    ` : '';
+
                     todayTasksHTML = `
+                        ${warningBannerHTML}
                         ${milestoneCardHTML}
 
                         <div class="flex items-center justify-between mb-4">
