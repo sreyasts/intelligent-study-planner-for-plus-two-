@@ -1,5 +1,5 @@
-// Mission PlusTwo Service Worker
-const CACHE_NAME = 'plustwo-mission-v2';
+// Mission PlusTwo Service Worker v2.1
+const CACHE_NAME = 'plustwo-mission-v2.1';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -25,22 +25,39 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+// Network-First for HTML/navigation requests so existing users always see new UI immediately!
+// Cache-First for static assets (icons, etc.) for instant offline loading.
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
+
+  const isNavigation = (event.request.mode === 'navigate' || event.request.destination === 'document');
+
+  if (isNavigation) {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const copy = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          }
+          return networkResponse;
+        })
+        .catch(() => caches.match(event.request).then((res) => res || caches.match('./index.html')))
+    );
+    return;
+  }
+
+  // Static assets: cache first, update in background
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        // Return cached, but refresh in background
-        fetch(event.request).then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, networkResponse);
-            });
-          }
-        }).catch(() => {});
-        return cachedResponse;
-      }
-      return fetch(event.request);
+      const fetchPromise = fetch(event.request).then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200) {
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, networkResponse));
+        }
+        return networkResponse;
+      }).catch(() => {});
+
+      return cachedResponse || fetchPromise;
     })
   );
 });

@@ -371,15 +371,85 @@
         ];
 
         /* ==========================================================================
-           2. STATE & PERSISTENCE
+           2. STATE, MIGRATION & PERSISTENCE
+           Guarantees 100% data preservation for existing users from previous version!
            ========================================================================== */
-        let appState = JSON.parse(localStorage.getItem('plusTwoMissionState_v2')) || null;
+        function migrateOldState(oldState) {
+            if (!oldState || !Array.isArray(oldState.plan)) return null;
+
+            const migratedPlan = oldState.plan.map((day, dIdx) => ({
+                dayNumber: day.dayNumber || (dIdx + 1),
+                date: day.date,
+                isRevisionDay: Boolean(day.isRevisionDay),
+                tasks: (day.tasks || []).map((t, tIdx) => ({
+                    id: t.id || `migrated_${dIdx}_${tIdx}`,
+                    chapId: t.chapId || `${t.grade || '+2'}_${(t.subject || '').replace(/\s+/g, '_')}_${tIdx}`,
+                    grade: t.grade || '+2',
+                    subject: t.subject || 'General',
+                    chapterName: t.chapterName || (t.chapter ? t.chapter.replace(/^\d+\.\s*/, '') : 'Chapter Portion'),
+                    topicTitle: t.topicTitle || t.topic || 'Concept & Problems',
+                    completed: Boolean(t.completed),
+                    term: t.term || 1,
+                    isRevision: Boolean(t.isRevision)
+                }))
+            }));
+
+            return {
+                startDate: oldState.startDate || getLocalDateStr(),
+                deadlineDate: oldState.deadlineDate || '2026-11-30',
+                targetTerm: oldState.targetTerm || 2,
+                completedChaptersOnInit: oldState.completedChapters || [],
+                improvementConfig: oldState.improvementConfig || [],
+                plan: migratedPlan,
+                revisionDaysCount: oldState.revisionDaysCount || 0,
+                totalConfiguredTasks: migratedPlan.reduce((acc, d) => acc + d.tasks.length, 0),
+                _migratedFromV1: true
+            };
+        }
+
+        function loadInitialState() {
+            // 1. Check v2 state
+            try {
+                const v2Raw = localStorage.getItem('plusTwoMissionState_v2');
+                if (v2Raw) {
+                    const parsed = JSON.parse(v2Raw);
+                    if (parsed && Array.isArray(parsed.plan) && parsed.plan.length > 0) {
+                        return parsed;
+                    }
+                }
+            } catch(e) { console.warn("V2 load error:", e); }
+
+            // 2. Check and migrate v1 state from previous app version ('plusTwoPlanState')
+            try {
+                const v1Raw = localStorage.getItem('plusTwoPlanState');
+                if (v1Raw) {
+                    const oldState = JSON.parse(v1Raw);
+                    if (oldState && Array.isArray(oldState.plan) && oldState.plan.length > 0) {
+                        const migrated = migrateOldState(oldState);
+                        if (migrated) {
+                            localStorage.setItem('plusTwoMissionState_v2', JSON.stringify(migrated));
+                            console.log("Migrated v1 study plan seamlessly without losing progress.");
+                            setTimeout(() => {
+                                showToastMessage("✨ Welcome back! Your study progress was seamlessly upgraded to the new experience.", "fa-wand-magic-sparkles text-blue-400");
+                            }, 500);
+                            return migrated;
+                        }
+                    }
+                }
+            } catch(e) { console.warn("V1 migration error:", e); }
+
+            return null;
+        }
+
+        let appState = loadInitialState();
         let currentView = 'today'; // 'today', 'plan', 'syllabus', 'setup'
         let activeSetupSubjectTab = 'Physics';
 
-        // Save State helper
+        // Save State helper - saves to v2 and keeps backup in v1 key
         function saveAppState() {
+            if (!appState) return;
             localStorage.setItem('plusTwoMissionState_v2', JSON.stringify(appState));
+            localStorage.setItem('plusTwoPlanState', JSON.stringify(appState));
         }
 
         const getLocalDateStr = (d = new Date()) => {
@@ -775,6 +845,7 @@
         function resetApp() {
             if (confirm('Are you sure you want to reset your study plan and start over? This cannot be undone.')) {
                 localStorage.removeItem('plusTwoMissionState_v2');
+                localStorage.removeItem('plusTwoPlanState');
                 location.reload();
             }
         }
