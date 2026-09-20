@@ -1,0 +1,19 @@
+{
+  "name": "Mission PlusTwo - Intelligent Study Planner",
+  "short_name": "MissionPlusTwo",
+  "description": "Smart study planner for Kerala DHSE Plus Two and Plus One students",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f8fafc",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

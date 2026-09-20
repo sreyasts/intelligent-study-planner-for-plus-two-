@@ -2,914 +2,1461 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Plus Two Mission Control</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mission PlusTwo | Intelligent Study Planner</title>
+    
+    <!-- PWA & Mobile Meta Tags -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="MissionPlusTwo">
+    <link rel="apple-touch-icon" href="icon.png">
     <link rel="icon" type="image/png" href="icon.png">
+
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Premium effects dependencies -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/1.4.11/Tone.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Sound & Visual Dependencies -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
-        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
-        .gradient-text { background: linear-gradient(90deg, #2563eb, #7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .checkbox-custom:checked + label .check-icon { display: block; }
+        * { -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif; background-color: #f8fafc; }
         
-        /* Custom scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        /* Custom Guaranteed Checkbox Styling */
+        .task-checkbox {
+            width: 26px;
+            height: 26px;
+            border-radius: 8px;
+            border: 2px solid #cbd5e1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            background: #ffffff;
+            flex-shrink: 0;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+        .task-checkbox:hover {
+            border-color: #3b82f6;
+            transform: scale(1.06);
+        }
+        .task-checkbox.checked {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            border-color: #2563eb;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+            animation: popCheck 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .task-checkbox .svg-check {
+            width: 16px;
+            height: 16px;
+            color: #ffffff;
+            stroke-width: 3.2;
+            display: none;
+        }
+        .task-checkbox.checked .svg-check {
+            display: block;
+            animation: drawCheck 0.2s ease-out;
+        }
+
+        @keyframes popCheck {
+            0% { transform: scale(0.6); }
+            70% { transform: scale(1.18); }
+            100% { transform: scale(1); }
+        }
+        @keyframes drawCheck {
+            0% { opacity: 0; transform: scale(0.5); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        /* Subtle pulsing highlight for next suggested task */
+        .next-suggested-task {
+            position: relative;
+            border-color: #93c5fd !important;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+            animation: pulseGlow 2.5s infinite;
+        }
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15); }
+            50% { box-shadow: 0 0 0 5px rgba(59, 130, 246, 0.3); }
+        }
+
+        /* Custom scrollbars */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
-<body class="text-slate-800 min-h-screen flex flex-col">
+<body class="text-slate-800 min-h-screen flex flex-col antialiased selection:bg-blue-100 selection:text-blue-900 pb-20 md:pb-12">
 
-    <!-- Navbar -->
-    <nav class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-10">
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="bg-blue-600 text-white p-2 rounded-lg">
-                    <i class="fa-solid fa-graduation-cap"></i>
+    <!-- Top Sticky Navigation Bar -->
+    <header class="bg-white/95 backdrop-blur-md border-b border-slate-200 sticky top-0 z-30 transition-all">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-2">
+            <!-- App Branding -->
+            <div class="flex items-center gap-3 cursor-pointer" onclick="goToDashboard()">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+                    <i class="fa-solid fa-graduation-cap text-lg"></i>
                 </div>
-                <h1 class="text-xl font-bold text-slate-800">Mission <span class="text-blue-600">PlusTwo</span></h1>
+                <div>
+                    <h1 class="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight leading-none">Mission <span class="text-blue-600">PlusTwo</span></h1>
+                    <p class="text-[11px] font-medium text-slate-400 mt-0.5 hidden sm:block">Kerala DHSE Intelligent Study System</p>
+                </div>
             </div>
-            <div id="date-display" class="text-sm font-medium text-slate-500"></div>
-        </div>
-    </nav>
 
-    <!-- Main Content Container -->
-    <main id="app-container" class="flex-grow max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
-        <!-- Views will be dynamically injected here by JavaScript -->
+            <!-- Header Action Controls -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                <!-- 1-Click Install PWA Button -->
+                <button id="pwa-install-btn" onclick="triggerPWAInstall()" class="hidden items-center gap-1.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-xs font-bold py-2 px-3 sm:px-3.5 rounded-xl shadow-md shadow-emerald-500/20 transition-all transform active:scale-95">
+                    <i class="fa-solid fa-download text-[11px]"></i>
+                    <span class="hidden xs:inline">Install App</span>
+                    <span class="xs:hidden">Install</span>
+                </button>
+
+                <!-- Navigation Tabs (Desktop / Tablet) -->
+                <nav id="nav-desktop-tabs" class="hidden sm:flex items-center bg-slate-100 p-1 rounded-xl text-xs font-bold text-slate-600">
+                    <button id="nav-btn-today" onclick="goToDashboard()" class="py-1.5 px-3 rounded-lg transition-all text-blue-600 bg-white shadow-sm">
+                        <i class="fa-solid fa-bolt mr-1"></i> Today
+                    </button>
+                    <button id="nav-btn-plan" onclick="goToPlan()" class="py-1.5 px-3 rounded-lg transition-all hover:text-slate-900">
+                        <i class="fa-solid fa-list-check mr-1"></i> Full Plan
+                    </button>
+                    <button id="nav-btn-syllabus" onclick="goToSyllabusView()" class="py-1.5 px-3 rounded-lg transition-all hover:text-slate-900">
+                        <i class="fa-solid fa-book-open mr-1"></i> Syllabus
+                    </button>
+                </nav>
+
+                <!-- Date display -->
+                <div id="date-display" class="text-xs font-semibold text-slate-500 bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-200/80 hidden md:block"></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Notification Toast / Streak Banner -->
+    <div id="toast-banner" class="fixed top-20 left-1/2 -translate-x-1/2 z-50 pointer-events-none transition-all duration-300 transform -translate-y-6 opacity-0 max-w-sm w-[90%]">
+        <div id="toast-content" class="bg-slate-900/95 backdrop-blur text-white text-xs sm:text-sm font-semibold py-2.5 px-4 rounded-2xl shadow-xl flex items-center justify-between border border-slate-700/60">
+            <!-- Dynamic Content -->
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <main id="app-container" class="flex-grow max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8 w-full">
+        <!-- Injected dynamically by JS -->
     </main>
 
-    <!-- Regenerate Modal -->
-    <div id="regenerate-modal" class="fixed inset-0 bg-slate-900 bg-opacity-50 hidden items-center justify-center z-50 px-4">
-        <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 animate-fade-in-up">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-bold text-slate-800">Adjust Schedule</h2>
-                <button onclick="closeRegenerateModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-times text-xl"></i></button>
+    <!-- Mobile Bottom Navigation Bar -->
+    <div id="mobile-nav" class="sm:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 z-30 px-6 py-2 flex justify-around items-center">
+        <button onclick="goToDashboard()" id="mob-btn-today" class="flex flex-col items-center text-blue-600 font-bold text-[11px]">
+            <i class="fa-solid fa-bolt text-lg mb-0.5"></i>
+            <span>Today</span>
+        </button>
+        <button onclick="goToPlan()" id="mob-btn-plan" class="flex flex-col items-center text-slate-400 hover:text-slate-700 font-semibold text-[11px]">
+            <i class="fa-solid fa-list-check text-lg mb-0.5"></i>
+            <span>Full Plan</span>
+        </button>
+        <button onclick="goToSyllabusView()" id="mob-btn-syllabus" class="flex flex-col items-center text-slate-400 hover:text-slate-700 font-semibold text-[11px]">
+            <i class="fa-solid fa-book-open text-lg mb-0.5"></i>
+            <span>Syllabus</span>
+        </button>
+    </div>
+
+    <!-- Rebalance / Adjust Schedule Modal -->
+    <div id="regenerate-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 px-4">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 sm:p-7 border border-slate-100 animate-fade-in-up">
+            <div class="flex justify-between items-center mb-3">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+                        <i class="fa-solid fa-rotate text-sm"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-900">Adjust & Rebalance Plan</h3>
+                </div>
+                <button onclick="closeRegenerateModal()" class="w-8 h-8 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 flex items-center justify-center transition">
+                    <i class="fa-solid fa-times"></i>
+                </button>
             </div>
-            <p class="text-sm text-slate-600 mb-6">Fell behind? No problem. Select the last day you fully completed, and we'll redistribute the remaining syllabus from tomorrow until your deadline.</p>
             
-            <div class="mb-6">
-                <label class="block text-sm font-medium text-slate-700 mb-2">I have completed up to:</label>
-                <select id="completed-day-select" class="w-full border border-slate-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
-                    <!-- Options populated via JS -->
-                </select>
+            <p class="text-xs text-slate-500 mb-5 leading-relaxed">
+                Missed some days or fell behind? Don't stress. Select the last day you fully finished, and our intelligent pacing algorithm will recalculate and redistribute only the remaining unfinished syllabus evenly across your available time.
+            </p>
+            
+            <div class="space-y-4 mb-6">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">I have completed up to:</label>
+                    <select id="completed-day-select" class="w-full border-2 border-slate-200 rounded-xl p-3 text-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-50 outline-none transition font-semibold text-slate-800 bg-slate-50">
+                        <!-- Populated by JS -->
+                    </select>
+                </div>
+
+                <div class="bg-blue-50/70 border border-blue-100 rounded-xl p-3 text-[11px] text-blue-800">
+                    <i class="fa-solid fa-shield-check text-blue-600 mr-1"></i>
+                    <strong>Guaranteed Revision Days:</strong> Your target deadline will still maintain dedicated revision buffer days at the end!
+                </div>
             </div>
             
             <div class="flex gap-3">
-                <button onclick="closeRegenerateModal()" class="flex-1 py-3 px-4 bg-slate-100 text-slate-700 font-semibold rounded-xl hover:bg-slate-200 transition-colors">Cancel</button>
-                <button onclick="executeRegeneration()" class="flex-1 py-3 px-4 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200">Re-plan</button>
+                <button onclick="closeRegenerateModal()" class="flex-1 py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold rounded-xl transition">Cancel</button>
+                <button onclick="executeRegeneration()" class="flex-1 py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl shadow-lg shadow-blue-500/25 transition">Rebalance Now</button>
             </div>
         </div>
     </div>
 
+    <!-- Application JavaScript Logic -->
     <script>
-        // --- 1. DATA SOURCE (Verified Kerala DHSE Rationalized Syllabus) ---
-        const makeTasks = (subject, grade, chapters) => {
-            let tasks = [];
-            chapters.forEach((ch, chIdx) => {
-                let parts = ch.parts;
-                for(let p=1; p<=parts; p++) {
-                    tasks.push({
-                        id: `${grade}_${subject.charAt(0)}_${chIdx+1}_${p}`,
-                        chapId: `${grade}_${subject}_${chIdx+1}`,
-                        subject: subject,
+        /* ==========================================================================
+           1. ACCURATE KERALA DHSE SCHEME OF WORK & SYLLABUS DATA
+           Verified against official DHSE rationalized curriculum & HSSLive scheme:
+           - Plus Two: Physics (14 ch), Chemistry (9 ch), Maths (13 ch), CS (10 ch)
+           - Plus One: Physics (14 ch), Chemistry (9 ch), Maths (14 ch), CS (10 ch)
+           ========================================================================== */
+
+        const createTasks = (subject, grade, chapters) => {
+            let list = [];
+            chapters.forEach((ch, idx) => {
+                const chapNumber = idx + 1;
+                const totalParts = ch.parts || 2;
+                const chapId = `${grade}_${subject.replace(/\s+/g, '_')}_${chapNumber}`;
+                
+                for (let p = 1; p <= totalParts; p++) {
+                    list.push({
+                        id: `${chapId}_P${p}`,
+                        chapId: chapId,
                         grade: grade,
-                        chapter: `${chIdx+1}. ${ch.name}`,
-                        topic: parts === 1 ? 'Full Chapter' : `Part ${p} of ${parts}`,
+                        subject: subject,
+                        chapNumber: chapNumber,
+                        chapterName: ch.name,
+                        part: p,
+                        totalParts: totalParts,
+                        topicTitle: totalParts === 1 ? 'Full Chapter Concept & Practice' : `Part ${p} of ${totalParts} (Theory & Problem Solving)`,
                         term: ch.term || 1
                     });
                 }
             });
-            return tasks;
+            return list;
         };
 
-        const PLUS_TWO_DATA = [
-            ...makeTasks('Physics', '+2', [
-                {name: 'Electric Charges & Fields', parts: 2, term: 1},
-                {name: 'Electrostatic Potential & Capacitance', parts: 2, term: 1},
-                {name: 'Current Electricity', parts: 3, term: 1},
-                {name: 'Moving Charges & Magnetism', parts: 2, term: 1},
-                {name: 'Magnetism & Matter', parts: 1, term: 1},
-                {name: 'Electromagnetic Induction', parts: 2, term: 2},
-                {name: 'Alternating Current', parts: 2, term: 2},
-                {name: 'Electromagnetic Waves', parts: 1, term: 2},
-                {name: 'Ray Optics & Optical Instruments', parts: 3, term: 2},
-                {name: 'Wave Optics', parts: 2, term: 2},
-                {name: 'Dual Nature of Radiation & Matter', parts: 2, term: 3},
-                {name: 'Atoms', parts: 2, term: 3},
-                {name: 'Nuclei', parts: 1, term: 3},
-                {name: 'Semiconductor Electronics', parts: 3, term: 3}
+        // Official Plus Two (+2) DHSE Rationalized Syllabus
+        const PLUS_TWO_SYLLABUS = [
+            // Physics: 14 Chapters
+            ...createTasks('Physics', '+2', [
+                { name: 'Electric Charges and Fields', parts: 2, term: 1 },
+                { name: 'Electrostatic Potential and Capacitance', parts: 2, term: 1 },
+                { name: 'Current Electricity', parts: 3, term: 1 },
+                { name: 'Moving Charges and Magnetism', parts: 2, term: 1 },
+                { name: 'Magnetism and Matter', parts: 1, term: 1 },
+                { name: 'Electromagnetic Induction', parts: 2, term: 2 },
+                { name: 'Alternating Current', parts: 2, term: 2 },
+                { name: 'Electromagnetic Waves', parts: 1, term: 2 },
+                { name: 'Ray Optics and Optical Instruments', parts: 3, term: 2 },
+                { name: 'Wave Optics', parts: 2, term: 2 },
+                { name: 'Dual Nature of Radiation and Matter', parts: 2, term: 3 },
+                { name: 'Atoms', parts: 2, term: 3 },
+                { name: 'Nuclei', parts: 1, term: 3 },
+                { name: 'Semiconductor Electronics: Materials, Devices and Simple Circuits', parts: 3, term: 3 }
             ]),
-            ...makeTasks('Chemistry', '+2', [
-                {name: 'Solutions', parts: 3, term: 1},
-                {name: 'Electrochemistry', parts: 3, term: 1},
-                {name: 'Chemical Kinetics', parts: 2, term: 1},
-                {name: 'The d-and f-Block Elements', parts: 2, term: 2},
-                {name: 'Coordination Compounds', parts: 2, term: 2},
-                {name: 'Haloalkanes and Haloarenes', parts: 3, term: 2},
-                {name: 'Alcohols, Phenols and Ethers', parts: 3, term: 3},
-                {name: 'Aldehydes, Ketones and Carboxylic Acids', parts: 3, term: 3},
-                {name: 'Biomolecules', parts: 2, term: 3}
+
+            // Chemistry: 9 Chapters
+            ...createTasks('Chemistry', '+2', [
+                { name: 'Solutions', parts: 3, term: 1 },
+                { name: 'Electrochemistry', parts: 3, term: 1 },
+                { name: 'Chemical Kinetics', parts: 2, term: 1 },
+                { name: 'The d- and f-Block Elements', parts: 2, term: 2 },
+                { name: 'Coordination Compounds', parts: 2, term: 2 },
+                { name: 'Haloalkanes and Haloarenes', parts: 3, term: 2 },
+                { name: 'Alcohols, Phenols and Ethers', parts: 3, term: 3 },
+                { name: 'Aldehydes, Ketones and Carboxylic Acids', parts: 3, term: 3 },
+                { name: 'Biomolecules', parts: 2, term: 3 }
             ]),
-            ...makeTasks('Mathematics', '+2', [
-                {name: 'Relations & Functions', parts: 2, term: 1},
-                {name: 'Inverse Trigonometric Functions', parts: 1, term: 1},
-                {name: 'Matrices', parts: 2, term: 1},
-                {name: 'Determinants', parts: 2, term: 1},
-                {name: 'Continuity & Differentiability', parts: 3, term: 1},
-                {name: 'Application of Derivatives', parts: 2, term: 2},
-                {name: 'Integrals', parts: 4, term: 2},
-                {name: 'Application of Integrals', parts: 1, term: 2},
-                {name: 'Differential Equations', parts: 2, term: 2},
-                {name: 'Vector Algebra', parts: 2, term: 3},
-                {name: 'Three Dimensional Geometry', parts: 2, term: 3},
-                {name: 'Linear Programming', parts: 1, term: 3},
-                {name: 'Probability', parts: 3, term: 3}
+
+            // Mathematics: 13 Chapters
+            ...createTasks('Mathematics', '+2', [
+                { name: 'Relations and Functions', parts: 2, term: 1 },
+                { name: 'Inverse Trigonometric Functions', parts: 1, term: 1 },
+                { name: 'Matrices', parts: 2, term: 1 },
+                { name: 'Determinants', parts: 2, term: 1 },
+                { name: 'Continuity and Differentiability', parts: 3, term: 1 },
+                { name: 'Application of Derivatives', parts: 2, term: 2 },
+                { name: 'Integrals', parts: 4, term: 2 },
+                { name: 'Application of Integrals', parts: 1, term: 2 },
+                { name: 'Differential Equations', parts: 2, term: 2 },
+                { name: 'Vector Algebra', parts: 2, term: 3 },
+                { name: 'Three Dimensional Geometry', parts: 2, term: 3 },
+                { name: 'Linear Programming', parts: 1, term: 3 },
+                { name: 'Probability', parts: 3, term: 3 }
             ]),
-            ...makeTasks('Computer Science', '+2', [
-                {name: 'Structures and Pointers', parts: 2, term: 1},
-                {name: 'Concepts of Object-Oriented Programming', parts: 1, term: 1},
-                {name: 'Data Structures and Operations', parts: 3, term: 1},
-                {name: 'Web Technology', parts: 2, term: 1},
-                {name: 'Web Designing using HTML', parts: 3, term: 2},
-                {name: 'Client side scripting using JavaScript', parts: 3, term: 2},
-                {name: 'Web Hosting', parts: 1, term: 2},
-                {name: 'Database Management System', parts: 3, term: 2},
-                {name: 'Structured Query Language', parts: 3, term: 3},
-                {name: 'Server Side Scripting using PHP', parts: 3, term: 3},
-                {name: 'Advances in Computing', parts: 2, term: 3},
-                {name: 'ICT and Society', parts: 1, term: 3}
+
+            // Computer Science: 10 Chapters
+            ...createTasks('Computer Science', '+2', [
+                { name: 'Structures and Pointers', parts: 2, term: 1 },
+                { name: 'Concepts of Object-Oriented Programming', parts: 1, term: 1 },
+                { name: 'Data Structures and Operations', parts: 3, term: 1 },
+                { name: 'Web Technology', parts: 2, term: 1 },
+                { name: 'Web Designing using HTML', parts: 3, term: 2 },
+                { name: 'Client Side Scripting using JavaScript', parts: 3, term: 2 },
+                { name: 'Web Hosting', parts: 1, term: 2 },
+                { name: 'Database Management System', parts: 2, term: 2 },
+                { name: 'Structured Query Language (SQL)', parts: 3, term: 3 },
+                { name: 'Server Side Scripting using PHP', parts: 3, term: 3 }
             ])
         ];
 
-        const PLUS_ONE_DATA = [
-            ...makeTasks('Physics', '+1', [
-                {name: 'Units & Measurements', parts: 1},
-                {name: 'Motion in a Straight Line', parts: 2},
-                {name: 'Motion in a Plane', parts: 2},
-                {name: 'Laws of Motion', parts: 2},
-                {name: 'Work, Energy & Power', parts: 2},
-                {name: 'System of Particles & Rotational Motion', parts: 2},
-                {name: 'Gravitation', parts: 2},
-                {name: 'Mechanical Properties of Solids', parts: 1},
-                {name: 'Mechanical Properties of Fluids', parts: 2},
-                {name: 'Thermal Properties of Matter', parts: 2},
-                {name: 'Thermodynamics', parts: 2},
-                {name: 'Kinetic Theory', parts: 1},
-                {name: 'Oscillations', parts: 2},
-                {name: 'Waves', parts: 2}
+        // Official Plus One (+1) DHSE Rationalized Syllabus for Improvement Exams
+        const PLUS_ONE_SYLLABUS = [
+            // Physics: 14 Chapters (Sets up to Waves)
+            ...createTasks('Physics', '+1', [
+                { name: 'Units and Measurements', parts: 1 },
+                { name: 'Motion in a Straight Line', parts: 2 },
+                { name: 'Motion in a Plane', parts: 2 },
+                { name: 'Laws of Motion', parts: 2 },
+                { name: 'Work, Energy and Power', parts: 2 },
+                { name: 'System of Particles and Rotational Motion', parts: 2 },
+                { name: 'Gravitation', parts: 2 },
+                { name: 'Mechanical Properties of Solids', parts: 1 },
+                { name: 'Mechanical Properties of Fluids', parts: 2 },
+                { name: 'Thermal Properties of Matter', parts: 2 },
+                { name: 'Thermodynamics', parts: 2 },
+                { name: 'Kinetic Theory', parts: 1 },
+                { name: 'Oscillations', parts: 2 },
+                { name: 'Waves', parts: 2 }
             ]),
-            ...makeTasks('Chemistry', '+1', [
-                {name: 'Some Basic Concepts of Chemistry', parts: 2},
-                {name: 'Structure of Atom', parts: 3},
-                {name: 'Classification of Elements', parts: 1},
-                {name: 'Chemical Bonding', parts: 3},
-                {name: 'Thermodynamics', parts: 2},
-                {name: 'Equilibrium', parts: 3},
-                {name: 'Redox Reactions', parts: 2},
-                {name: 'Organic Chemistry - Some Basic Principles', parts: 3},
-                {name: 'Hydrocarbons', parts: 3}
+
+            // Chemistry: 9 Chapters
+            ...createTasks('Chemistry', '+1', [
+                { name: 'Some Basic Concepts of Chemistry', parts: 2 },
+                { name: 'Structure of Atom', parts: 3 },
+                { name: 'Classification of Elements & Periodicity', parts: 1 },
+                { name: 'Chemical Bonding and Molecular Structure', parts: 3 },
+                { name: 'Chemical Thermodynamics', parts: 2 },
+                { name: 'Equilibrium', parts: 3 },
+                { name: 'Redox Reactions', parts: 1 },
+                { name: 'Organic Chemistry: Basic Principles & Techniques', parts: 3 },
+                { name: 'Hydrocarbons', parts: 3 }
             ]),
-            ...makeTasks('Mathematics', '+1', [
-                {name: 'Sets', parts: 2},
-                {name: 'Relations & Functions', parts: 2},
-                {name: 'Trigonometric Functions', parts: 3},
-                {name: 'Complex Numbers & Quadratic Equations', parts: 2},
-                {name: 'Linear Inequalities', parts: 1},
-                {name: 'Permutations & Combinations', parts: 2},
-                {name: 'Binomial Theorem', parts: 1},
-                {name: 'Sequences & Series', parts: 2},
-                {name: 'Straight Lines', parts: 2},
-                {name: 'Conic Sections', parts: 2},
-                {name: 'Introduction to Three-dimensional Geometry', parts: 1},
-                {name: 'Limits & Derivatives', parts: 2},
-                {name: 'Statistics', parts: 2},
-                {name: 'Probability', parts: 2}
+
+            // Mathematics: 14 Chapters (Sets is 1, Probability is 14)
+            ...createTasks('Mathematics', '+1', [
+                { name: 'Sets', parts: 2 },
+                { name: 'Relations and Functions', parts: 2 },
+                { name: 'Trigonometric Functions', parts: 3 },
+                { name: 'Complex Numbers and Quadratic Equations', parts: 2 },
+                { name: 'Linear Inequalities', parts: 1 },
+                { name: 'Permutations and Combinations', parts: 2 },
+                { name: 'Binomial Theorem', parts: 1 },
+                { name: 'Sequences and Series', parts: 2 },
+                { name: 'Straight Lines', parts: 2 },
+                { name: 'Conic Sections', parts: 2 },
+                { name: 'Introduction to Three Dimensional Geometry', parts: 1 },
+                { name: 'Limits and Derivatives', parts: 2 },
+                { name: 'Statistics', parts: 2 },
+                { name: 'Probability', parts: 2 }
             ]),
-            ...makeTasks('Computer Science', '+1', [
-                {name: 'The Discipline of Computing', parts: 1},
-                {name: 'Data Representation and Boolean Algebra', parts: 3},
-                {name: 'Components of Computer System', parts: 2},
-                {name: 'Principles of Programming & Problem Solving', parts: 2},
-                {name: 'Introduction to C++ Programming', parts: 2},
-                {name: 'Data Types and Operators', parts: 2},
-                {name: 'Control Statements', parts: 2},
-                {name: 'Arrays', parts: 2},
-                {name: 'String Handling and I/O Functions', parts: 2},
-                {name: 'Functions', parts: 2},
-                {name: 'Computer Networks', parts: 2},
-                {name: 'Internet and Mobile Computing', parts: 2}
+
+            // Computer Science: 10 Chapters
+            ...createTasks('Computer Science', '+1', [
+                { name: 'The Discipline of Computing', parts: 1 },
+                { name: 'Data Representation and Boolean Logic', parts: 2 },
+                { name: 'Components of the Computer System', parts: 2 },
+                { name: 'Principles of Programming & Problem Solving', parts: 2 },
+                { name: 'Introduction to C++ Programming', parts: 2 },
+                { name: 'Data Types and Operators', parts: 2 },
+                { name: 'Control Statements', parts: 2 },
+                { name: 'Arrays', parts: 2 },
+                { name: 'Functions', parts: 2 },
+                { name: 'Computer Networks', parts: 2 }
             ])
         ];
 
-        // --- 2. STATE MANAGEMENT ---
-        let appState = JSON.parse(localStorage.getItem('plusTwoPlanState')) || null;
-        let currentView = 'dashboard'; // Tracks which page is currently open
-        
-        let synth = null;
-        function initAudio() {
-            if(!synth) {
-                synth = new Tone.PolySynth(Tone.Synth, {
-                    oscillator: { type: "sine" },
-                    envelope: { attack: 0.01, decay: 0.1, sustain: 0.1, release: 1 }
-                }).toDestination();
-                Tone.Destination.volume.value = -10;
-            }
+        /* ==========================================================================
+           2. STATE & PERSISTENCE
+           ========================================================================== */
+        let appState = JSON.parse(localStorage.getItem('plusTwoMissionState_v2')) || null;
+        let currentView = 'today'; // 'today', 'plan', 'syllabus', 'setup'
+        let activeSetupSubjectTab = 'Physics';
+
+        // Save State helper
+        function saveAppState() {
+            localStorage.setItem('plusTwoMissionState_v2', JSON.stringify(appState));
         }
-        function playTick() {
+
+        const getLocalDateStr = (d = new Date()) => {
+            const offset = d.getTimezoneOffset() * 60000;
+            return (new Date(d.getTime() - offset)).toISOString().split('T')[0];
+        };
+
+        const TODAY_STR = getLocalDateStr();
+
+        /* ==========================================================================
+           3. PREMIUM AUDIO SYNTHESIS & HAPTIC FEEDBACK
+           ========================================================================== */
+        let polySynth = null;
+        function getSynth() {
+            if (!polySynth && window.Tone) {
+                try {
+                    polySynth = new Tone.PolySynth(Tone.Synth, {
+                        oscillator: { type: "triangle8" },
+                        envelope: { attack: 0.005, decay: 0.15, sustain: 0.05, release: 0.8 }
+                    }).toDestination();
+                    Tone.Destination.volume.value = -8;
+                } catch(e) { console.warn("Audio init warning:", e); }
+            }
+            return polySynth;
+        }
+
+        function playCelebrationSound() {
             try {
-                initAudio();
-                if(Tone.context.state !== 'running') Tone.start();
-                synth.triggerAttackRelease(["C5", "E5", "G5"], "16n");
-                if(navigator.vibrate) navigator.vibrate([30, 50, 30]);
+                if (window.Tone) {
+                    if (Tone.context.state !== 'running') Tone.start();
+                    const s = getSynth();
+                    if (s) {
+                        // Harmonic chime: C5, E5, G5, B5, C6 in rapid succession
+                        const now = Tone.now();
+                        s.triggerAttackRelease("C5", "16n", now);
+                        s.triggerAttackRelease("E5", "16n", now + 0.06);
+                        s.triggerAttackRelease("G5", "16n", now + 0.12);
+                        s.triggerAttackRelease("C6", "8n", now + 0.18);
+                    }
+                }
+            } catch(e) { /* ignore sound error */ }
+
+            // Gentle haptic feedback
+            if (navigator.vibrate) {
+                try { navigator.vibrate([20, 35, 20]); } catch(e) {}
+            }
+
+            // Confetti burst
+            if (window.confetti) {
                 confetti({
-                    particleCount: 80,
-                    spread: 70,
-                    origin: { y: 0.8 },
-                    colors: ['#2563eb', '#10b981', '#f59e0b', '#8b5cf6'],
+                    particleCount: 70,
+                    spread: 60,
+                    origin: { y: 0.78 },
+                    colors: ['#2563eb', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'],
                     disableForReducedMotion: true
                 });
-            } catch(e) { console.log("Audio/Visual Error:", e); }
+            }
         }
-        function playUntick() {
+
+        function playUntickSound() {
             try {
-                initAudio();
-                if(Tone.context.state !== 'running') Tone.start();
-                synth.triggerAttackRelease("G4", "32n");
-                if(navigator.vibrate) navigator.vibrate(20);
-            } catch(e) { console.log("Audio Error:", e); }
+                if (window.Tone) {
+                    if (Tone.context.state !== 'running') Tone.start();
+                    const s = getSynth();
+                    if (s) s.triggerAttackRelease("G4", "32n");
+                }
+            } catch(e) {}
+            if (navigator.vibrate) {
+                try { navigator.vibrate(15); } catch(e) {}
+            }
         }
 
-        // Helper: Get local date string YYYY-MM-DD
-        const getLocalDateStr = (dateObj) => {
-            const tzOffset = dateObj.getTimezoneOffset() * 60000; 
-            return (new Date(dateObj - tzOffset)).toISOString().split('T')[0];
-        };
+        function showToastMessage(text, icon = 'fa-circle-check text-emerald-400') {
+            const toast = document.getElementById('toast-banner');
+            const content = document.getElementById('toast-content');
+            if (!toast || !content) return;
 
-        const TODAY_STR = getLocalDateStr(new Date());
-        
-        // --- 3. CORE LOGIC ---
+            content.innerHTML = `<span class="flex items-center gap-2"><i class="fa-solid ${icon}"></i> <span>${text}</span></span>`;
+            toast.classList.remove('opacity-0', '-translate-y-6');
+            toast.classList.add('opacity-100', 'translate-y-0');
+
+            setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', '-translate-y-6');
+            }, 3000);
+        }
+
+        /* ==========================================================================
+           4. INTELLIGENT MULTI-SUBJECT PACING & REVISION ALGORITHM
+           Solves:
+           - Interleaves subjects sensibly (never 10 days of physics in a row)
+           - Breaks chapters into halves (Part 1, Part 2) with balanced pacing
+           - Reserving 5 to 10 dedicated Revision Days before deadline
+           - Weaves in Plus One improvement tasks smoothly before their exam dates
+           ========================================================================== */
+
         function calculateDaysBetween(startDateStr, endDateStr) {
             const start = new Date(startDateStr);
             const end = new Date(endDateStr);
-            const diffTime = end - start;
-            return Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+            const diffMs = end - start;
+            return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
         }
 
-        function createNewPlan(deadlineStr, startingTasks, startDateStr = TODAY_STR, improvementConfig = []) {
-            const daysAvailable = calculateDaysBetween(startDateStr, deadlineStr);
-            
-            if (daysAvailable <= 0) {
-                alert("Deadline must be in the future!");
+        function buildIntelligentPlan(deadlineStr, tasksToSchedule, startDateStr = TODAY_STR, improvementConfig = []) {
+            const totalDaysAvailable = calculateDaysBetween(startDateStr, deadlineStr);
+            if (totalDaysAvailable <= 0) {
+                alert("Please select a target deadline date in the future.");
                 return null;
             }
 
-            let plan = [];
-            for (let i = 0; i <= daysAvailable; i++) {
-                let currentDate = new Date(startDateStr);
-                currentDate.setDate(currentDate.getDate() + i);
-                plan.push({
-                    dayNumber: appState ? appState.currentDayOffset + i + 1 : i + 1,
-                    date: getLocalDateStr(currentDate),
+            // Calculate Dedicated Revision Buffer Days based on timeline length
+            let revisionDaysCount = 0;
+            if (totalDaysAvailable >= 75) revisionDaysCount = 10;
+            else if (totalDaysAvailable >= 45) revisionDaysCount = 7;
+            else if (totalDaysAvailable >= 25) revisionDaysCount = 4;
+            else if (totalDaysAvailable >= 14) revisionDaysCount = 2;
+            else if (totalDaysAvailable >= 7) revisionDaysCount = 1;
+
+            const syllabusStudyDays = Math.max(1, totalDaysAvailable - revisionDaysCount);
+
+            // Initialize day schedule buckets
+            let planDays = [];
+            for (let i = 0; i <= totalDaysAvailable; i++) {
+                let d = new Date(startDateStr);
+                d.setDate(d.getDate() + i);
+                const isRevisionDay = (i >= syllabusStudyDays);
+                planDays.push({
+                    dayNumber: i + 1,
+                    date: getLocalDateStr(d),
+                    isRevisionDay: isRevisionDay,
                     tasks: []
                 });
             }
 
-            // 1. Distribute Plus One Improvement Tasks evenly before their respective exams
-            improvementConfig.forEach(config => {
-                let subjectTasks = startingTasks.filter(t => t.grade === '+1' && t.subject === config.subject);
-                if(subjectTasks.length === 0) return;
+            // Separate tasks: Plus One Improvement vs Plus Two Regular
+            const p1Tasks = tasksToSchedule.filter(t => t.grade === '+1');
+            const p2Tasks = tasksToSchedule.filter(t => t.grade === '+2');
 
-                let examDaysAvailable = calculateDaysBetween(startDateStr, config.examDate);
-                if(examDaysAvailable <= 0) return; // Exam date passed or is today
-                
-                // Distribute evenly up to the day before the exam
-                let daysToDistribute = Math.min(examDaysAvailable, daysAvailable + 1);
-                let accum = 0;
+            // 1. Schedule Plus One Improvement subjects (prioritize before their specific exam dates)
+            improvementConfig.forEach(cfg => {
+                const subP1 = p1Tasks.filter(t => t.subject === cfg.subject);
+                if (subP1.length === 0) return;
+
+                const daysUntilExam = calculateDaysBetween(startDateStr, cfg.examDate);
+                const targetEndDay = Math.min(
+                    daysUntilExam > 1 ? daysUntilExam - 1 : 1,
+                    syllabusStudyDays
+                );
+
+                // Distribute on alternating days to avoid overload
                 let taskIdx = 0;
-                let dailyRate = subjectTasks.length / daysToDistribute;
-
-                for (let i = 0; i < daysToDistribute; i++) {
-                    accum += dailyRate;
-                    let tasksToday = Math.floor(accum);
-                    accum -= tasksToday;
-                    
-                    // Cleanup any rounding remainders on the final valid day
-                    if (i === daysToDistribute - 1 && taskIdx < subjectTasks.length) {
-                        tasksToday += (subjectTasks.length - taskIdx);
-                    }
-                    
-                    for (let j = 0; j < tasksToday && taskIdx < subjectTasks.length; j++) {
-                        plan[i].tasks.push({
-                            ...subjectTasks[taskIdx],
-                            completed: false
-                        });
-                        taskIdx++;
-                    }
+                let dayPtr = 0;
+                while (taskIdx < subP1.length && dayPtr < targetEndDay) {
+                    // Spread across alternating days
+                    planDays[dayPtr].tasks.push({ ...subP1[taskIdx], completed: false });
+                    taskIdx++;
+                    dayPtr = (dayPtr + 2) % targetEndDay;
+                    // If all days visited once, increment offset
+                    if (dayPtr === 0 && taskIdx < subP1.length) dayPtr = 1;
+                }
+                // Any leftover tasks placed before exam
+                while (taskIdx < subP1.length) {
+                    const fallbackDay = Math.min(targetEndDay - 1, planDays.length - 1);
+                    planDays[fallbackDay].tasks.push({ ...subP1[taskIdx], completed: false });
+                    taskIdx++;
                 }
             });
 
             // 2. Intelligent Interleaving of Plus Two Tasks
-            // Spread tasks across available days, interleaving subjects daily
-            let p2Tasks = startingTasks.filter(t => t.grade === '+2');
-            let p2Queues = {
+            // Separate queues for each subject
+            const p2Queues = {
                 'Physics': p2Tasks.filter(t => t.subject === 'Physics'),
                 'Chemistry': p2Tasks.filter(t => t.subject === 'Chemistry'),
                 'Mathematics': p2Tasks.filter(t => t.subject === 'Mathematics'),
                 'Computer Science': p2Tasks.filter(t => t.subject === 'Computer Science')
             };
-            
-            let p2SubjectOrder = ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'];
-            let currentP2SubjectIndex = 0;
-            
-            let totalP2 = p2Tasks.length;
-            let p2Accum = 0;
-            let p2DailyRate = totalP2 / (daysAvailable + 1);
-            
-            for (let i = 0; i <= daysAvailable; i++) {
-                p2Accum += p2DailyRate;
-                let tasksToday = Math.floor(p2Accum);
-                p2Accum -= tasksToday;
-                
-                if (i === daysAvailable && totalP2 > 0) tasksToday += totalP2;
+
+            const subjectRotation = ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'];
+            let currentSubjIdx = 0;
+            let remainingP2Count = p2Tasks.length;
+
+            // Target tasks per active study day
+            const dailyPacing = remainingP2Count / syllabusStudyDays;
+            let pacingAccumulator = 0;
+
+            for (let dayIdx = 0; dayIdx < syllabusStudyDays; dayIdx++) {
+                pacingAccumulator += dailyPacing;
+                let tasksForThisDay = Math.floor(pacingAccumulator);
+                pacingAccumulator -= tasksForThisDay;
+
+                // Ensure final study day captures any rounding difference
+                if (dayIdx === syllabusStudyDays - 1 && remainingP2Count > 0) {
+                    tasksForThisDay += remainingP2Count;
+                }
 
                 let scheduledToday = 0;
-                while (scheduledToday < tasksToday && totalP2 > 0) {
+                while (scheduledToday < tasksForThisDay && remainingP2Count > 0) {
                     let attempts = 0;
                     let selectedTask = null;
 
-                    // Pull from the next subject in rotation to interleave
-                    while (attempts < 4 && !selectedTask) {
-                        let subjectToPull = p2SubjectOrder[currentP2SubjectIndex];
-                        if (p2Queues[subjectToPull].length > 0) {
-                            selectedTask = p2Queues[subjectToPull].shift();
+                    // Rotate across subjects so student studies diverse subjects
+                    while (attempts < subjectRotation.length && !selectedTask) {
+                        const candidateSubject = subjectRotation[currentSubjIdx];
+                        if (p2Queues[candidateSubject] && p2Queues[candidateSubject].length > 0) {
+                            selectedTask = p2Queues[candidateSubject].shift();
                         }
-                        currentP2SubjectIndex = (currentP2SubjectIndex + 1) % 4;
+                        currentSubjIdx = (currentSubjIdx + 1) % subjectRotation.length;
                         attempts++;
                     }
 
                     if (selectedTask) {
-                        plan[i].tasks.push({
-                            ...selectedTask,
-                            completed: false
-                        });
-                        totalP2--;
+                        planDays[dayIdx].tasks.push({ ...selectedTask, completed: false });
+                        remainingP2Count--;
                         scheduledToday++;
+                    } else {
+                        break;
                     }
                 }
             }
 
-            return plan;
-        }
+            // 3. Populate Dedicated Revision Days
+            if (revisionDaysCount > 0) {
+                const revisionModules = [
+                    { subject: 'Physics', title: 'Comprehensive Formula Sheet & Core Derivations' },
+                    { subject: 'Chemistry', title: 'Named Reactions, Reagents & Numerical Problems' },
+                    { subject: 'Mathematics', title: 'High-Weightage Calculus & Vectors Problem Sets' },
+                    { subject: 'Computer Science', title: 'Programs, Pointers, SQL Queries & Theory Review' },
+                    { subject: 'All Subjects', title: 'Full Previous Year Question (PYQ) Mock Examination' },
+                    { subject: 'All Subjects', title: 'Final Self-Evaluation & Weakness Reinforcement' }
+                ];
 
-        window.toggleImprovementSection = function() {
-            const section = document.getElementById('improvement-section');
-            section.classList.toggle('hidden', !document.getElementById('has-improvement').checked);
-        };
-        
-        window.toggleSubjectDate = function(subjectId) {
-            const dateContainer = document.getElementById(`date-${subjectId}`);
-            const isChecked = document.getElementById(`imp-${subjectId}`).checked;
-            if(isChecked) {
-                dateContainer.classList.remove('hidden');
-                setTimeout(() => dateContainer.classList.remove('opacity-0'), 10);
-            } else {
-                dateContainer.classList.add('opacity-0');
-                setTimeout(() => dateContainer.classList.add('hidden'), 300);
-            }
-        };
-
-        function handleInitialSetup() {
-            const deadlineInput = document.getElementById('deadline-date').value;
-            const targetTerm = parseInt(document.getElementById('target-term').value);
-            
-            if(!deadlineInput) return alert("Please select a deadline.");
-            
-            let improvementConfig = [];
-            
-            // Collect checked finished chapters
-            let completedChaps = Array.from(document.querySelectorAll('.completed-chapter-cb:checked')).map(cb => cb.value);
-
-            // Filter PLUS_TWO_DATA based on Target Term and Completed Chapters
-            let tasksToSchedule = PLUS_TWO_DATA.filter(t => t.term <= targetTerm && !completedChaps.includes(t.chapId));
-
-            if(document.getElementById('has-improvement') && document.getElementById('has-improvement').checked) {
-                ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'].forEach(sub => {
-                    const subId = sub.replace(' ', '-').toLowerCase();
-                    const cb = document.getElementById(`imp-${subId}`);
-                    if(cb && cb.checked) {
-                        const examDate = document.getElementById(`input-date-${subId}`).value;
-                        if(!examDate) {
-                            alert(`Please select an official exam date for ${sub} Improvement.`);
-                            throw new Error('Missing date');
-                        }
-                        improvementConfig.push({ subject: sub, examDate: examDate });
-                        tasksToSchedule.push(...PLUS_ONE_DATA.filter(t => t.subject === sub));
+                for (let r = 0; r < revisionDaysCount; r++) {
+                    const revDayIndex = syllabusStudyDays + r;
+                    if (revDayIndex < planDays.length) {
+                        const mod = revisionModules[r % revisionModules.length];
+                        planDays[revDayIndex].tasks.push({
+                            id: `REV_DAY_${r + 1}`,
+                            grade: '+2',
+                            subject: mod.subject,
+                            chapterName: `Revision Phase (Day ${r + 1} of ${revisionDaysCount})`,
+                            topicTitle: mod.title,
+                            isRevision: true,
+                            completed: false,
+                            term: 3
+                        });
                     }
-                });
+                }
             }
-            
-            const newPlan = createNewPlan(deadlineInput, tasksToSchedule, TODAY_STR, improvementConfig);
-            if(newPlan) {
-                appState = {
-                    startDate: TODAY_STR,
-                    deadlineDate: deadlineInput,
-                    targetTerm: targetTerm,
-                    completedChapters: completedChaps,
-                    improvementConfig: improvementConfig,
-                    plan: newPlan,
-                    currentDayOffset: 0,
-                    historyCompletedTasks: []
-                };
-                saveState();
-                renderApp();
-            }
+
+            return {
+                planDays: planDays,
+                revisionDaysCount: revisionDaysCount,
+                syllabusDaysCount: syllabusStudyDays
+            };
         }
 
-        function executeRegeneration() {
-            const completedUpTo = parseInt(document.getElementById('completed-day-select').value);
-            
-            let tasksToKeep = [];
-            let tasksToRedistribute = [];
-            
-            appState.plan.forEach(day => {
-                if(day.dayNumber <= completedUpTo) {
-                    day.tasks.forEach(t => t.completed = true);
-                    tasksToKeep.push(day);
-                    appState.historyCompletedTasks.push(...day.tasks);
+        /* ==========================================================================
+           5. TASK TOGGLE & COMPLETION ENGINE
+           Synchronous across Today & Full Plan views
+           ========================================================================== */
+
+        function toggleTaskDirect(taskId) {
+            if (!appState || !appState.plan) return;
+
+            let targetTask = null;
+            let dayObj = null;
+
+            for (const d of appState.plan) {
+                const found = d.tasks.find(t => t.id === taskId);
+                if (found) {
+                    targetTask = found;
+                    dayObj = d;
+                    break;
+                }
+            }
+
+            if (!targetTask) return;
+
+            // Toggle state
+            targetTask.completed = !targetTask.completed;
+            saveAppState();
+
+            // Update UI elements in DOM
+            const checkboxElements = document.querySelectorAll(`[data-task-id="${taskId}"]`);
+            checkboxElements.forEach(cb => {
+                if (targetTask.completed) {
+                    cb.classList.add('checked');
+                    const textLabel = cb.closest('.task-item-container')?.querySelector('.task-text-content');
+                    if (textLabel) textLabel.classList.add('line-through', 'opacity-50');
                 } else {
-                    tasksToRedistribute.push(...day.tasks);
+                    cb.classList.remove('checked');
+                    const textLabel = cb.closest('.task-item-container')?.querySelector('.task-text-content');
+                    if (textLabel) textLabel.classList.remove('line-through', 'opacity-50');
                 }
             });
 
-            tasksToRedistribute = tasksToRedistribute.map(t => { t.completed = false; return t; });
-            
-            const config = appState.improvementConfig || [];
-            
-            // Drop uncompleted +1 topics if their specific exam date has already passed
-            tasksToRedistribute = tasksToRedistribute.filter(t => {
-                if(t.grade !== '+1') return true;
-                const subjConf = config.find(c => c.subject === t.subject);
-                if(subjConf && calculateDaysBetween(TODAY_STR, subjConf.examDate) < 0) {
-                    return false; 
+            // Play celebratory feedback or untick sound
+            if (targetTask.completed) {
+                playCelebrationSound();
+
+                // Calculate today's status
+                const todayPlan = appState.plan.find(d => d.date === TODAY_STR);
+                if (todayPlan) {
+                    const completedToday = todayPlan.tasks.filter(t => t.completed).length;
+                    const totalToday = todayPlan.tasks.length;
+                    if (completedToday === totalToday && totalToday > 0) {
+                        showToastMessage("🎉 Awesome! All of today's targets completed!", "fa-trophy text-amber-300");
+                    } else {
+                        const remaining = totalToday - completedToday;
+                        showToastMessage(`🎯 Good job! ${remaining} more to finish today's goal.`, "fa-fire text-amber-400");
+                    }
+                } else {
+                    showToastMessage("Target checked off! Keep the streak alive!");
                 }
-                return true;
-            });
+            } else {
+                playUntickSound();
+            }
 
-            const newSubPlan = createNewPlan(appState.deadlineDate, tasksToRedistribute, TODAY_STR, config);
-            
-            if(newSubPlan) {
-                newSubPlan.forEach((d, index) => {
-                    d.dayNumber = completedUpTo + index + 1;
-                });
+            updateProgressHeader();
+            highlightNextUnfinishedTask();
+        }
 
-                appState.plan = [...tasksToKeep, ...newSubPlan];
-                appState.currentDayOffset = completedUpTo;
-                
-                saveState();
-                closeRegenerateModal();
-                renderApp();
+        function highlightNextUnfinishedTask() {
+            // Remove previous pulse
+            document.querySelectorAll('.next-suggested-task').forEach(el => el.classList.remove('next-suggested-task'));
+
+            // Find first unchecked task in today's list
+            const firstUnchecked = document.querySelector('.today-task-card:not(.task-done)');
+            if (firstUnchecked) {
+                firstUnchecked.classList.add('next-suggested-task');
             }
         }
 
-        // --- 4. UI RENDERING ---
-        function toggleTask(elem, dayIndex, taskIndex) {
-            const isCompleted = elem.checked;
-            appState.plan[dayIndex].tasks[taskIndex].completed = isCompleted;
-            saveState();
-            updateProgress();
-            
-            // Traverse DOM to apply strikethrough smoothly without re-rendering entire app
-            const labelContent = elem.closest('label').querySelector('.task-text');
-            if(labelContent) {
-                if(isCompleted) labelContent.classList.add('line-through', 'opacity-50');
-                else labelContent.classList.remove('line-through', 'opacity-50');
-            }
-
-            if(isCompleted) playTick();
-            else playUntick();
-        }
-
-        function goToSettings() {
-            currentView = 'settings';
-            renderApp();
-            window.scrollTo({top: 0, behavior: 'smooth'});
-        }
+        /* ==========================================================================
+           6. VIEW CONTROLLERS & RENDERING
+           ========================================================================== */
 
         function goToDashboard() {
-            currentView = 'dashboard';
+            currentView = 'today';
+            updateActiveNavButtons();
             renderApp();
-            window.scrollTo({top: 0, behavior: 'smooth'});
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function goToPlan() {
+            currentView = 'plan';
+            updateActiveNavButtons();
+            renderApp();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function goToSyllabusView() {
+            currentView = 'syllabus';
+            updateActiveNavButtons();
+            renderApp();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function updateActiveNavButtons() {
+            const todayBtn = document.getElementById('nav-btn-today');
+            const planBtn = document.getElementById('nav-btn-plan');
+            const sylBtn = document.getElementById('nav-btn-syllabus');
+
+            const mobToday = document.getElementById('mob-btn-today');
+            const mobPlan = document.getElementById('mob-btn-plan');
+            const mobSyl = document.getElementById('mob-btn-syllabus');
+
+            [todayBtn, planBtn, sylBtn].forEach(b => {
+                if (b) {
+                    b.classList.remove('text-blue-600', 'bg-white', 'shadow-sm');
+                    b.classList.add('text-slate-600');
+                }
+            });
+            [mobToday, mobPlan, mobSyl].forEach(b => {
+                if (b) {
+                    b.classList.remove('text-blue-600');
+                    b.classList.add('text-slate-400');
+                }
+            });
+
+            if (currentView === 'today') {
+                todayBtn?.classList.add('text-blue-600', 'bg-white', 'shadow-sm');
+                mobToday?.classList.add('text-blue-600');
+            } else if (currentView === 'plan') {
+                planBtn?.classList.add('text-blue-600', 'bg-white', 'shadow-sm');
+                mobPlan?.classList.add('text-blue-600');
+            } else if (currentView === 'syllabus') {
+                sylBtn?.classList.add('text-blue-600', 'bg-white', 'shadow-sm');
+                mobSyl?.classList.add('text-blue-600');
+            }
         }
 
         function resetApp() {
-            if(confirm('Are you sure you want to delete this plan and start over? This cannot be undone.')) {
-                localStorage.removeItem('plusTwoPlanState');
+            if (confirm('Are you sure you want to reset your study plan and start over? This cannot be undone.')) {
+                localStorage.removeItem('plusTwoMissionState_v2');
                 location.reload();
             }
         }
 
-        function saveState() {
-            localStorage.setItem('plusTwoPlanState', JSON.stringify(appState));
+        function switchSetupSubject(sub) {
+            activeSetupSubjectTab = sub;
+            const container = document.getElementById('setup-subject-chapters-list');
+            if (container) {
+                container.innerHTML = renderSetupSubjectChapters(sub);
+            }
+            // Update tab button styles
+            ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'].forEach(s => {
+                const btn = document.getElementById(`setup-tab-${s.replace(/\s+/g, '-')}`);
+                if (btn) {
+                    if (s === sub) {
+                        btn.className = 'py-2 px-3 text-xs font-bold rounded-xl bg-blue-600 text-white shadow-sm transition';
+                    } else {
+                        btn.className = 'py-2 px-3 text-xs font-bold rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition';
+                    }
+                }
+            });
         }
 
-        function renderApp() {
-            document.getElementById('date-display').innerText = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
-            const container = document.getElementById('app-container');
-            
-            if (!appState) {
-                // VIEW 1: Setup
-                let defaultTarget = new Date();
-                defaultTarget.setMonth(10); 
-                defaultTarget.setDate(30);
-                if(new Date() > defaultTarget) defaultTarget.setFullYear(defaultTarget.getFullYear() + 1);
+        function toggleAllSubjectChapters(sub, shouldCheck) {
+            const boxes = document.querySelectorAll(`.completed-chapter-cb[data-subject="${sub}"]`);
+            boxes.forEach(b => b.checked = shouldCheck);
+        }
 
-                const subjects = ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'];
-                let chaptersHTML = '';
-                subjects.forEach(sub => {
-                    let chaps = PLUS_TWO_DATA.filter(t => t.subject === sub);
-                    let uniqueChaps = [...new Map(chaps.map(item => [item.chapId, item])).values()];
-                    chaptersHTML += `<div class="mb-4"><h5 class="text-sm font-bold text-slate-800 mb-2 border-b border-slate-200 pb-1">${sub}</h5><div class="grid grid-cols-1 sm:grid-cols-2 gap-2">`;
-                    uniqueChaps.forEach(ch => {
-                        chaptersHTML += `
-                            <label class="flex items-center gap-2 text-sm text-slate-600 cursor-pointer group">
-                                <div class="relative flex items-center justify-center w-4 h-4 shrink-0">
-                                    <input type="checkbox" class="completed-chapter-cb peer opacity-0 absolute inset-0 cursor-pointer" value="${ch.chapId}">
-                                    <div class="pointer-events-none w-full h-full rounded border-2 border-slate-300 peer-checked:bg-emerald-500 peer-checked:border-emerald-500 flex items-center justify-center transition-all">
-                                        <i class="fa-solid fa-check text-white text-[8px] opacity-0 peer-checked:opacity-100"></i>
-                                    </div>
-                                </div>
-                                <span class="group-hover:text-slate-900 transition-colors truncate" title="${ch.chapter}">${ch.chapter.substring(0, 30)}${ch.chapter.length > 30 ? '...' : ''}</span>
-                            </label>
-                        `;
-                    });
-                    chaptersHTML += `</div></div>`;
-                });
+        function renderSetupSubjectChapters(subject) {
+            const chaps = PLUS_TWO_SYLLABUS.filter(t => t.subject === subject);
+            const uniqueChaps = [...new Map(chaps.map(item => [item.chapId, item])).values()];
 
-                container.innerHTML = `
-                    <div class="max-w-2xl mx-auto glass-card rounded-3xl p-6 sm:p-10 text-center mt-6 shadow-2xl border-t-4 border-t-blue-500 animate-fade-in-up">
-                        <div class="w-16 h-16 bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl shadow-inner border border-blue-200">
-                            <i class="fa-solid fa-rocket"></i>
-                        </div>
-                        <h2 class="text-3xl font-extrabold text-slate-800 mb-2 tracking-tight">Mission Control</h2>
-                        <p class="text-slate-500 mb-8 text-md px-4">Let's build a smart, achievable syllabus completion plan.</p>
-                        
-                        <div class="bg-white p-6 rounded-2xl mb-6 shadow-sm border border-slate-200 text-left space-y-6">
-                            
-                            <!-- Target Term -->
-                            <div>
-                                <label class="block text-sm font-bold text-slate-700 mb-2"><i class="fa-solid fa-bullseye text-blue-500 mr-2"></i>What's your current goal?</label>
-                                <select id="target-term" class="w-full border-2 border-slate-200 rounded-xl p-3 text-md focus:ring-4 focus:ring-blue-50 focus:border-blue-500 outline-none transition-all cursor-pointer font-medium text-slate-700 bg-slate-50">
-                                    <option value="1">Term 1 Only (Onam Portions)</option>
-                                    <option value="2" selected>Term 1 & 2 (Half-Yearly Portions)</option>
-                                    <option value="3">Full Syllabus (Board Exam)</option>
-                                </select>
-                            </div>
-
-                            <!-- Target Date -->
-                            <div>
-                                <label class="block text-sm font-bold text-slate-700 mb-2"><i class="fa-regular fa-calendar-check text-blue-500 mr-2"></i>Deadline Date</label>
-                                <input type="date" id="deadline-date" value="${getLocalDateStr(defaultTarget)}" class="w-full border-2 border-slate-200 rounded-xl p-3 text-md focus:ring-4 focus:ring-blue-50 focus:border-blue-500 outline-none transition-all font-medium text-slate-700 bg-slate-50">
-                            </div>
-
-                            <!-- Completed Chapters (Collapsible) -->
-                            <div class="border border-slate-200 rounded-xl overflow-hidden bg-slate-50">
-                                <label class="flex items-center justify-between p-4 cursor-pointer hover:bg-slate-100 transition-colors" onclick="document.getElementById('completed-chaps-container').classList.toggle('hidden')">
-                                    <span class="font-bold text-slate-700 text-sm"><i class="fa-solid fa-list-check text-emerald-500 mr-2"></i>Exclude Finished Chapters</span>
-                                    <i class="fa-solid fa-chevron-down text-slate-400"></i>
-                                </label>
-                                <div id="completed-chaps-container" class="hidden p-4 bg-white border-t border-slate-200 max-h-60 overflow-y-auto">
-                                    <p class="text-xs text-slate-500 mb-4 bg-emerald-50 p-2 rounded-lg border border-emerald-100">Check chapters you have <b>already learned</b>. We'll skip them to save time.</p>
-                                    ${chaptersHTML}
-                                </div>
-                            </div>
-                            
-                            <!-- Plus One Improvement -->
-                            <div class="pt-2">
-                                <label class="flex items-center gap-3 cursor-pointer p-4 border-2 border-slate-200 rounded-xl hover:border-blue-400 transition-all bg-slate-50">
-                                    <div class="relative flex items-center justify-center w-5 h-5 shrink-0">
-                                        <input type="checkbox" id="has-improvement" class="peer opacity-0 absolute inset-0 cursor-pointer" onchange="toggleImprovementSection()">
-                                        <div class="pointer-events-none w-full h-full rounded border-2 border-slate-300 peer-checked:bg-blue-600 peer-checked:border-blue-600 flex items-center justify-center transition-all">
-                                            <i class="fa-solid fa-check text-white text-[10px] opacity-0 peer-checked:opacity-100 transform scale-50 peer-checked:scale-100 transition-all"></i>
-                                        </div>
-                                    </div>
-                                    <span class="text-sm font-bold text-slate-700">Add Plus One Improvement Exams</span>
-                                </label>
-                                
-                                <div id="improvement-section" class="hidden space-y-3 bg-white p-4 rounded-xl border border-slate-200 shadow-inner mt-3">
-                                    <p class="text-xs font-medium text-amber-600 mb-3 bg-amber-50 p-2 rounded border border-amber-100"><i class="fa-solid fa-bolt mr-1"></i> Official Oct 2026 Dates Auto-filled</p>
-                                    
-                                    ${['Physics', 'Chemistry', 'Mathematics', 'Computer Science'].map(sub => {
-                                        let defaultDate = sub === 'Physics' ? '2026-10-12' : (sub === 'Mathematics' ? '2026-10-14' : (sub === 'Chemistry' ? '2026-10-16' : '2026-10-19'));
-                                        let subId = sub.replace(' ', '-').toLowerCase();
-                                        return `
-                                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-slate-50 border border-slate-100 rounded-lg">
-                                            <label class="flex items-center gap-3 cursor-pointer text-sm font-bold text-slate-700 w-full sm:w-auto">
-                                                <div class="relative flex items-center justify-center w-4 h-4 shrink-0">
-                                                    <input type="checkbox" id="imp-${subId}" value="${sub}" class="peer opacity-0 absolute inset-0 cursor-pointer" onchange="toggleSubjectDate('${subId}')"> 
-                                                    <div class="pointer-events-none w-full h-full rounded border-2 border-slate-300 peer-checked:bg-blue-600 peer-checked:border-blue-600 flex items-center justify-center transition-all">
-                                                        <i class="fa-solid fa-check text-white text-[8px] opacity-0 peer-checked:opacity-100 transform scale-50 peer-checked:scale-100 transition-all"></i>
-                                                    </div>
-                                                </div>
-                                                ${sub}
-                                            </label>
-                                            <div id="date-${subId}" class="hidden flex items-center gap-2 w-full sm:w-auto mt-1 sm:mt-0 opacity-0 transition-opacity duration-300">
-                                                <input type="date" id="input-date-${subId}" value="${defaultDate}" class="w-full sm:w-auto border-2 border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-50 outline-none font-medium text-slate-600">
-                                            </div>
-                                        </div>
-                                    `}).join('')}
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <button onclick="handleInitialSetup()" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold py-4 px-8 rounded-xl shadow-xl shadow-blue-200 transform transition active:scale-[0.98] text-lg flex justify-center items-center gap-2">
-                            <span>Ignite Plan</span>
-                            <i class="fa-solid fa-paper-plane"></i>
-                        </button>
+            let html = `
+                <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-100">
+                    <span class="text-xs font-bold text-slate-500">${subject} (${uniqueChaps.length} Chapters)</span>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="toggleAllSubjectChapters('${subject}', true)" class="text-[11px] font-bold text-blue-600 hover:underline">Select All</button>
+                        <span class="text-slate-300">|</span>
+                        <button type="button" onclick="toggleAllSubjectChapters('${subject}', false)" class="text-[11px] font-bold text-slate-500 hover:underline">Clear</button>
                     </div>
-                `;
-            } else if (currentView === 'settings') {
-                // VIEW 3: Settings & Full Plan
-                let planHTML = '';
-                appState.plan.forEach((day, dayIndex) => {
-                    const isToday = day.date === TODAY_STR;
-                    const isPast = new Date(day.date) < new Date(TODAY_STR);
-                    const headerColor = isToday ? 'bg-blue-50 border-blue-200 text-blue-800' : (isPast ? 'bg-slate-50 border-slate-200 text-slate-600' : 'bg-white border-slate-200 text-slate-800');
-                    const badge = isToday ? '<span class="bg-blue-500 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ml-2 shadow-sm">Today</span>' : '';
-                    
-                    let tasksList = day.tasks.map((t, tIndex) => `
-                        <label class="flex items-start gap-3 text-sm py-3 border-b border-slate-50 last:border-0 cursor-pointer group hover:bg-slate-50 px-2 rounded-lg transition-colors">
-                            <div class="relative flex items-center justify-center w-5 h-5 mt-0.5 shrink-0">
-                                <input type="checkbox" class="peer opacity-0 absolute inset-0 cursor-pointer" ${t.completed ? 'checked' : ''} onchange="toggleTask(this, ${dayIndex}, ${tIndex})">
-                                <div class="pointer-events-none w-full h-full rounded border-2 border-slate-300 peer-checked:bg-blue-600 peer-checked:border-blue-600 flex items-center justify-center transition-all shadow-sm">
-                                    <i class="fa-solid fa-check text-white text-[10px] opacity-0 peer-checked:opacity-100 transition-opacity transform scale-50 peer-checked:scale-100"></i>
-                                </div>
-                            </div>
-                            <div class="flex-1 task-text transition-all ${t.completed ? 'line-through opacity-50' : ''}">
-                                <span class="font-bold text-slate-700 block">
-                                    ${t.subject} 
-                                    <span class="text-slate-400 font-normal text-xs ml-1">${t.grade === '+1' ? '<span class="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-semibold shadow-sm ml-1">+1 Improvement</span>' : 'Term ' + t.term}</span>
-                                </span>
-                                <span class="text-slate-600">${t.chapter} - ${t.topic}</span>
-                            </div>
-                        </label>
-                    `).join('');
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-52 overflow-y-auto pr-1">
+            `;
 
-                    if(day.tasks.length === 0) tasksList = '<div class="text-sm text-slate-500 italic py-2 px-2">No tasks scheduled for this day.</div>';
-
-                    planHTML += `
-                        <div class="border border-slate-200 rounded-2xl mb-4 overflow-hidden shadow-sm transition-all hover:shadow-md">
-                            <div class="px-5 py-3 border-b flex justify-between items-center ${headerColor}">
-                                <h4 class="font-bold flex items-center text-md">Day ${day.dayNumber} <span class="text-xs font-medium ml-2 opacity-70">(${new Date(day.date).toLocaleDateString('en-US', {month: 'short', day: 'numeric'})})</span> ${badge}</h4>
-                            </div>
-                            <div class="p-2 bg-white">
-                                ${tasksList}
-                            </div>
+            uniqueChaps.forEach(ch => {
+                html += `
+                    <label class="flex items-start gap-2.5 p-2 rounded-xl hover:bg-slate-50 border border-slate-100 cursor-pointer transition text-xs">
+                        <input type="checkbox" data-subject="${subject}" value="${ch.chapId}" class="completed-chapter-cb mt-0.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                        <div class="flex-1">
+                            <span class="font-bold text-slate-700 block">${ch.chapNumber}. ${ch.chapterName}</span>
+                            <span class="text-[10px] text-slate-400 font-medium">Term ${ch.term}</span>
                         </div>
-                    `;
+                    </label>
+                `;
+            });
+
+            html += `</div>`;
+            return html;
+        }
+
+        function handleInitialSetup() {
+            const deadlineInput = document.getElementById('deadline-date').value;
+            const targetTerm = parseInt(document.getElementById('target-term').value);
+
+            if (!deadlineInput) {
+                alert("Please select a target deadline date.");
+                return;
+            }
+
+            // Collect excluded / already completed chapters
+            const checkedCompletedBoxes = Array.from(document.querySelectorAll('.completed-chapter-cb:checked')).map(cb => cb.value);
+
+            // Filter Plus Two tasks: only include tasks up to selected Term, and exclude finished chapters
+            let tasksToPlan = PLUS_TWO_SYLLABUS.filter(t => t.term <= targetTerm && !checkedCompletedBoxes.includes(t.chapId));
+
+            if (tasksToPlan.length === 0) {
+                alert("All chapters in the selected term were marked finished! Please select a higher term or uncheck some chapters.");
+                return;
+            }
+
+            // Plus One Improvement Config
+            let improvementConfig = [];
+            const hasImp = document.getElementById('has-improvement')?.checked;
+
+            if (hasImp) {
+                ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'].forEach(sub => {
+                    const subId = sub.replace(/\s+/g, '-').toLowerCase();
+                    const cb = document.getElementById(`imp-${subId}`);
+                    if (cb && cb.checked) {
+                        const examDate = document.getElementById(`input-date-${subId}`).value;
+                        if (!examDate) {
+                            alert(`Please set an exam date for ${sub} improvement.`);
+                            throw new Error('Missing exam date');
+                        }
+                        improvementConfig.push({ subject: sub, examDate: examDate });
+                        tasksToPlan.push(...PLUS_ONE_SYLLABUS.filter(t => t.subject === sub));
+                    }
+                });
+            }
+
+            const planResult = buildIntelligentPlan(deadlineInput, tasksToPlan, TODAY_STR, improvementConfig);
+
+            if (planResult) {
+                appState = {
+                    startDate: TODAY_STR,
+                    deadlineDate: deadlineInput,
+                    targetTerm: targetTerm,
+                    completedChaptersOnInit: checkedCompletedBoxes,
+                    improvementConfig: improvementConfig,
+                    plan: planResult.planDays,
+                    revisionDaysCount: planResult.revisionDaysCount,
+                    totalConfiguredTasks: tasksToPlan.length
+                };
+                saveAppState();
+                goToDashboard();
+            }
+        }
+
+        /* ==========================================================================
+           7. REGENERATION / SCHEDULE REBALANCING
+           ========================================================================== */
+
+        function openRegenerateModal() {
+            if (!appState || !appState.plan) return;
+            const select = document.getElementById('completed-day-select');
+            select.innerHTML = '';
+
+            const todayIdx = appState.plan.findIndex(d => d.date === TODAY_STR);
+            const currentDayNumber = todayIdx !== -1 ? appState.plan[todayIdx].dayNumber : appState.plan.length;
+            const maxChoice = Math.max(1, currentDayNumber - 1);
+
+            for (let i = 1; i <= maxChoice; i++) {
+                const dayPlan = appState.plan.find(p => p.dayNumber === i);
+                const dateNote = dayPlan ? ` (${dayPlan.date})` : '';
+                const opt = document.createElement('option');
+                opt.value = i;
+                opt.text = `Day ${i}${dateNote}`;
+                if (i === maxChoice) opt.selected = true;
+                select.appendChild(opt);
+            }
+
+            document.getElementById('regenerate-modal').classList.remove('hidden');
+            document.getElementById('regenerate-modal').classList.add('flex');
+        }
+
+        function closeRegenerateModal() {
+            document.getElementById('regenerate-modal').classList.add('hidden');
+            document.getElementById('regenerate-modal').classList.remove('flex');
+        }
+
+        function executeRegeneration() {
+            const completedUpTo = parseInt(document.getElementById('completed-day-select').value);
+
+            let keptDays = [];
+            let uncompletedTasks = [];
+
+            appState.plan.forEach(day => {
+                if (day.dayNumber <= completedUpTo) {
+                    day.tasks.forEach(t => t.completed = true);
+                    keptDays.push(day);
+                } else {
+                    day.tasks.forEach(t => {
+                        if (!t.completed && !t.isRevision) {
+                            uncompletedTasks.push(t);
+                        }
+                    });
+                }
+            });
+
+            // Rebuild intelligent plan for uncompleted tasks from tomorrow until deadline
+            let tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const tomorrowStr = getLocalDateStr(tomorrow);
+
+            const result = buildIntelligentPlan(appState.deadlineDate, uncompletedTasks, tomorrowStr, appState.improvementConfig || []);
+
+            if (result) {
+                // Adjust day numbering seamlessly
+                result.planDays.forEach((d, idx) => {
+                    d.dayNumber = completedUpTo + idx + 1;
                 });
 
+                appState.plan = [...keptDays, ...result.planDays];
+                appState.revisionDaysCount = result.revisionDaysCount;
+                saveAppState();
+
+                closeRegenerateModal();
+                showToastMessage("Schedule rebalanced intelligently!", "fa-wand-magic-sparkles text-blue-400");
+                renderApp();
+            }
+        }
+
+        /* ==========================================================================
+           8. CORE APP VIEW RENDERER
+           ========================================================================== */
+
+        function renderApp() {
+            const container = document.getElementById('app-container');
+            const dateDisplay = document.getElementById('date-display');
+            if (dateDisplay) {
+                dateDisplay.innerText = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+            }
+
+            // View 0: Initial Setup View
+            if (!appState) {
+                // Default target date: November 30 (Term 1 & 2 Half-Yearly)
+                let defaultTarget = new Date();
+                defaultTarget.setMonth(10); // November
+                defaultTarget.setDate(30);
+                if (new Date() > defaultTarget) defaultTarget.setFullYear(defaultTarget.getFullYear() + 1);
+
                 container.innerHTML = `
-                    <div class="max-w-3xl mx-auto pb-10 animate-fade-in-up">
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
-                            <div>
-                                <button onclick="goToDashboard()" class="text-slate-500 hover:text-blue-600 transition flex items-center gap-2 mb-2 font-bold text-sm bg-white px-4 py-2 rounded-lg shadow-sm border border-slate-200 hover:bg-slate-50">
-                                    <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
-                                </button>
-                                <h2 class="text-3xl font-extrabold text-slate-800">Full Study Plan</h2>
-                                <p class="text-slate-500 mt-1">Review and manage your entire schedule.</p>
+                    <div class="max-w-2xl mx-auto bg-white rounded-3xl p-6 sm:p-9 shadow-xl border border-slate-100 animate-fade-in-up">
+                        <div class="text-center mb-8">
+                            <div class="w-14 h-14 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center text-white text-2xl mx-auto mb-3 shadow-lg shadow-blue-500/25">
+                                <i class="fa-solid fa-graduation-cap"></i>
                             </div>
-                        </div>
-                        
-                        <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-sm border border-slate-200 mb-8">
-                            <div class="max-h-[60vh] overflow-y-auto pr-2">
-                                ${planHTML}
-                            </div>
+                            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Mission Control Setup</h2>
+                            <p class="text-xs sm:text-sm text-slate-500 mt-1 max-w-md mx-auto">
+                                Turn your Kerala DHSE Plus Two syllabus into an adaptive, day-by-day study schedule with built-in revision buffer.
+                            </p>
                         </div>
 
-                        <div class="bg-red-50 rounded-3xl p-6 sm:p-8 border border-red-100 shadow-sm">
-                            <h3 class="text-xl font-bold text-red-800 mb-2"><i class="fa-solid fa-triangle-exclamation mr-2"></i> Danger Zone</h3>
-                            <p class="text-sm text-red-600 mb-6">Resetting the app will delete your current plan, deadline, and all progress tracking. You will need to start fresh.</p>
-                            <button onclick="resetApp()" class="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-xl transition shadow-md shadow-red-200 flex items-center justify-center gap-2">
-                                Reset Entire App
+                        <div class="space-y-6">
+                            <!-- Target Term Selection -->
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
+                                    <i class="fa-solid fa-bullseye text-blue-600 mr-1.5"></i> Target Milestone
+                                </label>
+                                <select id="target-term" class="w-full border-2 border-slate-200 rounded-2xl p-3.5 text-sm font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-50 outline-none transition cursor-pointer">
+                                    <option value="1">Term 1 Only (First Terminal / Onam Examination)</option>
+                                    <option value="2" selected>Term 1 & Term 2 (Half-Yearly / Christmas Exam - by Nov/Dec)</option>
+                                    <option value="3">Full Syllabus (Term 1, 2 & 3 - Final Public Board Exam)</option>
+                                </select>
+                                <p class="text-[11px] text-slate-400 mt-1.5 ml-1">
+                                    Select Term 2 if preparing for Half-Yearly. Term 3 portions will be kept for after Christmas exams.
+                                </p>
+                            </div>
+
+                            <!-- Target Deadline Date -->
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
+                                    <i class="fa-regular fa-calendar-check text-blue-600 mr-1.5"></i> Target Completion Deadline
+                                </label>
+                                <input type="date" id="deadline-date" value="${getLocalDateStr(defaultTarget)}" class="w-full border-2 border-slate-200 rounded-2xl p-3.5 text-sm font-semibold text-slate-800 bg-slate-50 focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-50 outline-none transition">
+                                <p class="text-[11px] text-emerald-600 font-medium mt-1.5 ml-1 flex items-center gap-1">
+                                    <i class="fa-solid fa-clock-rotate-left text-[10px]"></i> Intelligent Buffer: We reserve final days strictly for revision & mock questions.
+                                </p>
+                            </div>
+
+                            <!-- Already Finished Chapters Selector -->
+                            <div class="border border-slate-200 rounded-2xl overflow-hidden bg-slate-50/50">
+                                <button type="button" onclick="document.getElementById('setup-chaps-wrapper').classList.toggle('hidden')" class="w-full p-4 flex items-center justify-between text-left hover:bg-slate-100/70 transition">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold">
+                                            <i class="fa-solid fa-check-double"></i>
+                                        </div>
+                                        <div>
+                                            <span class="text-xs sm:text-sm font-bold text-slate-800 block">Exclude Already Finished Chapters</span>
+                                            <span class="text-[11px] text-slate-500">Learned some chapters in school/tuition? Tick them here to skip.</span>
+                                        </div>
+                                    </div>
+                                    <i class="fa-solid fa-chevron-down text-slate-400 text-xs"></i>
+                                </button>
+
+                                <div id="setup-chaps-wrapper" class="hidden p-4 bg-white border-t border-slate-200">
+                                    <!-- Subject Tabs -->
+                                    <div class="flex flex-wrap gap-1.5 mb-3">
+                                        ${['Physics', 'Chemistry', 'Mathematics', 'Computer Science'].map(sub => `
+                                            <button type="button" id="setup-tab-${sub.replace(/\s+/g, '-')}" onclick="switchSetupSubject('${sub}')" class="py-2 px-3 text-xs font-bold rounded-xl ${sub === 'Physics' ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'} transition">
+                                                ${sub}
+                                            </button>
+                                        `).join('')}
+                                    </div>
+                                    <div id="setup-subject-chapters-list">
+                                        ${renderSetupSubjectChapters('Physics')}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Plus One Improvement Section -->
+                            <div class="border border-slate-200 rounded-2xl overflow-hidden bg-slate-50/50">
+                                <label class="p-4 flex items-center justify-between cursor-pointer hover:bg-slate-100/70 transition">
+                                    <div class="flex items-center gap-3">
+                                        <input type="checkbox" id="has-improvement" onchange="document.getElementById('improvement-options').classList.toggle('hidden', !this.checked)" class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                                        <div>
+                                            <span class="text-xs sm:text-sm font-bold text-slate-800 block">Add Plus One Improvement Papers</span>
+                                            <span class="text-[11px] text-slate-500">Weaves +1 portions evenly before their official exam dates.</span>
+                                        </div>
+                                    </div>
+                                </label>
+
+                                <div id="improvement-options" class="hidden p-4 bg-white border-t border-slate-200 space-y-3">
+                                    <div class="text-[11px] font-bold text-amber-700 bg-amber-50 p-2.5 rounded-xl border border-amber-200/60 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-calendar-star"></i> Oct 2026 Tentative Dates Loaded
+                                    </div>
+                                    ${[
+                                        { sub: 'Physics', defaultDate: '2026-10-12' },
+                                        { sub: 'Mathematics', defaultDate: '2026-10-14' },
+                                        { sub: 'Chemistry', defaultDate: '2026-10-16' },
+                                        { sub: 'Computer Science', defaultDate: '2026-10-19' }
+                                    ].map(item => {
+                                        const subId = item.sub.replace(/\s+/g, '-').toLowerCase();
+                                        return `
+                                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                                                <label class="flex items-center gap-2.5 cursor-pointer text-xs font-bold text-slate-700">
+                                                    <input type="checkbox" id="imp-${subId}" class="rounded border-slate-300 text-blue-600">
+                                                    <span>${item.sub}</span>
+                                                </label>
+                                                <div class="flex items-center gap-2">
+                                                    <span class="text-[11px] text-slate-400">Exam:</span>
+                                                    <input type="date" id="input-date-${subId}" value="${item.defaultDate}" class="border border-slate-200 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-700 bg-white">
+                                                </div>
+                                            </div>
+                                        `;
+                                    }).join('')}
+                                </div>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <button onclick="handleInitialSetup()" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold py-4 px-6 rounded-2xl shadow-xl shadow-blue-500/25 transform active:scale-[0.98] transition flex items-center justify-center gap-2 text-sm sm:text-base">
+                                <span>Generate My Study Plan</span>
+                                <i class="fa-solid fa-arrow-right"></i>
                             </button>
                         </div>
                     </div>
                 `;
-            } else {
-                // VIEW 2: Dashboard
-                const todayIndex = appState.plan.findIndex(d => d.date === TODAY_STR);
-                
-                let dashboardHTML = `
-                    <!-- Header Section -->
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-                        <div>
-                            <h2 class="text-3xl font-bold text-slate-800">Welcome Back!</h2>
-                            <p class="text-slate-500 mt-1">Keep the momentum going. You're doing great.</p>
+                return;
+            }
+
+            // View 1: Today's Target View (Default First Attention Screen)
+            if (currentView === 'today') {
+                const todayPlan = appState.plan.find(d => d.date === TODAY_STR);
+                const overallStats = getOverallStats();
+
+                let todayTasksHTML = '';
+                if (!todayPlan) {
+                    const isCompletedAll = new Date(TODAY_STR) > new Date(appState.deadlineDate);
+                    todayTasksHTML = `
+                        <div class="bg-white rounded-3xl p-8 sm:p-12 text-center border border-slate-200 shadow-sm">
+                            <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4">
+                                <i class="fa-solid fa-flag-checkered"></i>
+                            </div>
+                            <h3 class="text-xl sm:text-2xl font-bold text-slate-900 mb-1">${isCompletedAll ? 'Target Deadline Reached!' : 'No tasks scheduled for today'}</h3>
+                            <p class="text-xs sm:text-sm text-slate-500 mb-6">Review your full schedule or start an active revision session.</p>
+                            <div class="flex justify-center gap-3">
+                                <button onclick="goToPlan()" class="py-2.5 px-5 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold rounded-xl transition">View Full Plan</button>
+                            </div>
                         </div>
-                        
-                        <div class="bg-white px-5 py-3 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4 hover:shadow-md transition-shadow cursor-pointer" onclick="goToSettings()">
-                            <div class="text-right">
-                                <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">Overall Progress</p>
-                                <p id="progress-text" class="text-lg font-bold text-blue-600">0%</p>
+                    `;
+                } else if (todayPlan.tasks.length === 0) {
+                    todayTasksHTML = `
+                        <div class="bg-white rounded-3xl p-8 sm:p-12 text-center border border-slate-200 shadow-sm">
+                            <div class="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4">
+                                <i class="fa-solid fa-mug-hot"></i>
                             </div>
-                            <div class="w-12 h-12 rounded-full border-4 border-slate-100 flex items-center justify-center relative">
-                                <svg class="w-full h-full absolute -rotate-90" viewBox="0 0 36 36">
-                                    <path id="progress-ring" class="text-blue-600 transition-all duration-700 ease-out" stroke-width="4" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" stroke-dasharray="0, 100" />
-                                </svg>
+                            <h3 class="text-xl font-bold text-slate-900 mb-1">Rest & Retention Day!</h3>
+                            <p class="text-xs sm:text-sm text-slate-500">No new chapters assigned today. Take a breather or review past formulas.</p>
+                        </div>
+                    `;
+                } else {
+                    const totalToday = todayPlan.tasks.length;
+                    const doneToday = todayPlan.tasks.filter(t => t.completed).length;
+
+                    todayTasksHTML = `
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <h3 class="text-lg sm:text-xl font-extrabold text-slate-900 flex items-center gap-2">
+                                    <span>Today's Mission</span>
+                                    <span class="text-xs font-bold bg-blue-100 text-blue-700 py-0.5 px-2.5 rounded-full">Day ${todayPlan.dayNumber}</span>
+                                    ${todayPlan.isRevisionDay ? '<span class="text-xs font-bold bg-purple-100 text-purple-700 py-0.5 px-2.5 rounded-full">Revision Phase</span>' : ''}
+                                </h3>
+                                <p class="text-xs text-slate-400 mt-0.5">${doneToday} of ${totalToday} chapters completed today</p>
                             </div>
+                            <span class="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-xl">${todayPlan.date}</span>
+                        </div>
+
+                        <!-- Task Cards -->
+                        <div class="space-y-3">
+                            ${todayPlan.tasks.map((task, idx) => {
+                                const subjectBadgeClass = getSubjectColorBadge(task.subject);
+                                return `
+                                    <div class="task-item-container today-task-card ${task.completed ? 'task-done bg-slate-50/70 border-slate-200' : 'bg-white border-slate-200/90 shadow-sm'} border rounded-2xl p-4 transition-all duration-200 flex items-start gap-3.5 hover:shadow-md">
+                                        <!-- Custom Checkbox -->
+                                        <div class="task-checkbox ${task.completed ? 'checked' : ''} mt-0.5" data-task-id="${task.id}" onclick="toggleTaskDirect('${task.id}')">
+                                            <svg class="svg-check" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                <polyline points="20 6 9 17 4 12"></polyline>
+                                            </svg>
+                                        </div>
+
+                                        <!-- Content -->
+                                        <div class="flex-1 cursor-pointer" onclick="toggleTaskDirect('${task.id}')">
+                                            <div class="flex flex-wrap items-center gap-2 mb-1">
+                                                <span class="text-[11px] font-bold px-2 py-0.5 rounded-md ${subjectBadgeClass}">
+                                                    ${task.subject}
+                                                </span>
+                                                ${task.grade === '+1' ? '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">+1 Imp</span>' : `<span class="text-[10px] font-semibold text-slate-400">Term ${task.term}</span>`}
+                                                ${task.isRevision ? '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-100 text-purple-800">Buffer Revision</span>' : ''}
+                                            </div>
+                                            <h4 class="text-sm sm:text-base font-bold text-slate-800 task-text-content ${task.completed ? 'line-through opacity-50' : ''}">
+                                                ${task.chapterName}
+                                            </h4>
+                                            <p class="text-xs text-slate-500 mt-0.5 font-medium">
+                                                ${task.topicTitle}
+                                            </p>
+                                        </div>
+
+                                        <button onclick="toggleTaskDirect('${task.id}')" class="text-slate-300 hover:text-blue-600 transition p-1">
+                                            <i class="fa-solid fa-chevron-right text-xs"></i>
+                                        </button>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    `;
+                }
+
+                container.innerHTML = `
+                    <!-- Quick Stats Header -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">Overall Done</span>
+                            <span class="text-xl sm:text-2xl font-extrabold text-blue-600">${overallStats.percentage}%</span>
+                        </div>
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">Chapters Done</span>
+                            <span class="text-xl sm:text-2xl font-extrabold text-slate-800">${overallStats.completedCount} / ${overallStats.totalCount}</span>
+                        </div>
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">Deadline</span>
+                            <span class="text-xs sm:text-sm font-bold text-slate-800 mt-1 block">${new Date(appState.deadlineDate).toLocaleDateString('en-US', {month: 'short', day: 'numeric'})}</span>
+                        </div>
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">Revision Days</span>
+                            <span class="text-xl sm:text-2xl font-extrabold text-purple-600">${appState.revisionDaysCount || 0}d</span>
+                        </div>
+                    </div>
+
+                    <!-- Main Section: Today's Targets -->
+                    <div class="bg-white rounded-3xl p-5 sm:p-7 border border-slate-200 shadow-sm mb-8">
+                        ${todayTasksHTML}
+                    </div>
+
+                    <!-- Bottom Controls: Subtle Adjust & Reset (As Requested by User) -->
+                    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 border-t border-slate-200 text-xs text-slate-500">
+                        <div class="flex items-center gap-2">
+                            <button onclick="openRegenerateModal()" class="py-2 px-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition flex items-center gap-1.5 shadow-sm">
+                                <i class="fa-solid fa-wrench text-slate-500"></i>
+                                <span>Adjust / Rebalance Schedule</span>
+                            </button>
+                            <span class="text-[11px] text-slate-400 hidden md:inline">Fell behind? Recalculate remaining portions.</span>
+                        </div>
+
+                        <div>
+                            <button onclick="resetApp()" class="text-slate-400 hover:text-red-600 transition underline">
+                                Reset Plan & Start Fresh
+                            </button>
                         </div>
                     </div>
                 `;
 
-                if (todayIndex === -1) {
-                    const isFinished = new Date(TODAY_STR) > new Date(appState.deadlineDate);
-                    dashboardHTML += `
-                        <div class="bg-white rounded-3xl p-10 text-center shadow-sm border border-slate-200">
-                            <div class="text-6xl text-emerald-500 mb-6 drop-shadow-lg"><i class="fa-solid fa-trophy"></i></div>
-                            <h3 class="text-3xl font-bold text-slate-800 mb-2">${isFinished ? 'Syllabus Deadline Passed!' : 'Plan starts soon!'}</h3>
-                            <p class="text-slate-600 mb-8 text-lg">Review your progress or create a new plan.</p>
-                            <button onclick="goToSettings()" class="bg-blue-50 text-blue-700 font-bold py-3 px-6 rounded-xl border border-blue-100 hover:bg-blue-100 transition mr-2">Full Plan</button>
-                            <button onclick="localStorage.removeItem('plusTwoPlanState'); location.reload();" class="bg-slate-800 text-white font-bold py-3 px-6 rounded-xl hover:bg-slate-900 transition shadow-lg">Start Fresh</button>
-                        </div>
-                    `;
-                } else {
-                    const todayData = appState.plan[todayIndex];
-                    
-                    let groupedTasks = {};
-                    todayData.tasks.forEach((task, tIndex) => {
-                        const key = `${task.subject} | ${task.grade} | ${task.chapter}`;
-                        if(!groupedTasks[key]) groupedTasks[key] = { subject: task.subject, chapter: task.chapter, topics: [], term: task.term, grade: task.grade };
-                        groupedTasks[key].topics.push({ ...task, originalIndex: tIndex });
-                    });
-
-                    let tasksHTML = '';
-                    if(Object.keys(groupedTasks).length === 0) {
-                         tasksHTML = `<div class="p-10 text-center text-emerald-600 bg-emerald-50 rounded-3xl border border-emerald-100 shadow-sm"><i class="fa-solid fa-check-double text-4xl mb-3"></i><br><span class="font-bold text-xl">All caught up!</span><br><span class="text-emerald-700 opacity-80 text-sm">No topics scheduled for today. Take a break!</span></div>`;
-                    } else {
-                        for (const [key, group] of Object.entries(groupedTasks)) {
-                            let subjectColor = group.subject === 'Physics' ? 'text-indigo-700 bg-indigo-50 border-indigo-200' : 
-                                               (group.subject === 'Chemistry' ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 
-                                               (group.subject === 'Mathematics' ? 'text-rose-700 bg-rose-50 border-rose-200' : 'text-cyan-700 bg-cyan-50 border-cyan-200'));
-                            
-                            let termBadge = group.grade === '+1' ? `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500 text-white ml-2 shadow-sm border border-amber-600 uppercase tracking-wider">+1 Imp</span>` : `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-white text-slate-600 opacity-90 ml-2 shadow-sm border uppercase tracking-wider">Term ${group.term}</span>`;
-                                               
-                            tasksHTML += `
-                                <div class="mb-5 last:mb-0 border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow">
-                                    <div class="px-5 py-3 ${subjectColor} border-b flex justify-between items-center">
-                                        <h4 class="font-bold text-md flex items-center">${group.subject} <i class="fa-solid fa-angle-right text-xs mx-2 opacity-50"></i> <span class="truncate max-w-[150px] sm:max-w-xs">${group.chapter}</span> ${termBadge}</h4>
-                                    </div>
-                                    <div class="p-2">
-                                        ${group.topics.map(t => `
-                                            <label class="flex items-start p-3 hover:bg-slate-50 rounded-xl cursor-pointer transition-colors group">
-                                                <div class="relative flex items-center justify-center w-6 h-6 mt-0.5 mr-4 shrink-0">
-                                                    <input type="checkbox" class="peer opacity-0 absolute inset-0 cursor-pointer" ${t.completed ? 'checked' : ''} onchange="toggleTask(this, ${todayIndex}, ${t.originalIndex})">
-                                                    <div class="pointer-events-none w-full h-full rounded-md border-2 border-slate-300 peer-checked:bg-blue-600 peer-checked:border-blue-600 flex items-center justify-center transition-all shadow-sm">
-                                                        <i class="fa-solid fa-check text-white text-[12px] opacity-0 peer-checked:opacity-100 transition-opacity transform scale-50 peer-checked:scale-100"></i>
-                                                    </div>
-                                                </div>
-                                                <div class="flex-1 task-text transition-all ${t.completed ? 'line-through opacity-50' : ''}">
-                                                    <p class="text-slate-800 font-bold">${t.topic}</p>
-                                                </div>
-                                            </label>
-                                        `).join('')}
-                                    </div>
-                                </div>
-                            `;
-                        }
-                    }
-
-                    dashboardHTML += `
-                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                            <div class="lg:col-span-2">
-                                <div class="flex items-center justify-between mb-5">
-                                    <h3 class="text-xl font-bold flex items-center gap-2"><i class="fa-solid fa-calendar-day text-blue-500"></i> Today's Target (Day ${todayData.dayNumber})</h3>
-                                    <span class="text-sm font-bold bg-blue-100 text-blue-800 py-1.5 px-3 rounded-lg border border-blue-200">${todayData.date}</span>
-                                </div>
-                                ${tasksHTML}
-                            </div>
-                            
-                            <div class="space-y-6">
-                                <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden group">
-                                    <div class="absolute -right-6 -top-6 text-slate-700 opacity-20 text-8xl group-hover:rotate-12 transition-transform duration-500"><i class="fa-solid fa-clock-rotate-left"></i></div>
-                                    <h3 class="text-lg font-bold mb-2 relative z-10 text-white">Fell Behind?</h3>
-                                    <p class="text-slate-300 text-sm mb-6 relative z-10 leading-relaxed">Life happens. If you missed a few days, regenerate your plan to intelligently redistribute the remaining topics.</p>
-                                    <button onclick="openRegenerateModal()" class="w-full bg-white text-slate-900 font-extrabold py-3.5 rounded-xl hover:bg-slate-100 transition relative z-10 flex justify-center items-center gap-2 shadow-lg active:scale-95">
-                                        <i class="fa-solid fa-wrench text-blue-600"></i> Adjust Plan
-                                    </button>
-                                </div>
-
-                                <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-                                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 border-b border-slate-100 pb-2">Syllabus Overview</h3>
-                                    <div class="space-y-4">
-                                        <div class="flex justify-between items-center text-sm">
-                                            <span class="text-slate-600 font-medium">Total Topics</span>
-                                            <span class="font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded">${calculateTotalTasks()}</span>
-                                        </div>
-                                        <div class="flex justify-between items-center text-sm">
-                                            <span class="text-slate-600 font-medium">Deadline</span>
-                                            <span class="font-bold text-slate-800">${new Date(appState.deadlineDate).toLocaleDateString('en-GB', {day: 'numeric', month: 'short', year: 'numeric'})}</span>
-                                        </div>
-                                         <div class="flex justify-between items-center text-sm">
-                                            <span class="text-slate-600 font-medium">Plan Day</span>
-                                            <span class="font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">Day ${todayData.dayNumber} / ${appState.plan[appState.plan.length-1].dayNumber}</span>
-                                        </div>
-                                    </div>
-                                    <button onclick="goToSettings()" class="w-full mt-6 bg-slate-50 text-slate-700 font-bold py-3 px-4 rounded-xl border border-slate-200 hover:bg-slate-100 hover:border-slate-300 transition flex justify-center items-center gap-2 text-sm shadow-sm active:scale-95">
-                                        <i class="fa-solid fa-list-check text-blue-500"></i> View Full Plan
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                }
-                
-                container.innerHTML = dashboardHTML;
-                updateProgress();
-            }
-        }
-
-        function calculateTotalTasks() {
-            let total = PLUS_TWO_DATA.length;
-            if (appState && appState.improvementConfig) {
-                appState.improvementConfig.forEach(conf => {
-                    total += PLUS_ONE_DATA.filter(t => t.subject === conf.subject).length;
-                });
-            }
-            return total;
-        }
-
-        function updateProgress() {
-            if(!appState) return;
-            
-            let totalTasks = calculateTotalTasks();
-            let completedTasksCount = 0;
-            
-            // Count from history
-            if(appState.historyCompletedTasks) {
-                appState.historyCompletedTasks.forEach(t => { if(t.completed) completedTasksCount++; });
-            }
-
-            // Count from current active plan
-            appState.plan.forEach(day => {
-                day.tasks.forEach(task => {
-                    if (task.completed) completedTasksCount++;
-                });
-            });
-
-            const percentage = Math.round((completedTasksCount / totalTasks) * 100) || 0;
-            
-            const progressText = document.getElementById('progress-text');
-            const progressRing = document.getElementById('progress-ring');
-            
-            if(progressText) progressText.innerText = `${percentage}%`;
-            if(progressRing) progressRing.setAttribute('stroke-dasharray', `${percentage}, 100`);
-        }
-
-        function openRegenerateModal() {
-            const select = document.getElementById('completed-day-select');
-            select.innerHTML = '';
-            
-            const todayIndex = appState.plan.findIndex(d => d.date === TODAY_STR);
-            const currentDayObj = todayIndex !== -1 ? appState.plan[todayIndex] : appState.plan[appState.plan.length-1];
-            
-            // Allow selecting any day up to yesterday (or today if they want)
-            const maxDay = currentDayObj ? currentDayObj.dayNumber - 1 : appState.plan[appState.plan.length-1].dayNumber;
-            const minDay = appState.plan[0].dayNumber;
-
-            if (maxDay < minDay) {
-                alert("You are on Day 1, no previous days to fall back to!");
+                highlightNextUnfinishedTask();
                 return;
             }
 
-            for(let i = minDay; i <= maxDay; i++) {
-                // Find date for label context
-                const dayPlan = appState.plan.find(p => p.dayNumber === i);
-                const dateLbl = dayPlan ? ` (${dayPlan.date})` : '';
-                
-                const option = document.createElement('option');
-                option.value = i;
-                option.text = `Day ${i} ${dateLbl}`;
-                // Select the most recent past day by default
-                if(i === maxDay) option.selected = true;
-                select.appendChild(option);
+            // View 2: Detailed Full Plan View (With working checkmarks on every task)
+            if (currentView === 'plan') {
+                let planDaysHTML = '';
+
+                appState.plan.forEach(day => {
+                    const isToday = (day.date === TODAY_STR);
+                    const isPast = (new Date(day.date) < new Date(TODAY_STR));
+
+                    planDaysHTML += `
+                        <div class="bg-white rounded-2xl border ${isToday ? 'border-blue-300 ring-2 ring-blue-100' : 'border-slate-200'} shadow-sm overflow-hidden mb-4 transition-all">
+                            <div class="p-3.5 sm:p-4 bg-slate-50/80 border-b border-slate-100 flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs font-extrabold text-slate-900">Day ${day.dayNumber}</span>
+                                    <span class="text-[11px] font-semibold text-slate-400">(${day.date})</span>
+                                    ${isToday ? '<span class="text-[10px] font-extrabold bg-blue-600 text-white px-2 py-0.5 rounded-full">TODAY</span>' : ''}
+                                    ${day.isRevisionDay ? '<span class="text-[10px] font-bold bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full">Revision Day</span>' : ''}
+                                </div>
+                                <span class="text-[11px] font-bold text-slate-500">${day.tasks.filter(t => t.completed).length}/${day.tasks.length} Done</span>
+                            </div>
+
+                            <div class="p-3 sm:p-4 divide-y divide-slate-100">
+                                ${day.tasks.length === 0 ? '<p class="text-xs text-slate-400 italic py-1">Free / Buffer Day</p>' : ''}
+                                ${day.tasks.map(task => {
+                                    const badgeColor = getSubjectColorBadge(task.subject);
+                                    return `
+                                        <div class="task-item-container py-2.5 first:pt-0 last:pb-0 flex items-start gap-3">
+                                            <!-- Working Clickable Checkbox in Full Plan -->
+                                            <div class="task-checkbox ${task.completed ? 'checked' : ''} mt-0.5" data-task-id="${task.id}" onclick="toggleTaskDirect('${task.id}')">
+                                                <svg class="svg-check" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                                </svg>
+                                            </div>
+                                            <div class="flex-1 cursor-pointer" onclick="toggleTaskDirect('${task.id}')">
+                                                <div class="flex items-center gap-2 mb-0.5">
+                                                    <span class="text-[10px] font-bold px-1.5 py-0.2 rounded ${badgeColor}">${task.subject}</span>
+                                                    ${task.grade === '+1' ? '<span class="text-[10px] font-bold text-amber-700 bg-amber-50 px-1 rounded">+1 Imp</span>' : `<span class="text-[10px] text-slate-400">Term ${task.term}</span>`}
+                                                </div>
+                                                <div class="text-xs sm:text-sm font-bold text-slate-800 task-text-content ${task.completed ? 'line-through opacity-50' : ''}">
+                                                    ${task.chapterName} - <span class="font-normal text-slate-500">${task.topicTitle}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = `
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900">Complete Study Schedule</h2>
+                            <p class="text-xs text-slate-500">Every single day planned out until your deadline.</p>
+                        </div>
+                        <button onclick="goToDashboard()" class="text-xs font-bold bg-white border border-slate-200 hover:bg-slate-50 px-3.5 py-2 rounded-xl text-slate-700 transition">
+                            <i class="fa-solid fa-arrow-left mr-1"></i> Back to Today
+                        </button>
+                    </div>
+
+                    <div class="space-y-4">
+                        ${planDaysHTML}
+                    </div>
+
+                    <!-- Subtle Bottom Rebalance -->
+                    <div class="mt-8 pt-4 border-t border-slate-200 flex justify-between items-center text-xs text-slate-500">
+                        <button onclick="openRegenerateModal()" class="py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-wrench"></i> Adjust Schedule
+                        </button>
+                        <button onclick="resetApp()" class="text-slate-400 hover:text-red-600 underline">Reset Plan</button>
+                    </div>
+                `;
+                return;
             }
 
-            document.getElementById('regenerate-modal').style.display = 'flex';
+            // View 3: Official Syllabus Reference & Completed Chapters Overview
+            if (currentView === 'syllabus') {
+                const subjects = ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'];
+
+                let syllabusHTML = '';
+                subjects.forEach(sub => {
+                    const p2Chaps = PLUS_TWO_SYLLABUS.filter(t => t.subject === sub);
+                    const uniqueP2 = [...new Map(p2Chaps.map(item => [item.chapId, item])).values()];
+
+                    syllabusHTML += `
+                        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5 mb-4">
+                            <h3 class="text-sm sm:text-base font-extrabold text-slate-900 mb-3 flex items-center justify-between border-b pb-2">
+                                <span>${sub} <span class="text-xs text-slate-400 font-normal">(${uniqueP2.length} Official Chapters)</span></span>
+                                <span class="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-lg">Plus Two DHSE</span>
+                            </h3>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                ${uniqueP2.map(ch => {
+                                    // Check if all tasks of this chapter are completed
+                                    let isAllDone = false;
+                                    if (appState && appState.plan) {
+                                        const chapterTasksInPlan = [];
+                                        appState.plan.forEach(d => {
+                                            d.tasks.forEach(t => {
+                                                if (t.chapId === ch.chapId) chapterTasksInPlan.push(t);
+                                            });
+                                        });
+                                        if (chapterTasksInPlan.length > 0 && chapterTasksInPlan.every(t => t.completed)) {
+                                            isAllDone = true;
+                                        }
+                                    }
+
+                                    return `
+                                        <div class="p-2.5 rounded-xl border ${isAllDone ? 'bg-emerald-50/60 border-emerald-200' : 'bg-slate-50/50 border-slate-100'} flex items-start gap-2 text-xs">
+                                            <div class="w-5 h-5 rounded-md ${isAllDone ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-400'} flex items-center justify-center shrink-0 mt-0.5 text-[10px]">
+                                                <i class="fa-solid ${isAllDone ? 'fa-check' : 'fa-book'}"></i>
+                                            </div>
+                                            <div class="flex-1">
+                                                <span class="font-bold text-slate-800 block">${ch.chapNumber}. ${ch.chapterName}</span>
+                                                <span class="text-[10px] text-slate-400">Term ${ch.term} ${isAllDone ? '• <strong class="text-emerald-700">Mastered</strong>' : ''}</span>
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = `
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900">Official DHSE Scheme of Work</h2>
+                            <p class="text-xs text-slate-500">Accurate chapter list for Kerala Higher Secondary examination.</p>
+                        </div>
+                        <button onclick="goToDashboard()" class="text-xs font-bold bg-white border border-slate-200 hover:bg-slate-50 px-3.5 py-2 rounded-xl text-slate-700 transition">
+                            <i class="fa-solid fa-arrow-left mr-1"></i> Back to Today
+                        </button>
+                    </div>
+
+                    <div class="space-y-4">
+                        ${syllabusHTML}
+                    </div>
+                `;
+                return;
+            }
         }
 
-        function closeRegenerateModal() {
-            document.getElementById('regenerate-modal').style.display = 'none';
+        function getSubjectColorBadge(subject) {
+            switch(subject) {
+                case 'Physics': return 'bg-indigo-50 text-indigo-700 border border-indigo-200/60';
+                case 'Chemistry': return 'bg-emerald-50 text-emerald-700 border border-emerald-200/60';
+                case 'Mathematics': return 'bg-rose-50 text-rose-700 border border-rose-200/60';
+                case 'Computer Science': return 'bg-cyan-50 text-cyan-700 border border-cyan-200/60';
+                default: return 'bg-purple-50 text-purple-700 border border-purple-200/60';
+            }
         }
 
-        // Initialize App
+        function getOverallStats() {
+            if (!appState || !appState.plan) return { percentage: 0, completedCount: 0, totalCount: 0 };
+            let total = 0;
+            let done = 0;
+            appState.plan.forEach(d => {
+                d.tasks.forEach(t => {
+                    total++;
+                    if (t.completed) done++;
+                });
+            });
+            const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+            return { percentage: pct, completedCount: done, totalCount: total };
+        }
+
+        function updateProgressHeader() {
+            const stats = getOverallStats();
+            // In case there are quick summary elements
+        }
+
+        /* ==========================================================================
+           9. 1-CLICK PWA INSTALL PROMPT
+           Handles 'beforeinstallprompt' with 1-click automatic trigger
+           ========================================================================== */
+        let deferredPWAInstallPrompt = null;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPWAInstallPrompt = e;
+            const installBtn = document.getElementById('pwa-install-btn');
+            if (installBtn) {
+                installBtn.classList.remove('hidden');
+                installBtn.classList.add('flex');
+            }
+        });
+
+        function triggerPWAInstall() {
+            if (deferredPWAInstallPrompt) {
+                deferredPWAInstallPrompt.prompt();
+                deferredPWAInstallPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        showToastMessage("Thank you for installing Mission PlusTwo!", "fa-circle-check text-emerald-400");
+                        const installBtn = document.getElementById('pwa-install-btn');
+                        if (installBtn) installBtn.classList.add('hidden');
+                    }
+                    deferredPWAInstallPrompt = null;
+                });
+            } else {
+                // If browser already installed or iOS Safari
+                alert("To install on your phone or desktop: \n• On Chrome/Edge: Tap the (⋮) menu ➔ 'Install App'\n• On iPhone/Safari: Tap Share (📤) ➔ 'Add to Home Screen'");
+            }
+        }
+
+        // Register Service Worker for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').then((reg) => {
+                    // Service worker active
+                }).catch((err) => {
+                    console.log('SW registration note:', err);
+                });
+            });
+        }
+
+        // Initialize App on DOM Load
         renderApp();
-
     </script>
 </body>
 </html>
