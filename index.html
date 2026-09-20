@@ -1146,12 +1146,30 @@
             }
         }
 
-        function resetApp() {
-            if (confirm('Are you sure you want to reset your study plan and start over? This cannot be undone.')) {
-                localStorage.removeItem('plusTwoMissionState_v2');
-                localStorage.removeItem('plusTwoPlanState');
-                location.reload();
+        async function resetApp() {
+            if (!confirm('Are you sure you want to reset your study plan and start fresh? All progress will be cleared.')) {
+                return;
             }
+
+            try {
+                // 1. If signed in, delete the cloud document from Firestore so it doesn't restore!
+                if (currentUser && db) {
+                    await db.collection('users').doc(currentUser.uid).delete();
+                }
+            } catch(e) {
+                console.warn("Cloud delete note:", e);
+            }
+
+            // 2. Clear local storage
+            localStorage.removeItem('plusTwoMissionState_v2');
+            localStorage.removeItem('plusTwoPlanState');
+
+            // 3. Reset in-memory state and re-render setup screen
+            appState = null;
+            currentView = 'today';
+            showToastMessage("Study plan reset. Ready to start fresh!", "fa-rotate text-blue-400");
+            renderApp();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function switchSetupSubject(sub) {
