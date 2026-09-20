@@ -64,7 +64,7 @@
             "name": "What is the best Plus Two study planner for Kerala State Board (DHSE)?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Mission PlusTwo is a free interactive Plus Two study planner specifically calibrated to the Kerala DHSE rationalized syllabus for Physics, Chemistry, Mathematics, and Computer Science. Unlike static PDF timetables, it dynamically adapts to your target deadline and automatically rebalances your schedule if you miss a day."
+              "text": "Mission PlusTwo is a free interactive Plus Two study planner specifically calibrated to the Kerala DHSE rationalized syllabus for both Biology Science (Botany & Zoology) and Computer Science streams with Physics, Chemistry, and Mathematics. Unlike static PDF timetables, it dynamically adapts to your target deadline and automatically rebalances your schedule if you miss a day."
             }
           },
           {
@@ -72,7 +72,7 @@
             "name": "How does the Plus Two study planner handle Plus One Improvement papers?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "The planner features a dedicated Plus One Improvement module that allows students to select their improvement papers (Physics, Chemistry, Maths, CS) and exam dates. It weaves remaining +1 chapters evenly before each exam date while continuing regular Plus Two portions."
+              "text": "The planner features a dedicated Plus One Improvement module that allows students to select their stream improvement papers (Botany, Zoology, Physics, Chemistry, Maths, or Computer Science) and exam dates. It weaves remaining +1 chapters evenly before each exam date while continuing regular Plus Two portions."
             }
           },
           {
@@ -673,6 +673,27 @@
                 { name: 'Database Management System', parts: 2, term: 2 },
                 { name: 'Structured Query Language (SQL)', parts: 3, term: 3 },
                 { name: 'Server Side Scripting using PHP', parts: 3, term: 3 }
+            ]),
+
+            // Botany: 6 Chapters (Rationalized SCERT / Kerala DHSE Scheme of Work)
+            ...createTasks('Botany', '+2', [
+                { name: 'Sexual Reproduction in Flowering Plants', parts: 3, term: 1 },
+                { name: 'Biotechnology: Principles and Processes', parts: 2, term: 1 },
+                { name: 'Biotechnology and its Applications', parts: 2, term: 2 },
+                { name: 'Organisms and Populations', parts: 2, term: 2 },
+                { name: 'Ecosystem', parts: 2, term: 3 },
+                { name: 'Biodiversity and Conservation', parts: 2, term: 3 }
+            ]),
+
+            // Zoology: 7 Chapters (Rationalized SCERT / Kerala DHSE Scheme of Work)
+            ...createTasks('Zoology', '+2', [
+                { name: 'Human Reproduction', parts: 3, term: 1 },
+                { name: 'Reproductive Health', parts: 2, term: 1 },
+                { name: 'Principles of Inheritance and Variation', parts: 3, term: 1 },
+                { name: 'Molecular Basis of Inheritance', parts: 3, term: 2 },
+                { name: 'Evolution', parts: 2, term: 2 },
+                { name: 'Human Health and Disease', parts: 3, term: 2 },
+                { name: 'Microbes in Human Welfare', parts: 2, term: 3 }
             ])
         ];
 
@@ -739,6 +760,33 @@
                 { name: 'Arrays', parts: 2 },
                 { name: 'Functions', parts: 2 },
                 { name: 'Computer Networks', parts: 2 }
+            ]),
+
+            // Botany: 9 Chapters (Rationalized SCERT / Kerala DHSE Scheme of Work for +1 Improvement)
+            ...createTasks('Botany', '+1', [
+                { name: 'Biological Classification', parts: 2 },
+                { name: 'Plant Kingdom', parts: 2 },
+                { name: 'Morphology of Flowering Plants', parts: 2 },
+                { name: 'Anatomy of Flowering Plants', parts: 2 },
+                { name: 'Cell: The Unit of Life', parts: 2 },
+                { name: 'Cell Cycle and Cell Division', parts: 2 },
+                { name: 'Photosynthesis in Higher Plants', parts: 3 },
+                { name: 'Respiration in Plants', parts: 2 },
+                { name: 'Plant Growth and Development', parts: 2 }
+            ]),
+
+            // Zoology: 10 Chapters (Rationalized SCERT / Kerala DHSE Scheme of Work for +1 Improvement)
+            ...createTasks('Zoology', '+1', [
+                { name: 'The Living World', parts: 1 },
+                { name: 'Animal Kingdom', parts: 3 },
+                { name: 'Structural Organisation in Animals', parts: 2 },
+                { name: 'Biomolecules', parts: 2 },
+                { name: 'Breathing and Exchange of Gases', parts: 2 },
+                { name: 'Body Fluids and Circulation', parts: 2 },
+                { name: 'Excretory Products and their Elimination', parts: 2 },
+                { name: 'Locomotion and Movement', parts: 2 },
+                { name: 'Neural Control and Coordination', parts: 2 },
+                { name: 'Chemical Coordination and Integration', parts: 2 }
             ])
         ];
 
@@ -766,7 +814,9 @@
                 }))
             }));
 
+            const hasBio = migratedPlan.some(d => d.tasks.some(t => t.subject === 'Botany' || t.subject === 'Zoology'));
             return {
+                stream: oldState.stream || (hasBio ? 'bio' : 'cs'),
                 startDate: oldState.startDate || getLocalDateStr(),
                 deadlineDate: oldState.deadlineDate || '2026-11-30',
                 targetTerm: oldState.targetTerm || 2,
@@ -1283,12 +1333,15 @@
             return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
         }
 
-        function buildIntelligentPlan(deadlineStr, tasksToSchedule, startDateStr = TODAY_STR, improvementConfig = []) {
+        function buildIntelligentPlan(deadlineStr, tasksToSchedule, startDateStr = TODAY_STR, improvementConfig = [], stream = null) {
             const totalDaysAvailable = calculateDaysBetween(startDateStr, deadlineStr);
             if (totalDaysAvailable <= 0) {
                 alert("Please select a target deadline date in the future.");
                 return null;
             }
+
+            // Detect stream if not explicitly provided
+            const effectiveStream = stream || (tasksToSchedule.some(t => t.subject === 'Botany' || t.subject === 'Zoology') ? 'bio' : 'cs');
 
             // Calculate Dedicated Revision Buffer Days based on timeline length
             let revisionDaysCount = 0;
@@ -1349,15 +1402,17 @@
             });
 
             // 2. Intelligent Interleaving of Plus Two Tasks
-            // Separate queues for each subject
-            const p2Queues = {
-                'Physics': p2Tasks.filter(t => t.subject === 'Physics'),
-                'Chemistry': p2Tasks.filter(t => t.subject === 'Chemistry'),
-                'Mathematics': p2Tasks.filter(t => t.subject === 'Mathematics'),
-                'Computer Science': p2Tasks.filter(t => t.subject === 'Computer Science')
-            };
+            // Dynamic queues and rotation based strictly on selected stream
+            const streamSubjects = effectiveStream === 'bio'
+                ? ['Physics', 'Chemistry', 'Mathematics', 'Botany', 'Zoology']
+                : ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'];
 
-            const subjectRotation = ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'];
+            const p2Queues = {};
+            streamSubjects.forEach(s => {
+                p2Queues[s] = p2Tasks.filter(t => t.subject === s);
+            });
+
+            const subjectRotation = [...streamSubjects];
             let currentSubjIdx = 0;
             let remainingP2Count = p2Tasks.length;
 
@@ -1400,9 +1455,17 @@
                 }
             }
 
-            // 3. Populate Dedicated Revision Days
+            // 3. Populate Dedicated Revision Days (100% Stream Isolated)
             if (revisionDaysCount > 0) {
-                const revisionModules = [
+                const revisionModules = effectiveStream === 'bio' ? [
+                    { subject: 'Physics', title: 'Comprehensive Formula Sheet & Core Derivations' },
+                    { subject: 'Chemistry', title: 'Named Reactions, Reagents & Numerical Problems' },
+                    { subject: 'Mathematics', title: 'High-Weightage Calculus & Vectors Problem Sets' },
+                    { subject: 'Botany', title: 'Plant Reproduction, Biotechnology & Ecology Rapid Notes' },
+                    { subject: 'Zoology', title: 'Genetics, Human Physiology & Evolution Key Drills' },
+                    { subject: 'All Subjects', title: 'Full Previous Year Question (PYQ) Mock Examination' },
+                    { subject: 'All Subjects', title: 'Final Self-Evaluation & Weakness Reinforcement' }
+                ] : [
                     { subject: 'Physics', title: 'Comprehensive Formula Sheet & Core Derivations' },
                     { subject: 'Chemistry', title: 'Named Reactions, Reagents & Numerical Problems' },
                     { subject: 'Mathematics', title: 'High-Weightage Calculus & Vectors Problem Sets' },
@@ -1644,9 +1707,132 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
+        let selectedStream = 'bio'; // 'bio' or 'cs'
         let activeSetupSubjectTab = 'Physics';
         let activeSetupGradeTab = '+2'; // '+2' or '+1'
         const selectedCompletedChapters = new Set();
+
+        function getStreamSubjects(stream = selectedStream) {
+            return stream === 'bio'
+                ? ['Physics', 'Chemistry', 'Mathematics', 'Botany', 'Zoology']
+                : ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'];
+        }
+
+        function setStreamSelection(stream) {
+            selectedStream = stream;
+
+            // Update Stream Card UI
+            const cardBio = document.getElementById('stream-card-bio');
+            const cardCs = document.getElementById('stream-card-cs');
+            if (cardBio && cardCs) {
+                if (stream === 'bio') {
+                    cardBio.className = 'cursor-pointer p-4 rounded-2xl border-2 border-emerald-600 bg-emerald-50/60 ring-2 ring-emerald-500/20 transition text-left flex flex-col justify-between relative shadow-sm';
+                    const checkBio = cardBio.querySelector('.stream-check');
+                    if (checkBio) {
+                        checkBio.className = 'w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px] stream-check';
+                        checkBio.innerHTML = '<i class="fa-solid fa-check"></i>';
+                    }
+                    cardCs.className = 'cursor-pointer p-4 rounded-2xl border-2 border-slate-200 bg-white hover:border-slate-300 transition text-left flex flex-col justify-between';
+                    const checkCs = cardCs.querySelector('.stream-check');
+                    if (checkCs) {
+                        checkCs.className = 'w-5 h-5 rounded-full border border-slate-300 flex items-center justify-center stream-check';
+                        checkCs.innerHTML = '';
+                    }
+                } else {
+                    cardCs.className = 'cursor-pointer p-4 rounded-2xl border-2 border-blue-600 bg-blue-50/60 ring-2 ring-blue-500/20 transition text-left flex flex-col justify-between relative shadow-sm';
+                    const checkCs = cardCs.querySelector('.stream-check');
+                    if (checkCs) {
+                        checkCs.className = 'w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] stream-check';
+                        checkCs.innerHTML = '<i class="fa-solid fa-check"></i>';
+                    }
+                    cardBio.className = 'cursor-pointer p-4 rounded-2xl border-2 border-slate-200 bg-white hover:border-slate-300 transition text-left flex flex-col justify-between';
+                    const checkBio = cardBio.querySelector('.stream-check');
+                    if (checkBio) {
+                        checkBio.className = 'w-5 h-5 rounded-full border border-slate-300 flex items-center justify-center stream-check';
+                        checkBio.innerHTML = '';
+                    }
+                }
+            }
+
+            // If activeSetupSubjectTab is not part of this stream, fallback to 'Physics'
+            const validSubs = getStreamSubjects(stream);
+            if (!validSubs.includes(activeSetupSubjectTab)) {
+                activeSetupSubjectTab = 'Physics';
+            }
+
+            // Re-render Subject Tabs in Exclude Chapters section
+            const tabsContainer = document.getElementById('setup-subject-tabs-container');
+            if (tabsContainer) {
+                tabsContainer.innerHTML = renderSetupSubjectTabs();
+            }
+
+            // Re-render Chapter List in Exclude Chapters section
+            const chapsContainer = document.getElementById('setup-subject-chapters-list');
+            if (chapsContainer) {
+                chapsContainer.innerHTML = renderSetupSubjectChapters(activeSetupSubjectTab, activeSetupGradeTab);
+            }
+
+            // Re-render Improvement Options in Step 5
+            const impContainer = document.getElementById('improvement-subject-items-container');
+            if (impContainer) {
+                impContainer.innerHTML = renderImprovementSubjectItems();
+            }
+
+            // Update Term 1 / 2 / 3 chapter counts in Step 2
+            updateTermCardsDescriptions();
+        }
+
+        function updateTermCardsDescriptions() {
+            const desc1 = document.getElementById('term-desc-1');
+            const desc2 = document.getElementById('term-desc-2');
+            const desc3 = document.getElementById('term-desc-3');
+            if (selectedStream === 'bio') {
+                if (desc1) desc1.innerText = 'Onam Exams (~18 chapters). Rapid short-term focus.';
+                if (desc2) desc2.innerText = 'Complete pre-Christmas portion (~35 chaps) before model exams.';
+                if (desc3) desc3.innerText = 'All 49 rationalized chapters (Term 1 + 2 + 3) for Public Exams.';
+            } else {
+                if (desc1) desc1.innerText = 'Onam Exams (~17 chapters). Rapid short-term focus.';
+                if (desc2) desc2.innerText = 'Complete pre-Christmas portion (~31 chaps) before model exams.';
+                if (desc3) desc3.innerText = 'All 46 rationalized chapters (Term 1 + 2 + 3) for Public Exams.';
+            }
+        }
+
+        function renderSetupSubjectTabs() {
+            const subs = getStreamSubjects(selectedStream);
+            return subs.map(sub => `
+                <button type="button" id="setup-tab-${sub.replace(/\s+/g, '-')}" onclick="switchSetupSubject('${sub}')" class="py-1.5 px-3 text-xs font-bold rounded-xl ${sub === activeSetupSubjectTab ? 'bg-slate-800 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'} transition">
+                    ${sub}
+                </button>
+            `).join('');
+        }
+
+        function renderImprovementSubjectItems() {
+            const defaultDates = {
+                'Physics': '2026-10-12',
+                'Mathematics': '2026-10-14',
+                'Chemistry': '2026-10-16',
+                'Botany': '2026-10-19',
+                'Zoology': '2026-10-19',
+                'Computer Science': '2026-10-19'
+            };
+            const subs = getStreamSubjects(selectedStream);
+            return subs.map(sub => {
+                const subId = sub.replace(/\s+/g, '-').toLowerCase();
+                const defaultDate = defaultDates[sub] || '2026-10-19';
+                return `
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-white rounded-xl border border-slate-200 shadow-sm">
+                        <label class="flex items-center gap-2.5 cursor-pointer text-xs font-bold text-slate-800">
+                            <input type="checkbox" id="imp-${subId}" class="rounded border-slate-300 text-blue-600 w-4 h-4">
+                            <span>${sub} Improvement</span>
+                        </label>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[11px] text-slate-500 font-medium">Exam Date:</span>
+                            <input type="date" id="input-date-${subId}" value="${defaultDate}" class="border border-slate-300 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-700 bg-slate-50 focus:bg-white focus:border-blue-600 outline-none">
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
 
         function switchSetupGrade(grade) {
             activeSetupGradeTab = grade;
@@ -1679,7 +1865,7 @@
                 }
             }
 
-            ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'].forEach(s => {
+            getStreamSubjects(selectedStream).forEach(s => {
                 const btn = document.getElementById(`setup-tab-${s.replace(/\s+/g, '-')}`);
                 if (btn) {
                     if (s === activeSetupSubjectTab) {
@@ -1867,16 +2053,21 @@
             // Collect excluded / already completed chapters (both +2 and +1)
             const checkedCompletedBoxes = Array.from(selectedCompletedChapters);
 
-            // Filter Plus Two tasks: only include tasks up to selected Term, and exclude finished chapters
-            let tasksToPlan = PLUS_TWO_SYLLABUS.filter(t => t.term <= targetTerm && !checkedCompletedBoxes.includes(t.chapId));
+            // Filter Plus Two tasks: only include tasks of the chosen stream, up to targetTerm, and not marked completed
+            const allowedSubjects = getStreamSubjects(selectedStream);
+            let tasksToPlan = PLUS_TWO_SYLLABUS.filter(t => 
+                allowedSubjects.includes(t.subject) && 
+                t.term <= targetTerm && 
+                !checkedCompletedBoxes.includes(t.chapId)
+            );
 
-            // Plus One Improvement Config
+            // Plus One Improvement Config (Strictly Stream Isolated)
             let improvementConfig = [];
             const hasImp = document.getElementById('has-improvement')?.checked;
 
             if (hasImp) {
                 let hasError = false;
-                ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'].forEach(sub => {
+                allowedSubjects.forEach(sub => {
                     const subId = sub.replace(/\s+/g, '-').toLowerCase();
                     const cb = document.getElementById(`imp-${subId}`);
                     if (cb && cb.checked) {
@@ -1900,10 +2091,11 @@
                 return;
             }
 
-            const planResult = buildIntelligentPlan(deadlineInput, tasksToPlan, TODAY_STR, improvementConfig);
+            const planResult = buildIntelligentPlan(deadlineInput, tasksToPlan, TODAY_STR, improvementConfig, selectedStream);
 
             if (planResult) {
                 appState = {
+                    stream: selectedStream,
                     startDate: TODAY_STR,
                     deadlineDate: deadlineInput,
                     targetTerm: targetTerm,
@@ -1974,7 +2166,8 @@
             tomorrow.setDate(tomorrow.getDate() + 1);
             const tomorrowStr = getLocalDateStr(tomorrow);
 
-            const result = buildIntelligentPlan(appState.deadlineDate, uncompletedTasks, tomorrowStr, appState.improvementConfig || []);
+            const userStream = appState.stream || (appState.plan.some(d => d.tasks.some(t => t.subject === 'Botany' || t.subject === 'Zoology')) ? 'bio' : 'cs');
+            const result = buildIntelligentPlan(appState.deadlineDate, uncompletedTasks, tomorrowStr, appState.improvementConfig || [], userStream);
 
             if (result) {
                 // Adjust day numbering seamlessly
@@ -2067,11 +2260,65 @@
                         </div>
 
                         <div class="space-y-6">
-                            <!-- Step 1: Target Scope Milestone -->
+                            <!-- Step 1: Stream Selection (Biology Science vs Computer Science) -->
                             <div>
                                 <div class="flex items-center justify-between mb-2.5">
                                     <label class="text-xs font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-2">
                                         <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[11px] font-black">1</span>
+                                        <span>Choose Your Academic Stream</span>
+                                    </label>
+                                    <span class="text-[11px] text-slate-400 font-medium">Select your group</span>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <!-- Option 1: Biology Science (Bio-Maths / General Science) -->
+                                    <div id="stream-card-bio" onclick="setStreamSelection('bio')" class="cursor-pointer p-4 rounded-2xl border-2 ${selectedStream === 'bio' ? 'border-emerald-600 bg-emerald-50/60 ring-2 ring-emerald-500/20 shadow-sm' : 'border-slate-200 bg-white hover:border-slate-300'} transition text-left flex flex-col justify-between relative">
+                                        <div class="flex items-start justify-between">
+                                            <div class="flex items-center gap-2.5">
+                                                <div class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-base font-bold">
+                                                    <i class="fa-solid fa-seedling"></i>
+                                                </div>
+                                                <div>
+                                                    <h4 class="font-extrabold text-slate-900 text-sm">Biology Science</h4>
+                                                    <span class="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">Bio-Maths / General Science</span>
+                                                </div>
+                                            </div>
+                                            <span class="w-5 h-5 rounded-full ${selectedStream === 'bio' ? 'bg-emerald-600 text-white' : 'border border-slate-300'} flex items-center justify-center text-[10px] stream-check">
+                                                ${selectedStream === 'bio' ? '<i class="fa-solid fa-check"></i>' : ''}
+                                            </span>
+                                        </div>
+                                        <p class="text-[11px] text-slate-600 mt-2.5 pt-2 border-t border-slate-100 font-medium">
+                                            Physics • Chemistry • Mathematics • <strong>Botany & Zoology</strong>
+                                        </p>
+                                    </div>
+
+                                    <!-- Option 2: Computer Science -->
+                                    <div id="stream-card-cs" onclick="setStreamSelection('cs')" class="cursor-pointer p-4 rounded-2xl border-2 ${selectedStream === 'cs' ? 'border-blue-600 bg-blue-50/60 ring-2 ring-blue-500/20 shadow-sm' : 'border-slate-200 bg-white hover:border-slate-300'} transition text-left flex flex-col justify-between relative">
+                                        <div class="flex items-start justify-between">
+                                            <div class="flex items-center gap-2.5">
+                                                <div class="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center text-base font-bold">
+                                                    <i class="fa-solid fa-laptop-code"></i>
+                                                </div>
+                                                <div>
+                                                    <h4 class="font-extrabold text-slate-900 text-sm">Computer Science</h4>
+                                                    <span class="text-[10px] font-bold text-blue-700 uppercase tracking-wider">Physics • Chem • Maths • CS</span>
+                                                </div>
+                                            </div>
+                                            <span class="w-5 h-5 rounded-full ${selectedStream === 'cs' ? 'bg-blue-600 text-white' : 'border border-slate-300'} flex items-center justify-center text-[10px] stream-check">
+                                                ${selectedStream === 'cs' ? '<i class="fa-solid fa-check"></i>' : ''}
+                                            </span>
+                                        </div>
+                                        <p class="text-[11px] text-slate-600 mt-2.5 pt-2 border-t border-slate-100 font-medium">
+                                            Physics • Chemistry • Mathematics • <strong>Computer Science</strong>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Step 2: Target Scope Milestone -->
+                            <div>
+                                <div class="flex items-center justify-between mb-2.5">
+                                    <label class="text-xs font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                                        <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[11px] font-black">2</span>
                                         <span>Choose Your Target Syllabus</span>
                                     </label>
                                     <span class="text-[11px] text-slate-400 font-medium">Click a goal to select</span>
@@ -2083,7 +2330,7 @@
                                         <div>
                                             <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">First Terminal</span>
                                             <h4 class="font-extrabold text-slate-900 text-sm">Term 1 Only</h4>
-                                            <p class="text-[11px] text-slate-500 mt-1">Onam Exams (~10 chapters). Rapid short-term focus.</p>
+                                            <p id="term-desc-1" class="text-[11px] text-slate-500 mt-1">${selectedStream === 'bio' ? 'Onam Exams (~18 chapters). Rapid short-term focus.' : 'Onam Exams (~17 chapters). Rapid short-term focus.'}</p>
                                         </div>
                                         <div class="mt-3 flex items-center justify-between">
                                             <span class="text-[10px] font-semibold text-slate-400">Unit 1 portions</span>
@@ -2099,7 +2346,7 @@
                                         <div>
                                             <span class="text-[10px] font-bold text-blue-600 uppercase tracking-wider block mb-1">Half-Yearly Target</span>
                                             <h4 class="font-extrabold text-slate-900 text-sm">Term 1 & Term 2</h4>
-                                            <p class="text-[11px] text-slate-600 mt-1">Complete pre-Christmas portion (~30 chaps) before model exams.</p>
+                                            <p id="term-desc-2" class="text-[11px] text-slate-600 mt-1">${selectedStream === 'bio' ? 'Complete pre-Christmas portion (~35 chaps) before model exams.' : 'Complete pre-Christmas portion (~31 chaps) before model exams.'}</p>
                                         </div>
                                         <div class="mt-3 flex items-center justify-between">
                                             <span class="text-[10px] font-bold text-blue-600">By Nov/Dec 2026</span>
@@ -2112,7 +2359,7 @@
                                         <div>
                                             <span class="text-[10px] font-bold text-purple-600 uppercase tracking-wider block mb-1">Board Ready</span>
                                             <h4 class="font-extrabold text-slate-900 text-sm">Full Syllabus</h4>
-                                            <p class="text-[11px] text-slate-500 mt-1">All 46 rationalized chapters (Term 1 + 2 + 3) for Public Exams.</p>
+                                            <p id="term-desc-3" class="text-[11px] text-slate-500 mt-1">${selectedStream === 'bio' ? 'All 49 rationalized chapters (Term 1 + 2 + 3) for Public Exams.' : 'All 46 rationalized chapters (Term 1 + 2 + 3) for Public Exams.'}</p>
                                         </div>
                                         <div class="mt-3 flex items-center justify-between">
                                             <span class="text-[10px] font-semibold text-slate-400">March Public Exam</span>
@@ -2122,11 +2369,11 @@
                                 </div>
                             </div>
 
-                            <!-- Step 2: Target Completion Deadline -->
+                            <!-- Step 3: Target Completion Deadline -->
                             <div>
                                 <div class="flex items-center justify-between mb-2">
                                     <label class="text-xs font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-2">
-                                        <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[11px] font-black">2</span>
+                                        <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[11px] font-black">3</span>
                                         <span>Target Completion Deadline</span>
                                     </label>
                                     <span class="text-[11px] text-slate-400 font-medium">Quick presets:</span>
@@ -2154,7 +2401,7 @@
                                 <div id="deadline-calc-label" class="mt-2.5 p-3 rounded-2xl bg-blue-50/70 border border-blue-100 text-xs text-slate-600"></div>
                             </div>
 
-                            <!-- Step 3: Exclude Finished Chapters (+2 & +1 Improvement) -->
+                            <!-- Step 4: Exclude Finished Chapters (+2 & +1 Improvement) -->
                             <div class="border-2 border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm transition">
                                 <button type="button" onclick="const w = document.getElementById('setup-chaps-wrapper'); w.classList.toggle('hidden'); const chv = document.getElementById('chaps-chevron'); chv.classList.toggle('rotate-180');" class="w-full p-4 flex items-center justify-between text-left hover:bg-slate-50 transition">
                                     <div class="flex items-center gap-3">
@@ -2163,7 +2410,7 @@
                                         </div>
                                         <div>
                                             <div class="flex items-center gap-2">
-                                                <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[11px] font-black">3</span>
+                                                <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[11px] font-black">4</span>
                                                 <span class="text-xs sm:text-sm font-extrabold text-slate-800">Exclude Already Finished Chapters</span>
                                                 <span id="completed-chaps-badge" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">0 excluded</span>
                                             </div>
@@ -2186,30 +2433,26 @@
                                         </button>
                                     </div>
 
-                                    <!-- Subject Tabs Switcher -->
-                                    <div class="flex flex-wrap gap-1.5 mb-3">
-                                        ${['Physics', 'Chemistry', 'Mathematics', 'Computer Science'].map(sub => `
-                                            <button type="button" id="setup-tab-${sub.replace(/\s+/g, '-')}" onclick="switchSetupSubject('${sub}')" class="py-1.5 px-3 text-xs font-bold rounded-xl ${sub === 'Physics' ? 'bg-slate-800 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'} transition">
-                                                ${sub}
-                                            </button>
-                                        `).join('')}
+                                    <!-- Subject Tabs Switcher (Strictly Stream Isolated) -->
+                                    <div id="setup-subject-tabs-container" class="flex flex-wrap gap-1.5 mb-3">
+                                        ${renderSetupSubjectTabs()}
                                     </div>
 
                                     <!-- Active Chapter List Container -->
                                     <div id="setup-subject-chapters-list" class="bg-white p-3 rounded-2xl border border-slate-200/80">
-                                        ${renderSetupSubjectChapters('Physics', '+2')}
+                                        ${renderSetupSubjectChapters(activeSetupSubjectTab, activeSetupGradeTab)}
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Step 4: Plus One Improvement Section -->
+                            <!-- Step 5: Plus One Improvement Section -->
                             <div class="border-2 border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm">
                                 <label class="p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition">
                                     <div class="flex items-center gap-3">
                                         <input type="checkbox" id="has-improvement" onchange="document.getElementById('improvement-options').classList.toggle('hidden', !this.checked)" class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
                                         <div>
                                             <div class="flex items-center gap-2">
-                                                <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[11px] font-black">4</span>
+                                                <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[11px] font-black">5</span>
                                                 <span class="text-xs sm:text-sm font-extrabold text-slate-800">Add Plus One Improvement Papers</span>
                                                 <span class="text-[10px] font-bold uppercase tracking-wider text-amber-700 bg-amber-100 px-2 py-0.5 rounded-md">Optional</span>
                                             </div>
@@ -2223,29 +2466,12 @@
                                         <i class="fa-solid fa-circle-info text-amber-600 mt-0.5 text-xs"></i>
                                         <div>
                                             <strong>Oct 2026 Examination Schedule:</strong> Select the papers you are appearing for.
-                                            <br><span class="text-amber-700">Tip: If you only need to revise specific chapters, go to <strong>Step 3</strong> above, select the <strong>Plus One Improvement</strong> tab, and mark the chapters you already know!</span>
+                                            <br><span class="text-amber-700">Tip: If you only need to revise specific chapters, go to <strong>Step 4</strong> above, select the <strong>Plus One Improvement</strong> tab, and mark the chapters you already know!</span>
                                         </div>
                                     </div>
-                                    ${[
-                                        { sub: 'Physics', defaultDate: '2026-10-12' },
-                                        { sub: 'Mathematics', defaultDate: '2026-10-14' },
-                                        { sub: 'Chemistry', defaultDate: '2026-10-16' },
-                                        { sub: 'Computer Science', defaultDate: '2026-10-19' }
-                                    ].map(item => {
-                                        const subId = item.sub.replace(/\s+/g, '-').toLowerCase();
-                                        return `
-                                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-white rounded-xl border border-slate-200 shadow-sm">
-                                                <label class="flex items-center gap-2.5 cursor-pointer text-xs font-bold text-slate-800">
-                                                    <input type="checkbox" id="imp-${subId}" class="rounded border-slate-300 text-blue-600 w-4 h-4">
-                                                    <span>${item.sub} Improvement</span>
-                                                </label>
-                                                <div class="flex items-center gap-2">
-                                                    <span class="text-[11px] text-slate-500 font-medium">Exam Date:</span>
-                                                    <input type="date" id="input-date-${subId}" value="${item.defaultDate}" class="border border-slate-300 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-700 bg-slate-50 focus:bg-white focus:border-blue-600 outline-none">
-                                                </div>
-                                            </div>
-                                        `;
-                                    }).join('')}
+                                    <div id="improvement-subject-items-container" class="space-y-2">
+                                        ${renderImprovementSubjectItems()}
+                                    </div>
                                 </div>
                             </div>
 
@@ -2407,6 +2633,24 @@
                             <span class="text-[10px] bg-emerald-100/80 text-emerald-700 px-2 py-0.5 rounded-md font-bold">Auto-saved</span>
                         </div>
                     `}
+
+                    <!-- Stream Badge Indicator -->
+                    <div class="flex items-center justify-between gap-2 mb-3 no-print">
+                        ${(function() {
+                            const userStream = appState?.stream || (appState?.plan?.some(d => d.tasks.some(t => t.subject === 'Botany' || t.subject === 'Zoology')) ? 'bio' : 'cs');
+                            return userStream === 'bio' ? `
+                                <div class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1 rounded-xl text-xs font-bold shadow-sm">
+                                    <i class="fa-solid fa-seedling text-emerald-600"></i>
+                                    <span>Biology Science Stream (Botany & Zoology)</span>
+                                </div>
+                            ` : `
+                                <div class="inline-flex items-center gap-1.5 bg-blue-50 text-blue-800 border border-blue-200 px-3 py-1 rounded-xl text-xs font-bold shadow-sm">
+                                    <i class="fa-solid fa-laptop-code text-blue-600"></i>
+                                    <span>Computer Science Stream</span>
+                                </div>
+                            `;
+                        })()}
+                    </div>
 
                     <!-- Quick Stats Header (5-Card Grid including Daily Streak Flame) -->
                     <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5 sm:gap-3 mb-6">
@@ -2636,24 +2880,37 @@
                         </div>
                     </div>
 
-                    <!-- Subject Filter Tabs (Horizontal Scrollable Pills) -->
+                    <!-- Subject Filter Tabs (Horizontal Scrollable Pills strictly stream-isolated) -->
                     <div class="no-print flex items-center gap-1.5 overflow-x-auto pb-2 mb-4 scrollbar-none text-xs">
-                        ${[
-                            { id: 'All', label: 'All Subjects', icon: 'fa-layer-group' },
-                            { id: 'Physics', label: 'Physics', icon: 'fa-atom' },
-                            { id: 'Chemistry', label: 'Chemistry', icon: 'fa-flask' },
-                            { id: 'Mathematics', label: 'Maths', icon: 'fa-calculator' },
-                            { id: 'Computer Science', label: 'CS', icon: 'fa-laptop-code' },
-                            { id: '+1 Improvement', label: '+1 Improvement', icon: 'fa-arrow-up-right-dots' }
-                        ].map(f => {
-                            const isActive = (currentPlanSubjectFilter === f.id);
-                            return `
-                                <button onclick="setPlanSubjectFilter('${f.id}')" class="py-1.5 px-3 rounded-xl font-bold transition-all shrink-0 flex items-center gap-1.5 ${isActive ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/20' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'}">
-                                    <i class="fa-solid ${f.icon} text-[11px]"></i>
-                                    <span>${f.label}</span>
-                                </button>
-                            `;
-                        }).join('')}
+                        ${(function() {
+                            const userStream = appState?.stream || (appState?.plan?.some(d => d.tasks.some(t => t.subject === 'Botany' || t.subject === 'Zoology')) ? 'bio' : 'cs');
+                            const filters = userStream === 'bio' ? [
+                                { id: 'All', label: 'All Subjects', icon: 'fa-layer-group' },
+                                { id: 'Physics', label: 'Physics', icon: 'fa-atom' },
+                                { id: 'Chemistry', label: 'Chemistry', icon: 'fa-flask' },
+                                { id: 'Mathematics', label: 'Maths', icon: 'fa-calculator' },
+                                { id: 'Botany', label: 'Botany', icon: 'fa-seedling' },
+                                { id: 'Zoology', label: 'Zoology', icon: 'fa-dna' },
+                                { id: '+1 Improvement', label: '+1 Improvement', icon: 'fa-arrow-up-right-dots' }
+                            ] : [
+                                { id: 'All', label: 'All Subjects', icon: 'fa-layer-group' },
+                                { id: 'Physics', label: 'Physics', icon: 'fa-atom' },
+                                { id: 'Chemistry', label: 'Chemistry', icon: 'fa-flask' },
+                                { id: 'Mathematics', label: 'Maths', icon: 'fa-calculator' },
+                                { id: 'Computer Science', label: 'CS', icon: 'fa-laptop-code' },
+                                { id: '+1 Improvement', label: '+1 Improvement', icon: 'fa-arrow-up-right-dots' }
+                            ];
+
+                            return filters.map(f => {
+                                const isActive = (currentPlanSubjectFilter === f.id);
+                                return `
+                                    <button onclick="setPlanSubjectFilter('${f.id}')" class="py-1.5 px-3 rounded-xl font-bold transition-all shrink-0 flex items-center gap-1.5 ${isActive ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/20' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'}">
+                                        <i class="fa-solid ${f.icon} text-[11px]"></i>
+                                        <span>${f.label}</span>
+                                    </button>
+                                `;
+                            }).join('');
+                        })()}
                     </div>
 
                     <div class="space-y-4">
@@ -2677,9 +2934,12 @@
                 return;
             }
 
-            // View 3: Official Syllabus Reference & Completed Chapters Overview
+            // View 3: Official Syllabus Reference & Completed Chapters Overview (Strictly Stream Isolated)
             if (currentView === 'syllabus') {
-                const subjects = ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'];
+                const userStream = appState?.stream || (appState?.plan?.some(d => d.tasks.some(t => t.subject === 'Botany' || t.subject === 'Zoology')) ? 'bio' : 'cs');
+                const subjects = userStream === 'bio'
+                    ? ['Physics', 'Chemistry', 'Mathematics', 'Botany', 'Zoology']
+                    : ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'];
 
                 let syllabusHTML = '';
                 subjects.forEach(sub => {
@@ -2730,7 +2990,7 @@
                     <div class="flex items-center justify-between mb-6">
                         <div>
                             <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900">Official DHSE Scheme of Work</h2>
-                            <p class="text-xs text-slate-500">Accurate chapter list for Kerala Higher Secondary examination.</p>
+                            <p class="text-xs text-slate-500">${userStream === 'bio' ? 'Biology Science Stream (Botany & Zoology)' : 'Computer Science Stream'} • Rationalized Kerala Higher Secondary curriculum.</p>
                         </div>
                         <button onclick="goToDashboard()" class="text-xs font-bold bg-white border border-slate-200 hover:bg-slate-50 px-3.5 py-2 rounded-xl text-slate-700 transition">
                             <i class="fa-solid fa-arrow-left mr-1"></i> Back to Today
@@ -2748,9 +3008,11 @@
         function getSubjectColorBadge(subject) {
             switch(subject) {
                 case 'Physics': return 'bg-indigo-50 text-indigo-700 border border-indigo-200/60';
-                case 'Chemistry': return 'bg-emerald-50 text-emerald-700 border border-emerald-200/60';
+                case 'Chemistry': return 'bg-amber-50 text-amber-700 border border-amber-200/60';
                 case 'Mathematics': return 'bg-rose-50 text-rose-700 border border-rose-200/60';
                 case 'Computer Science': return 'bg-cyan-50 text-cyan-700 border border-cyan-200/60';
+                case 'Botany': return 'bg-emerald-50 text-emerald-700 border border-emerald-200/60';
+                case 'Zoology': return 'bg-teal-50 text-teal-700 border border-teal-200/60';
                 default: return 'bg-purple-50 text-purple-700 border border-purple-200/60';
             }
         }

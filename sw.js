@@ -1,5 +1,5 @@
-// Mission PlusTwo Service Worker v2.9
-const CACHE_NAME = 'plustwo-mission-v2.9';
+// Mission PlusTwo Service Worker v3.0
+const CACHE_NAME = 'plustwo-mission-v3.0';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
