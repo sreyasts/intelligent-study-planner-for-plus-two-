@@ -55,5 +55,17 @@ export {
 export {
   initAnalytics,
   trackEvent,
+  trackTaskChecked,
   getFunnelStats,
+  ensureFirebaseAnalytics,
+  FUNNEL_STAGES,
 } from './analytics/tracker.js';
+
+// Internationalization & Auto-Detection
+export { ML_STRINGS } from './i18n/ml.js';
+export {
+  detectMalayalamEnvironment,
+  getCurrentLanguage,
+  setLanguagePreference,
+  STORAGE_KEY_LANG,
+} from './i18n/detector.js';

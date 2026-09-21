@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <!-- Primary SEO Meta Tags (Optimized for 'plus two study planner') -->
     <title>Plus Two Study Planner | Kerala DHSE Class 12 & +1 Improvement Daily Timetable</title>
@@ -895,13 +895,13 @@
                 <!-- Navigation Tabs (Desktop / Tablet) -->
                 <nav id="nav-desktop-tabs" class="hidden sm:flex items-center bg-slate-100 p-1 rounded-xl text-xs font-bold text-slate-600">
                     <button id="nav-btn-today" onclick="goToDashboard()" class="py-1.5 px-3 rounded-lg transition-all text-blue-600 bg-white shadow-sm">
-                        <i class="fa-solid fa-bolt mr-1"></i> Today
+                        <i class="fa-solid fa-bolt mr-1"></i> <span id="nav-text-today">Today</span>
                     </button>
                     <button id="nav-btn-plan" onclick="goToPlan()" class="py-1.5 px-3 rounded-lg transition-all hover:text-slate-900">
-                        <i class="fa-solid fa-list-check mr-1"></i> Full Plan
+                        <i class="fa-solid fa-list-check mr-1"></i> <span id="nav-text-plan">Full Plan</span>
                     </button>
                     <button id="nav-btn-syllabus" onclick="goToSyllabusView()" class="py-1.5 px-3 rounded-lg transition-all hover:text-slate-900">
-                        <i class="fa-solid fa-book-open mr-1"></i> Syllabus
+                        <i class="fa-solid fa-book-open mr-1"></i> <span id="nav-text-syllabus">Syllabus</span>
                     </button>
                 </nav>
 
@@ -1011,6 +1011,12 @@
                     </div>
                 </div>
 
+                <!-- In-App Language Switcher Button (Very Small Pill) -->
+                <button id="lang-switch-btn" onclick="toggleLanguagePreference()" class="flex items-center gap-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700/80 text-[11px] font-bold py-1 px-2 rounded-lg shadow-2xs transition active:scale-95 shrink-0" title="Switch Language / ഭാഷ മാറ്റുക">
+                    <span id="lang-btn-flag" class="text-[10px] font-black text-blue-600 dark:text-blue-400">EN</span>
+                    <span id="lang-btn-label" class="text-[10px] text-slate-500 dark:text-slate-400">| മ</span>
+                </button>
+
                 <!-- Share with Classmates Button -->
                 <button onclick="shareApp()" class="flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200/80 text-xs font-bold py-1.5 px-2.5 sm:px-3 rounded-xl shadow-sm transition active:scale-95 shrink-0" title="Share with Classmates on WhatsApp & Telegram">
                     <i class="fa-solid fa-share-nodes text-emerald-600"></i>
@@ -1118,19 +1124,19 @@
     <div id="mobile-nav" class="sm:hidden fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-[#0e1422]/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800/80 z-30 px-3 py-2 flex justify-around items-center">
         <button onclick="goToDashboard()" id="mob-btn-today" class="flex flex-col items-center text-blue-600 dark:text-blue-400 font-bold text-[11px] transition">
             <i class="fa-solid fa-bolt text-lg mb-0.5"></i>
-            <span>Today</span>
+            <span id="mob-text-today">Today</span>
         </button>
         <button onclick="goToPlan()" id="mob-btn-plan" class="flex flex-col items-center text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 font-semibold text-[11px] transition">
             <i class="fa-solid fa-list-check text-lg mb-0.5"></i>
-            <span>Full Plan</span>
+            <span id="mob-text-plan">Full Plan</span>
         </button>
         <button onclick="goToSyllabusView()" id="mob-btn-syllabus" class="flex flex-col items-center text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 font-semibold text-[11px] transition">
             <i class="fa-solid fa-book-open text-lg mb-0.5"></i>
-            <span>Syllabus</span>
+            <span id="mob-text-syllabus">Syllabus</span>
         </button>
         <button onclick="shareApp()" class="flex flex-col items-center text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-semibold text-[11px] transition">
             <i class="fa-solid fa-share-nodes text-lg mb-0.5"></i>
-            <span>Share</span>
+            <span id="mob-text-share">Share</span>
         </button>
     </div>
 
@@ -3300,6 +3306,14 @@
 
             // Play celebratory feedback or untick sound
             if (targetTask.completed) {
+                try {
+                    const hasRecorded = localStorage.getItem('mpt_first_task_recorded');
+                    if (!hasRecorded) {
+                        localStorage.setItem('mpt_first_task_recorded', 'true');
+                        trackAnalyticsEvent('first_task_checked', { taskId: String(targetTask.id || '') });
+                    }
+                } catch(e) {}
+
                 updateStreakOnCompletion();
                 playCelebrationSound();
 
@@ -4088,6 +4102,11 @@
                     lastModified: new Date().toISOString()
                 };
                 saveAppState();
+                trackAnalyticsEvent('plan_created', {
+                    stream: selectedStream,
+                    daysTotal: days,
+                    tasksCount: tasksToPlan.length
+                });
                 goToDashboard();
                 showToastMessage("🎉 Your personalized study plan is ready! Let's conquer Day 1!", "fa-rocket text-blue-400");
             }
@@ -4216,6 +4235,7 @@
 
             // View 0: Initial Setup View
             if (!appState) {
+                trackAnalyticsEvent('setup_started');
                 // Default target date: November 30 (Term 1 & 2 Half-Yearly)
                 let defaultTarget = new Date();
                 defaultTarget.setMonth(10); // November
@@ -5237,6 +5257,261 @@
             }
         }
 
+        /* ==========================================================================
+           INTERNATIONALIZATION (i18n) & BROWSER TRANSLATION AUTO-DETECTOR (v6.1)
+           ========================================================================== */
+        const STORAGE_KEY_LANG = 'plustwo_lang';
+
+        const ML_I18N = {
+            _meta: { lang: 'ml', name: 'മലയാളം' },
+            nav: { today: 'ഇന്ന്', plan: 'പൂർണ്ണ ഷെഡ്യൂൾ', syllabus: 'പാഠ്യപദ്ധതി', share: 'പങ്കുവെക്കുക', install: 'ഇൻസ്റ്റാൾ ചെയ്യുക' },
+            setup: {
+                title: 'നിങ്ങളുടെ പഠന പ്ലാൻ തയ്യാറാക്കുക',
+                subtitle: 'കേരള DHSE പരീക്ഷയ്ക്കായി ക്രമീകരിച്ച ദൈനംദിന ടൈംടേബിൾ',
+                streamLabel: '1. സ്ട്രീം തിരഞ്ഞെടുക്കുക',
+                csTitle: 'കമ്പ്യൂട്ടർ സയൻസ്',
+                bioTitle: 'ബയോളജി സയൻസ്',
+                termLabel: '2. ലക്ഷ്യമിടുന്ന സിലബസ്',
+                impLabel: '3. പ്ലസ് വൺ (+1) ഇംപ്രൂവ്മെന്റ് പേപ്പറുകൾ',
+                deadlineLabel: '4. ലക്ഷ്യ തീയതി',
+                personalizeLabel: '5. പഠന രീതി ക്രമീകരിക്കുക',
+                generateBtn: 'പഠന പ്ലാൻ തയ്യാറാക്കുക'
+            },
+            dashboard: {
+                todayGoal: 'ഇന്നത്തെ പഠന ലക്ഷ്യം',
+                allDone: 'അഭിനന്ദനങ്ങൾ! ഇന്നത്തെ ലക്ഷ്യങ്ങൾ പൂർത്തിയായി!',
+                completedCount: 'പൂർത്തിയായത്',
+                remainingCount: 'ബാക്കിയുള്ളത്',
+                adjustPlan: 'ഷെഡ്യൂൾ പുനഃക്രമീകരിക്കുക',
+                fullChapter: 'മുഴുവൻ അധ്യായം'
+            }
+        };
+
+        function detectMalayalamEnvironment() {
+            if (typeof window === 'undefined') return false;
+            try {
+                // 1. Saved manual preference
+                const saved = localStorage.getItem(STORAGE_KEY_LANG);
+                if (saved === 'ml') return true;
+                if (saved === 'en') return false;
+
+                // 2. documentElement lang modified by browser translation
+                const docLang = (document.documentElement.lang || '').toLowerCase();
+                if (docLang.startsWith('ml')) return true;
+
+                // 3. Browser / Google translation detection (e.g. translated-ltr, translated-rtl)
+                const isTranslated = 
+                    document.documentElement.classList.contains('translated-ltr') ||
+                    document.documentElement.classList.contains('translated-rtl') ||
+                    document.querySelector('meta[name="google-translate-customization"]') !== null ||
+                    document.querySelector('.goog-te-banner-frame') !== null;
+
+                if (isTranslated && docLang.startsWith('ml')) return true;
+
+                // 4. Check navigator.languages array
+                const userLangs = (navigator.languages && navigator.languages.length)
+                    ? navigator.languages
+                    : [navigator.language || navigator.userLanguage || ''];
+
+                for (const l of userLangs) {
+                    if (l && l.toLowerCase().startsWith('ml')) return true;
+                }
+
+                // 5. Detect Malayalam unicode script injected in DOM
+                if (document.body && isTranslated) {
+                    const sample = (document.body.innerText || '').slice(0, 500);
+                    if (/[\u0D00-\u0D7F]/.test(sample)) return true;
+                }
+            } catch(e) {}
+            return false;
+        }
+
+        function getAppLanguage() {
+            if (typeof window === 'undefined') return 'en';
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY_LANG);
+                if (saved === 'ml' || saved === 'en') return saved;
+            } catch(e) {}
+            return detectMalayalamEnvironment() ? 'ml' : 'en';
+        }
+
+        function setAppLanguage(lang) {
+            try {
+                localStorage.setItem(STORAGE_KEY_LANG, lang);
+            } catch(e) {}
+            applyAppLanguage(lang);
+            if (typeof renderApp === 'function') {
+                try { renderApp(); } catch(e) {}
+            }
+            const label = lang === 'ml' ? 'മലയാളം ഭാഷ സജ്ജമാക്കി' : 'English language enabled';
+            showToastMessage(label, 'fa-language text-blue-400');
+        }
+
+        function toggleLanguagePreference() {
+            const current = getAppLanguage();
+            const next = current === 'ml' ? 'en' : 'ml';
+            setAppLanguage(next);
+        }
+
+        function applyAppLanguage(lang) {
+            if (!lang) lang = getAppLanguage();
+            const isML = lang === 'ml';
+
+            // 1. Update In-App Switcher Button UI
+            const flag = document.getElementById('lang-btn-flag');
+            const lbl = document.getElementById('lang-btn-label');
+            const switchBtn = document.getElementById('lang-switch-btn');
+            if (flag && lbl) {
+                if (isML) {
+                    flag.textContent = 'മല';
+                    flag.className = 'text-[10px] font-black text-emerald-600 dark:text-emerald-400';
+                    lbl.textContent = '| EN';
+                } else {
+                    flag.textContent = 'EN';
+                    flag.className = 'text-[10px] font-black text-blue-600 dark:text-blue-400';
+                    lbl.textContent = '| മ';
+                }
+            }
+            if (switchBtn) {
+                switchBtn.setAttribute('title', isML ? 'Switch to English' : 'മലയാളത്തിലേക്ക് മാറ്റുക');
+                switchBtn.setAttribute('aria-label', isML ? 'Switch to English' : 'Switch to Malayalam');
+            }
+
+            // 2. Update Desktop Navigation Labels
+            const navToday = document.getElementById('nav-text-today');
+            const navPlan = document.getElementById('nav-text-plan');
+            const navSyllabus = document.getElementById('nav-text-syllabus');
+            if (navToday) navToday.textContent = isML ? ML_I18N.nav.today : 'Today';
+            if (navPlan) navPlan.textContent = isML ? ML_I18N.nav.plan : 'Full Plan';
+            if (navSyllabus) navSyllabus.textContent = isML ? ML_I18N.nav.syllabus : 'Syllabus';
+
+            // 3. Update Mobile Navigation Labels
+            const mobToday = document.getElementById('mob-text-today');
+            const mobPlan = document.getElementById('mob-text-plan');
+            const mobSyllabus = document.getElementById('mob-text-syllabus');
+            const mobShare = document.getElementById('mob-text-share');
+            if (mobToday) mobToday.textContent = isML ? ML_I18N.nav.today : 'Today';
+            if (mobPlan) mobPlan.textContent = isML ? ML_I18N.nav.plan : 'Full Plan';
+            if (mobSyllabus) mobSyllabus.textContent = isML ? ML_I18N.nav.syllabus : 'Syllabus';
+            if (mobShare) mobShare.textContent = isML ? ML_I18N.nav.share : 'Share';
+
+            // Update html lang attribute
+            document.documentElement.lang = isML ? 'ml' : 'en';
+        }
+
+        /* ==========================================================================
+           PRIVACY-FIRST ANONYMOUS ANALYTICS (FIREBASE ANALYTICS G-12KPP3ZZ80)
+           ========================================================================== */
+        let firebaseAnalyticsInstance = null;
+        let isAnalyticsLoading = false;
+        const analyticsEventQueue = [];
+
+        async function ensureFirebaseAnalytics() {
+            if (typeof window === 'undefined') return null;
+            if (firebaseAnalyticsInstance) return firebaseAnalyticsInstance;
+            if (isAnalyticsLoading) return null;
+
+            try {
+                isAnalyticsLoading = true;
+                if (typeof window.firebase !== 'undefined') {
+                    if (typeof window.firebase.analytics !== 'function') {
+                        await new Promise((resolve, reject) => {
+                            const script = document.createElement('script');
+                            script.src = 'https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics-compat.js';
+                            script.onload = resolve;
+                            script.onerror = reject;
+                            document.head.appendChild(script);
+                        });
+                    }
+
+                    if (typeof window.firebase.analytics === 'function') {
+                        // Strictly disable Google Signals & Ad Personalization
+                        window['gtag_enable_tcf_support'] = false;
+                        if (typeof window.gtag === 'function') {
+                            window.gtag('set', 'allow_google_signals', false);
+                            window.gtag('set', 'allow_ad_personalization_signals', false);
+                        }
+
+                        firebaseAnalyticsInstance = window.firebase.analytics();
+                        
+                        // Process queued events
+                        while (analyticsEventQueue.length > 0) {
+                            const item = analyticsEventQueue.shift();
+                            firebaseAnalyticsInstance.logEvent(item.name, {
+                                ...item.params,
+                                debug_mode: true
+                            });
+                        }
+                    }
+                }
+            } catch(e) {
+                // Ignore analytics errors / adblockers
+            } finally {
+                isAnalyticsLoading = false;
+            }
+            return firebaseAnalyticsInstance;
+        }
+
+        function trackAnalyticsEvent(name, params = {}) {
+            // Strip any PII
+            const cleanParams = {};
+            for (const [k, v] of Object.entries(params)) {
+                if (!['email', 'name', 'uid', 'userId', 'token', 'phone'].includes(k)) {
+                    cleanParams[k] = typeof v === 'object' ? JSON.stringify(v) : v;
+                }
+            }
+
+            // Local funnel counts for audit
+            try {
+                const raw = localStorage.getItem('mpt_funnel_counts_v1');
+                const counts = raw ? JSON.parse(raw) : {};
+                counts[name] = (counts[name] || 0) + 1;
+                localStorage.setItem('mpt_funnel_counts_v1', JSON.stringify(counts));
+            } catch(e) {}
+
+            // Send to Firebase Analytics
+            if (firebaseAnalyticsInstance && typeof firebaseAnalyticsInstance.logEvent === 'function') {
+                firebaseAnalyticsInstance.logEvent(name, {
+                    ...cleanParams,
+                    debug_mode: true
+                });
+            } else {
+                analyticsEventQueue.push({ name, params: cleanParams });
+                ensureFirebaseAnalytics().catch(() => {});
+            }
+
+            // Dispatch custom event for test inspection
+            window.dispatchEvent(new CustomEvent('mpt:analytics', {
+                detail: { event: name, properties: cleanParams, timestamp: Date.now() }
+            }));
+        }
+
+        function initAppAnalytics() {
+            try {
+                const now = Date.now();
+                let firstVisit = localStorage.getItem('mpt_first_visit_ts');
+                if (!firstVisit) {
+                    localStorage.setItem('mpt_first_visit_ts', String(now));
+                    trackAnalyticsEvent('opened', { isFirstVisit: true });
+                } else {
+                    trackAnalyticsEvent('opened', { isFirstVisit: false });
+                    const hoursSince = (now - Number(firstVisit)) / (1000 * 60 * 60);
+                    const day3Logged = localStorage.getItem('mpt_day3_recorded');
+                    if (!day3Logged && hoursSince >= 48 && hoursSince <= 144) {
+                        localStorage.setItem('mpt_day3_recorded', 'true');
+                        trackAnalyticsEvent('returned_day3', { days: Math.round(hoursSince / 24) });
+                    }
+                }
+
+                // Lazy load Firebase Analytics in idle time
+                if ('requestIdleCallback' in window) {
+                    window.requestIdleCallback(() => ensureFirebaseAnalytics());
+                } else {
+                    setTimeout(() => ensureFirebaseAnalytics(), 1500);
+                }
+            } catch(e) {}
+        }
+
         function toggleUserSetting(key) {
             const current = getUserSetting(key, true);
             const next = !current;
@@ -5449,8 +5724,11 @@
             });
         }
 
-        // Initialize Theme & System Listener
+        // Initialize Theme, Language, Analytics & System Listener
         applyTheme();
+        applyAppLanguage();
+        initAppAnalytics();
+
         if (typeof window !== 'undefined' && window.matchMedia) {
             try {
                 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {

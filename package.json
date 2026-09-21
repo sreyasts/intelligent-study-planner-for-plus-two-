@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node -e \"const fs=require('fs'); fs.copyFileSync('sw.js', 'dist/sw.js'); ['favicon-32.png','apple-touch-icon.png','icon.png','icon-192.png','icon-512.png','icon-maskable-192.png','icon-maskable-512.png'].forEach(f => { if(fs.existsSync(f)) fs.copyFileSync(f, 'dist/' + f); });\"",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -27,8 +27,13 @@
   "author": "Mission PlusTwo Team",
   "license": "MIT",
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.63.0",
+    "@tailwindcss/vite": "^4.3.3",
     "autoprefixer": "^10.6.1",
+    "eslint": "^10.11.0",
     "postcss": "^8.5.28",
+    "prettier": "^3.9.8",
     "sharp": "^0.35.4",
     "tailwindcss": "^4.3.3",
     "vite": "^8.3.0",

@@ -79,16 +79,23 @@
                     <li>Your Study Plan JSON data (target exam date, completed chapter IDs, subject priorities).</li>
                 </ul>
             </li>
-            <li><strong>Anonymous Analytics:</strong> We record aggregate, cookieless metrics (e.g. how many times a plan is generated or shared) without recording IP addresses, cookies, or unique identifiers.</li>
+            <li><strong>Anonymous Analytics (Google Analytics via Firebase):</strong> We use Google Analytics (measurement ID <code>G-12KPP3ZZ80</code>) configured strictly for anonymous usage metrics. 
+                <ul>
+                    <li>Google Signals and Ad Personalization features are permanently disabled (<code>allow_google_signals: false</code>, <code>allow_ad_personalization_signals: false</code>).</li>
+                    <li>No Personally Identifiable Information (PII) such as student names, emails, phone numbers, or IP addresses are sent with any analytics event.</li>
+                    <li>Only aggregated lifecycle milestone events are recorded: <code>opened</code>, <code>setup_started</code>, <code>plan_created</code>, <code>first_task_checked</code>, and <code>returned_day3</code> to measure app usefulness and retention.</li>
+                    <li>The analytics SDK is loaded lazily on demand to optimize performance.</li>
+                </ul>
+            </li>
         </ul>
 
         <h2>3. Compliance with India's Digital Personal Data Protection (DPDP) Act, 2023</h2>
-        <p>We recognize that many Plus One and Plus Two students in Kerala are between 15 and 18 years old. Under Section 9 of the India DPDP Act 2023:</p>
+        <p>We recognize that many Plus One and Plus Two students in Kerala are minors (between 15 and 18 years old). In accordance with Section 9 of the India DPDP Act 2023:</p>
         <ul>
-            <li>We do NOT track or profile children's browsing behavior.</li>
-            <li>We do NOT serve behavioral advertisements or sponsored commercial content.</li>
-            <li>We do NOT process any data likely to cause harm to a student.</li>
-            <li>Students may delete their cloud account and all study data at any time directly through the "Reset Plan" button in Settings, which wipes the Firestore document instantly.</li>
+            <li>We do NOT track or profile children's browsing behavior across third-party websites.</li>
+            <li>We do NOT serve targeted advertisements, sponsored commercial content, or sell user records.</li>
+            <li>We do NOT process any data detrimental to a student's well-being or physical/mental health.</li>
+            <li>Students may delete their cloud account and all study data at any time directly through the "Reset Plan" button in Settings, which wipes the Firestore cloud document instantly.</li>
         </ul>
 
         <h2>4. Data Storage & Security</h2>

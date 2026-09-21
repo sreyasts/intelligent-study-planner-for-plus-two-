@@ -133,7 +133,7 @@ export function buildIntelligentPlan({
   termScope = 3,
   includePlusOne = false,
   plusOneSubjects = [],
-  improvementDates = {},
+  improvementDates: _improvementDates = {},
   dailyStudyHours = 3.5,
   excludedChapterIds = new Set(),
 }) {
@@ -144,7 +144,7 @@ export function buildIntelligentPlan({
     throw new Error('Target deadline must be in the future.');
   }
 
-  // 1. Gather all required canonical tasks
+  // 1. Get filtered canonical tasks
   const rawTasks = getCanonicalTasks({
     stream,
     termScope,
@@ -157,7 +157,7 @@ export function buildIntelligentPlan({
 
   // 2. Calculate dynamic revision buffer based on runway
   // Rules: Short runway (< 15 days) -> 1-2 buffer days. Medium (15-60 days) -> 3-7 buffer days. Long (> 60 days) -> 8-12 buffer days.
-  let revisionDaysCount = 7;
+  let revisionDaysCount;
   if (daysTotal < 10) revisionDaysCount = 1;
   else if (daysTotal < 20) revisionDaysCount = 2;
   else if (daysTotal < 45) revisionDaysCount = 4;
