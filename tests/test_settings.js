@@ -133,4 +133,52 @@ if (!modal.classList.contains('hidden') || modal.classList.contains('flex')) {
   throw new Error('Settings modal was not closed correctly!');
 }
 
-console.log('ALL SETTINGS & THEME TESTS PASSED PERFECTLY!');
+// Test User Dropdown & Unified Profile Header
+console.log('Testing profile dropdown & auth UI states...');
+vm.runInContext('currentUser = null; updateAuthHeaderUI();', context);
+const guestIcon = context.document.getElementById('guest-avatar-icon');
+const userAvatar = context.document.getElementById('user-avatar-img');
+const guestBlock = context.document.getElementById('dropdown-guest-block');
+const signedInBlock = context.document.getElementById('dropdown-signed-in-block');
+
+if (guestIcon.classList.contains('hidden')) {
+  throw new Error('Guest icon should be visible when logged out!');
+}
+if (!userAvatar.classList.contains('hidden')) {
+  throw new Error('User avatar should be hidden when logged out!');
+}
+if (guestBlock.classList.contains('hidden')) {
+  throw new Error('Guest dropdown block should be visible when logged out!');
+}
+if (!signedInBlock.classList.contains('hidden')) {
+  throw new Error('Signed-in dropdown block should be hidden when logged out!');
+}
+
+// Test logged in state
+vm.runInContext("currentUser = { displayName: 'Arjun P', email: 'arjun@example.com', photoURL: 'https://example.com/arjun.jpg' }; updateAuthHeaderUI();", context);
+if (!guestIcon.classList.contains('hidden')) {
+  throw new Error('Guest icon should be hidden when signed in!');
+}
+if (userAvatar.classList.contains('hidden')) {
+  throw new Error('User avatar should be visible when signed in!');
+}
+if (!guestBlock.classList.contains('hidden')) {
+  throw new Error('Guest dropdown block should be hidden when signed in!');
+}
+if (signedInBlock.classList.contains('hidden')) {
+  throw new Error('Signed-in dropdown block should be visible when signed in!');
+}
+
+// Verify no duplicate settings buttons in HTML
+console.log('Testing single settings entrypoint invariant...');
+if (html.includes('id="header-settings-btn"')) {
+  throw new Error('Duplicate header settings button still present in HTML!');
+}
+if (html.includes('id="mob-btn-settings"')) {
+  throw new Error('Duplicate mobile nav settings button still present in HTML!');
+}
+if (!html.includes('id="auth-avatar-btn"')) {
+  throw new Error('Unified auth avatar button not found in HTML!');
+}
+
+console.log('ALL SETTINGS, THEME & PROFILE TESTS PASSED PERFECTLY!');

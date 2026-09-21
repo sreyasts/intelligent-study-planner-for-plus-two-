@@ -123,6 +123,8 @@
                 } else {
                     document.documentElement.classList.remove('dark');
                 }
+                var meta = document.querySelector('meta[name="theme-color"]');
+                if (meta) meta.setAttribute('content', isDark ? '#080c14' : '#2563eb');
             } catch(e) {}
         })();
     </script>
@@ -248,55 +250,132 @@
         }
 
         /* ==========================================================================
-           HIGH-PERFORMANCE DARK MODE (OLED Deep Slate Palette)
+           ULTRA-OPTIMIZED PREMIUM DARK MODE (Obsidian Midnight Palette)
+           Engineered for Kerala DHSE students: zero glare, high contrast, OLED black
            ========================================================================== */
         html.dark {
             color-scheme: dark;
         }
         html.dark body {
-            background-color: #0b0f19 !important;
+            background-color: #080c14 !important;
             color: #f1f5f9 !important;
         }
         html.dark header {
-            background-color: rgba(11, 15, 25, 0.94) !important;
-            border-color: #1e293b !important;
+            background-color: rgba(8, 12, 20, 0.90) !important;
+            border-color: #1a2438 !important;
+            backdrop-filter: blur(12px) !important;
+            -webkit-backdrop-filter: blur(12px) !important;
         }
         html.dark #mobile-nav {
-            background-color: rgba(11, 15, 25, 0.96) !important;
-            border-color: #1e293b !important;
+            background-color: rgba(8, 12, 20, 0.94) !important;
+            border-color: #1a2438 !important;
+            backdrop-filter: blur(12px) !important;
+            -webkit-backdrop-filter: blur(12px) !important;
         }
         html.dark #nav-desktop-tabs {
-            background-color: #162036 !important;
-            color: #94a3b8 !important;
+            background-color: #101726 !important;
+            border: 1px solid #1e293b !important;
+            color: #8295b0 !important;
         }
         html.dark #nav-desktop-tabs button.text-blue-600 {
-            background-color: #0b0f19 !important;
+            background-color: #1e293b !important;
             color: #60a5fa !important;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5) !important;
         }
         html.dark #nav-desktop-tabs button:not(.text-blue-600) {
-            color: #94a3b8 !important;
+            color: #8295b0 !important;
         }
         html.dark #nav-desktop-tabs button:not(.text-blue-600):hover {
             color: #f8fafc !important;
         }
         html.dark #date-display {
-            background-color: #162036 !important;
+            background-color: #121929 !important;
             border-color: #1e293b !important;
-            color: #94a3b8 !important;
+            color: #8295b0 !important;
         }
+        /* Surfaces & Elevation */
         html.dark .bg-white {
-            background-color: #131b2e !important;
+            background-color: #0e1422 !important;
+            border-color: #1e293b !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
         }
         html.dark .bg-slate-50,
-        html.dark .bg-slate-50\/80,
+        html.dark .bg-slate-50\/40,
+        html.dark .bg-slate-50\/50,
         html.dark .bg-slate-50\/70,
-        html.dark .bg-slate-50\/50 {
-            background-color: #0f172a !important;
+        html.dark .bg-slate-50\/80 {
+            background-color: #121a2b !important;
+            border-color: #1e293b !important;
         }
         html.dark .bg-slate-100 {
-            background-color: #1e293b !important;
+            background-color: #162035 !important;
+            border-color: #24334c !important;
         }
+        html.dark .bg-slate-200,
+        html.dark .bg-slate-200\/80 {
+            background-color: #1a253c !important;
+            border-color: #2a3a54 !important;
+        }
+        /* Task Cards */
+        html.dark .today-task-card {
+            background-color: #121a2c !important;
+            border-color: #202d44 !important;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        html.dark .today-task-card:hover {
+            background-color: #162036 !important;
+            border-color: #2b3d5c !important;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35) !important;
+        }
+        html.dark .today-task-card.task-done {
+            background-color: rgba(14, 20, 34, 0.45) !important;
+            border-color: #182236 !important;
+        }
+        html.dark .task-text-content {
+            color: #f1f5f9 !important;
+        }
+        html.dark .task-text-content.line-through {
+            color: #62738d !important;
+        }
+        /* Checkbox in Dark Mode */
+        html.dark .task-checkbox {
+            background-color: #141d30 !important;
+            border: 2px solid #2e3e5c !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4) !important;
+        }
+        html.dark .task-checkbox:hover {
+            border-color: #60a5fa !important;
+            background-color: #18233a !important;
+            transform: scale(1.06);
+        }
+        html.dark .task-checkbox.checked {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+            border-color: #60a5fa !important;
+            box-shadow: 0 0 14px rgba(59, 130, 246, 0.55), 0 2px 6px rgba(0, 0, 0, 0.3) !important;
+        }
+        /* Next Suggested Pulse Glow */
+        html.dark .next-suggested-task {
+            border-color: #3b82f6 !important;
+            animation: darkPulseGlow 2.5s infinite !important;
+        }
+        @keyframes darkPulseGlow {
+            0%, 100% {
+                box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.35), 0 0 14px rgba(59, 130, 246, 0.15) !important;
+            }
+            50% {
+                box-shadow: 0 0 0 3.5px rgba(59, 130, 246, 0.6), 0 0 24px rgba(59, 130, 246, 0.35) !important;
+            }
+        }
+        /* Typography & Contrast */
+        html.dark .text-slate-900 { color: #ffffff !important; }
+        html.dark .text-slate-800 { color: #f1f5f9 !important; }
+        html.dark .text-slate-700 { color: #e2e8f0 !important; }
+        html.dark .text-slate-600 { color: #cbd5e1 !important; }
+        html.dark .text-slate-500 { color: #94a3b8 !important; }
+        html.dark .text-slate-400 { color: #72849e !important; }
+        html.dark .text-slate-300 { color: #8a9bb3 !important; }
+        /* Borders & Dividers */
         html.dark .border-slate-100,
         html.dark .border-slate-200,
         html.dark .border-slate-200\/70,
@@ -305,163 +384,155 @@
             border-color: #1e293b !important;
         }
         html.dark .border-slate-300 {
-            border-color: #334155 !important;
+            border-color: #2a3a54 !important;
         }
         html.dark .divide-slate-100 > * + *,
         html.dark .divide-slate-200 > * + * {
-            border-color: #1e293b !important;
+            border-color: #1c2639 !important;
         }
-        html.dark .text-slate-900,
-        html.dark .text-slate-800 {
-            color: #f8fafc !important;
-        }
-        html.dark .text-slate-700 {
-            color: #e2e8f0 !important;
-        }
-        html.dark .text-slate-600 {
-            color: #cbd5e1 !important;
-        }
-        html.dark .text-slate-500 {
-            color: #94a3b8 !important;
-        }
-        html.dark .text-slate-400 {
-            color: #64748b !important;
-        }
-        html.dark .task-checkbox {
-            background-color: #0f172a !important;
-            border-color: #334155 !important;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4) !important;
-        }
-        html.dark .task-checkbox:hover {
-            border-color: #60a5fa !important;
-        }
-        html.dark .task-checkbox.checked {
-            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
-            border-color: #3b82f6 !important;
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.45) !important;
-        }
-        html.dark .today-task-card.task-done {
-            background-color: rgba(15, 23, 42, 0.6) !important;
-            border-color: #1e293b !important;
-        }
+        /* Inputs & Form Controls */
         html.dark input[type="text"],
         html.dark input[type="date"],
         html.dark select,
         html.dark textarea {
-            background-color: #0f172a !important;
-            border-color: #334155 !important;
+            background-color: #101726 !important;
+            border-color: #233048 !important;
             color: #f8fafc !important;
         }
+        html.dark input:focus,
+        html.dark select:focus {
+            border-color: #3b82f6 !important;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25) !important;
+        }
         html.dark input[type="date"]::-webkit-calendar-picker-indicator {
-            filter: invert(0.85);
+            filter: invert(0.88);
             cursor: pointer;
         }
-        html.dark ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
+        /* Luminous Dark Badges */
+        html.dark .bg-emerald-50,
+        html.dark .bg-emerald-50\/60 {
+            background-color: rgba(16, 185, 129, 0.14) !important;
         }
-        html.dark ::-webkit-scrollbar-track {
-            background: #0b0f19;
+        html.dark .bg-blue-50,
+        html.dark .bg-blue-50\/60,
+        html.dark .bg-blue-50\/70 {
+            background-color: rgba(59, 130, 246, 0.14) !important;
         }
-        html.dark ::-webkit-scrollbar-thumb {
-            background: #334155;
-            border-radius: 9999px;
+        html.dark .bg-amber-50 {
+            background-color: rgba(245, 158, 11, 0.14) !important;
         }
-        html.dark ::-webkit-scrollbar-thumb:hover {
-            background: #475569;
+        html.dark .bg-rose-50 {
+            background-color: rgba(244, 63, 94, 0.14) !important;
         }
+        html.dark .bg-purple-50 {
+            background-color: rgba(168, 85, 247, 0.14) !important;
+        }
+        html.dark .text-emerald-700,
+        html.dark .text-emerald-800 {
+            color: #6ee7b7 !important;
+        }
+        html.dark .text-blue-700,
+        html.dark .text-blue-800 {
+            color: #93c5fd !important;
+        }
+        html.dark .text-amber-700,
+        html.dark .text-amber-800 {
+            color: #fcd34d !important;
+        }
+        html.dark .text-rose-700,
+        html.dark .text-rose-800 {
+            color: #fda4af !important;
+        }
+        html.dark .text-purple-700,
+        html.dark .text-purple-800 {
+            color: #d8b4fe !important;
+        }
+        html.dark .border-emerald-100,
+        html.dark .border-emerald-200 {
+            border-color: rgba(16, 185, 129, 0.3) !important;
+        }
+        html.dark .border-blue-100,
+        html.dark .border-blue-200 {
+            border-color: rgba(59, 130, 246, 0.3) !important;
+        }
+        html.dark .border-amber-100,
+        html.dark .border-amber-200,
+        html.dark .border-amber-200\/70 {
+            border-color: rgba(245, 158, 11, 0.3) !important;
+        }
+        html.dark .bg-blue-100 {
+            background-color: rgba(59, 130, 246, 0.18) !important;
+            color: #93c5fd !important;
+        }
+        html.dark .bg-emerald-100 {
+            background-color: rgba(16, 185, 129, 0.18) !important;
+            color: #6ee7b7 !important;
+        }
+        html.dark .bg-amber-100 {
+            background-color: rgba(245, 158, 11, 0.18) !important;
+            color: #fcd34d !important;
+        }
+        html.dark .bg-rose-100 {
+            background-color: rgba(244, 63, 94, 0.18) !important;
+            color: #fda4af !important;
+        }
+        html.dark .bg-purple-100 {
+            background-color: rgba(168, 85, 247, 0.18) !important;
+            color: #d8b4fe !important;
+        }
+        html.dark .ring-blue-100 {
+            --tw-ring-color: rgba(59, 130, 246, 0.28) !important;
+        }
+        html.dark .border-blue-300 {
+            border-color: #3b82f6 !important;
+        }
+        /* Modals & Dropdowns */
         html.dark #user-dropdown,
         html.dark #settings-modal > div,
         html.dark #auth-modal > div,
         html.dark #regenerate-modal > div {
-            background-color: #131b2e !important;
-            border-color: #1e293b !important;
+            background-color: #0e1526 !important;
+            border-color: #223049 !important;
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
             color: #f8fafc !important;
         }
+        html.dark #auth-modal,
+        html.dark #settings-modal,
+        html.dark #regenerate-modal {
+            background-color: rgba(4, 7, 13, 0.75) !important;
+            backdrop-filter: blur(8px) !important;
+            -webkit-backdrop-filter: blur(8px) !important;
+        }
+        /* Details FAQ & Footer */
         html.dark details {
-            background-color: #131b2e !important;
+            background-color: #0e1422 !important;
             border-color: #1e293b !important;
         }
         html.dark details summary {
             color: #f1f5f9 !important;
         }
         html.dark footer {
-            border-color: #1e293b !important;
+            border-color: #1a2438 !important;
         }
         html.dark #toast-content {
-            background-color: rgba(30, 41, 59, 0.95) !important;
-            border-color: #334155 !important;
+            background-color: rgba(18, 26, 44, 0.95) !important;
+            border-color: #2d3e60 !important;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6) !important;
         }
-        /* Subdued Dark Mode Accents for Better Contrast */
-        html.dark .bg-emerald-50,
-        html.dark .bg-emerald-50\/60 {
-            background-color: rgba(6, 78, 59, 0.28) !important;
+        /* Scrollbar */
+        html.dark ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
         }
-        html.dark .bg-blue-50,
-        html.dark .bg-blue-50\/60,
-        html.dark .bg-blue-50\/70 {
-            background-color: rgba(30, 58, 138, 0.28) !important;
+        html.dark ::-webkit-scrollbar-track {
+            background: #080c14;
         }
-        html.dark .bg-amber-50 {
-            background-color: rgba(120, 53, 15, 0.28) !important;
+        html.dark ::-webkit-scrollbar-thumb {
+            background: #233048;
+            border-radius: 9999px;
         }
-        html.dark .bg-rose-50 {
-            background-color: rgba(136, 19, 55, 0.28) !important;
-        }
-        html.dark .bg-purple-50 {
-            background-color: rgba(88, 28, 135, 0.28) !important;
-        }
-        html.dark .text-emerald-700,
-        html.dark .text-emerald-800 {
-            color: #34d399 !important;
-        }
-        html.dark .text-blue-700,
-        html.dark .text-blue-800 {
-            color: #60a5fa !important;
-        }
-        html.dark .text-amber-700,
-        html.dark .text-amber-800 {
-            color: #fbbf24 !important;
-        }
-        html.dark .text-rose-700,
-        html.dark .text-rose-800 {
-            color: #fb7185 !important;
-        }
-        html.dark .text-purple-700,
-        html.dark .text-purple-800 {
-            color: #c084fc !important;
-        }
-        html.dark .border-emerald-100,
-        html.dark .border-emerald-200 {
-            border-color: rgba(16, 185, 129, 0.25) !important;
-        }
-        html.dark .border-blue-100,
-        html.dark .border-blue-200 {
-            border-color: rgba(59, 130, 246, 0.25) !important;
-        }
-        html.dark .border-amber-100,
-        html.dark .border-amber-200 {
-            border-color: rgba(245, 158, 11, 0.25) !important;
-        }
-        html.dark .bg-blue-100 {
-            background-color: rgba(37, 99, 235, 0.25) !important;
-            color: #93c5fd !important;
-        }
-        html.dark .bg-emerald-100 {
-            background-color: rgba(16, 185, 129, 0.25) !important;
-            color: #6ee7b7 !important;
-        }
-        html.dark .bg-amber-100 {
-            background-color: rgba(245, 158, 11, 0.25) !important;
-            color: #fde68a !important;
-        }
-        html.dark .bg-rose-100 {
-            background-color: rgba(244, 63, 94, 0.25) !important;
-            color: #fecdd3 !important;
-        }
-        html.dark .bg-purple-100 {
-            background-color: rgba(168, 85, 247, 0.25) !important;
-            color: #e9d5ff !important;
+        html.dark ::-webkit-scrollbar-thumb:hover {
+            background: #334464;
         }
     </style>
 </head>
@@ -503,69 +574,111 @@
                     </button>
                 </nav>
 
-                <!-- Google Account Auth Control -->
+                <!-- Unified Profile & Settings Avatar Control (Single clean entry point) -->
                 <div id="auth-container" class="relative">
-                    <!-- Signed Out Button -->
-                    <button id="auth-signin-btn" onclick="signInWithGoogle()" class="flex items-center gap-1.5 bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 text-blue-800 border border-blue-200/90 text-xs font-bold py-1.5 px-2.5 sm:px-3 rounded-xl shadow-sm transition active:scale-95 group" title="Connect Google Account to sync study progress">
-                        <svg class="w-3.5 h-3.5 shrink-0 transition-transform group-hover:scale-110" viewBox="0 0 24 24">
-                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-                        </svg>
-                        <span class="inline">Sign in</span>
-                        <span class="hidden md:inline-block text-[10px] bg-blue-200/60 text-blue-900 px-1.5 py-0.2 rounded font-extrabold">Sync</span>
+                    <button id="auth-avatar-btn" onclick="toggleUserDropdown()" class="flex items-center gap-1.5 p-1 sm:px-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 transition active:scale-95 group" title="Profile, Theme & Settings">
+                        <!-- Guest Avatar (Shown when logged out) -->
+                        <div id="guest-avatar-icon" class="w-7 h-7 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center text-xs font-bold shadow-xs">
+                            <i class="fa-solid fa-user"></i>
+                        </div>
+                        <!-- User Google Avatar (Shown when logged in) -->
+                        <img id="user-avatar-img" src="" alt="User" class="hidden w-7 h-7 rounded-lg object-cover border border-slate-200 dark:border-slate-700 bg-slate-200 dark:bg-slate-700">
+                        <span id="user-name-short" class="text-xs font-bold text-slate-700 dark:text-slate-200 hidden md:inline max-w-[85px] truncate">Guest</span>
+                        <i class="fa-solid fa-chevron-down text-[9px] text-slate-400 dark:text-slate-500 mr-0.5 transition group-hover:text-slate-700 dark:group-hover:text-slate-300"></i>
                     </button>
 
-                    <!-- Signed In Profile Avatar & Dropdown -->
-                    <div id="auth-user-menu" class="hidden items-center">
-                        <button onclick="toggleUserDropdown()" class="flex items-center gap-1.5 p-1 rounded-xl hover:bg-slate-100 border border-slate-200 transition">
-                            <img id="user-avatar-img" src="" alt="User" class="w-7 h-7 rounded-lg object-cover border border-slate-200 bg-slate-200">
-                            <span id="user-name-short" class="text-xs font-bold text-slate-700 hidden md:inline max-w-[80px] truncate"></span>
-                            <i class="fa-solid fa-chevron-down text-[9px] text-slate-400 mr-1"></i>
-                        </button>
-                        <!-- User Dropdown Card -->
-                        <div id="user-dropdown" class="hidden absolute right-0 top-11 w-64 bg-white rounded-2xl shadow-xl border border-slate-200 p-4 z-50 text-xs animate-fade-in-up">
-                            <div class="flex items-center gap-2.5 pb-3 border-b border-slate-100 mb-3">
-                                <img id="dropdown-avatar-img" src="" alt="Avatar" class="w-9 h-9 rounded-xl object-cover bg-slate-200">
+                    <!-- Profile & Settings Dropdown Card -->
+                    <div id="user-dropdown" class="hidden absolute right-0 top-11 w-72 bg-white dark:bg-[#0e1526] rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-4 z-50 text-xs animate-fade-in-up">
+                        <!-- Profile Details: Logged In State -->
+                        <div id="dropdown-signed-in-block" class="hidden pb-3 border-b border-slate-100 dark:border-slate-800 mb-3">
+                            <div class="flex items-center gap-2.5 mb-2.5">
+                                <img id="dropdown-avatar-img" src="" alt="Avatar" class="w-10 h-10 rounded-xl object-cover bg-slate-200 dark:bg-slate-700">
                                 <div class="truncate">
-                                    <span id="dropdown-user-name" class="font-bold text-slate-800 block truncate"></span>
+                                    <span id="dropdown-user-name" class="font-bold text-slate-800 dark:text-white block truncate text-sm"></span>
                                     <span id="dropdown-user-email" class="text-[11px] text-slate-400 block truncate"></span>
                                 </div>
                             </div>
-                            <div class="bg-emerald-50 text-emerald-800 p-2.5 rounded-xl border border-emerald-100 mb-3 flex items-center gap-2">
-                                <i class="fa-solid fa-cloud-arrow-up text-emerald-600 text-sm"></i>
-                                <span class="font-semibold text-[11px]">Cloud Sync Active (Auto-saved)</span>
-                            </div>
-                            <button onclick="openSettingsModal(); closeUserDropdown();" class="w-full py-2 px-3 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold rounded-xl transition flex items-center justify-between mb-2">
-                                <span class="flex items-center gap-2">
-                                    <i class="fa-solid fa-gear text-slate-500"></i>
-                                    <span>Settings & Theme</span>
+                            <div class="bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 p-2 rounded-xl border border-emerald-100 dark:border-emerald-800/60 flex items-center justify-between text-[11px]">
+                                <span class="flex items-center gap-1.5 font-semibold">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                    <span>Cloud Sync Active</span>
                                 </span>
-                                <span id="dropdown-theme-badge" class="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-bold uppercase">System</span>
+                                <button onclick="triggerManualSync()" class="text-xs text-emerald-700 dark:text-emerald-400 hover:underline font-bold" title="Sync now">
+                                    Sync now
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Profile Details: Guest / Logged Out State -->
+                        <div id="dropdown-guest-block" class="pb-3 border-b border-slate-100 dark:border-slate-800 mb-3">
+                            <div class="flex items-center gap-2.5 mb-3">
+                                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center text-base font-bold shadow-md shadow-blue-500/20">
+                                    <i class="fa-solid fa-user"></i>
+                                </div>
+                                <div>
+                                    <span class="font-bold text-slate-800 dark:text-white block text-sm">Guest Student</span>
+                                    <span class="text-[11px] text-slate-400 block">Saved locally on device</span>
+                                </div>
+                            </div>
+                            <!-- Prominent Google Sign-in to sync -->
+                            <button id="auth-signin-btn" onclick="signInWithGoogle()" class="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-2.5 px-3 rounded-xl shadow-md shadow-blue-500/20 transition active:scale-95 text-xs">
+                                <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24">
+                                    <path fill="#ffffff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                    <path fill="#ffffff" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                    <path fill="#ffffff" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                                    <path fill="#ffffff" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                                </svg>
+                                <span>Sign in with Google to Sync</span>
                             </button>
-                            <button onclick="triggerManualSync()" class="w-full py-2 px-3 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold rounded-xl transition flex items-center justify-center gap-2 mb-2">
-                                <i class="fa-solid fa-rotate"></i>
-                                <span>Sync with Cloud Now</span>
-                            </button>
-                            <a href="https://github.com/sreyasts/intelligent-study-planner-for-plus-two-" target="_blank" rel="noopener noreferrer" class="w-full py-2 px-3 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold rounded-xl transition flex items-center justify-center gap-2 mb-2">
+                        </div>
+
+                        <!-- 1-Tap Theme Switcher inside Profile Menu -->
+                        <div class="mb-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+                            <div class="flex items-center justify-between mb-1.5">
+                                <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Theme</span>
+                                <span id="dropdown-theme-badge" class="text-[10px] bg-blue-100 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 font-extrabold px-1.5 py-0.5 rounded uppercase">System</span>
+                            </div>
+                            <div class="grid grid-cols-3 gap-1 p-1 bg-slate-100 dark:bg-[#141d30] rounded-xl border border-slate-200/60 dark:border-slate-700/60">
+                                <button type="button" id="menu-theme-btn-light" onclick="setThemePreference('light')" class="py-1.5 px-2 rounded-lg text-center font-bold text-xs transition-all flex items-center justify-center gap-1 text-slate-600 dark:text-slate-300 hover:text-slate-900">
+                                    <i class="fa-solid fa-sun text-amber-500 text-[11px]"></i>
+                                    <span>Light</span>
+                                </button>
+                                <button type="button" id="menu-theme-btn-dark" onclick="setThemePreference('dark')" class="py-1.5 px-2 rounded-lg text-center font-bold text-xs transition-all flex items-center justify-center gap-1 text-slate-600 dark:text-slate-300 hover:text-slate-900">
+                                    <i class="fa-solid fa-moon text-indigo-400 text-[11px]"></i>
+                                    <span>Dark</span>
+                                </button>
+                                <button type="button" id="menu-theme-btn-system" onclick="setThemePreference('system')" class="py-1.5 px-2 rounded-lg text-center font-bold text-xs transition-all flex items-center justify-center gap-1 text-slate-600 dark:text-slate-300 hover:text-slate-900">
+                                    <i class="fa-solid fa-desktop text-blue-500 text-[11px]"></i>
+                                    <span>Auto</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Settings & Customization Button -->
+                        <button onclick="openSettingsModal(); closeUserDropdown();" class="w-full py-2.5 px-3 bg-slate-50 hover:bg-slate-100 dark:bg-[#141d30] dark:hover:bg-[#1a253c] text-slate-800 dark:text-slate-200 font-bold rounded-xl transition flex items-center justify-between mb-2">
+                            <span class="flex items-center gap-2">
+                                <i class="fa-solid fa-gear text-slate-500 dark:text-slate-400"></i>
+                                <span>Settings & Customization</span>
+                            </span>
+                            <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
+                        </button>
+
+                        <a href="https://github.com/sreyasts/intelligent-study-planner-for-plus-two-" target="_blank" rel="noopener noreferrer" class="w-full py-2 px-3 hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-600 dark:text-slate-300 font-medium rounded-xl transition flex items-center justify-between mb-1">
+                            <span class="flex items-center gap-2">
                                 <i class="fa-brands fa-github text-sm"></i>
-                                <span>Star & View on GitHub</span>
-                                <i class="fa-solid fa-star text-[10px] text-amber-400"></i>
-                            </a>
-                            <button onclick="signOutUser()" class="w-full py-2 px-3 bg-slate-100 hover:bg-red-50 hover:text-red-600 text-slate-700 font-bold rounded-xl transition flex items-center justify-center gap-2">
+                                <span>GitHub Repository</span>
+                            </span>
+                            <span class="text-[11px] text-amber-500">★ Star</span>
+                        </a>
+
+                        <div id="dropdown-signout-block" class="hidden pt-2 border-t border-slate-100 dark:border-slate-800">
+                            <button onclick="signOutUser()" class="w-full py-2 px-3 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 font-bold rounded-xl transition flex items-center justify-center gap-2">
                                 <i class="fa-solid fa-right-from-bracket"></i>
                                 <span>Sign Out</span>
                             </button>
                         </div>
                     </div>
                 </div>
-
-                <!-- Dedicated Settings Button (Visible for all users) -->
-                <button id="header-settings-btn" onclick="openSettingsModal()" class="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold py-1.5 px-2.5 sm:px-3 rounded-xl border border-slate-200/90 transition active:scale-95 shrink-0" title="Settings & Customization">
-                    <i class="fa-solid fa-gear text-slate-600"></i>
-                    <span class="hidden sm:inline">Settings</span>
-                </button>
 
                 <!-- Share with Classmates Button -->
                 <button onclick="shareApp()" class="flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200/80 text-xs font-bold py-1.5 px-2.5 sm:px-3 rounded-xl shadow-sm transition active:scale-95 shrink-0" title="Share with Classmates on WhatsApp & Telegram">
@@ -670,36 +783,32 @@
         </div>
     </footer>
 
-    <!-- Mobile Bottom Navigation Bar -->
-    <div id="mobile-nav" class="sm:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 z-30 px-3 py-2 flex justify-around items-center">
-        <button onclick="goToDashboard()" id="mob-btn-today" class="flex flex-col items-center text-blue-600 font-bold text-[11px]">
+    <!-- Mobile Bottom Navigation Bar (Clean 4 tabs) -->
+    <div id="mobile-nav" class="sm:hidden fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-[#0e1422]/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800/80 z-30 px-3 py-2 flex justify-around items-center">
+        <button onclick="goToDashboard()" id="mob-btn-today" class="flex flex-col items-center text-blue-600 dark:text-blue-400 font-bold text-[11px] transition">
             <i class="fa-solid fa-bolt text-lg mb-0.5"></i>
             <span>Today</span>
         </button>
-        <button onclick="goToPlan()" id="mob-btn-plan" class="flex flex-col items-center text-slate-400 hover:text-slate-700 font-semibold text-[11px]">
+        <button onclick="goToPlan()" id="mob-btn-plan" class="flex flex-col items-center text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 font-semibold text-[11px] transition">
             <i class="fa-solid fa-list-check text-lg mb-0.5"></i>
             <span>Full Plan</span>
         </button>
-        <button onclick="goToSyllabusView()" id="mob-btn-syllabus" class="flex flex-col items-center text-slate-400 hover:text-slate-700 font-semibold text-[11px]">
+        <button onclick="goToSyllabusView()" id="mob-btn-syllabus" class="flex flex-col items-center text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 font-semibold text-[11px] transition">
             <i class="fa-solid fa-book-open text-lg mb-0.5"></i>
             <span>Syllabus</span>
         </button>
-        <button onclick="shareApp()" class="flex flex-col items-center text-emerald-600 hover:text-emerald-700 font-semibold text-[11px]">
+        <button onclick="shareApp()" class="flex flex-col items-center text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-semibold text-[11px] transition">
             <i class="fa-solid fa-share-nodes text-lg mb-0.5"></i>
             <span>Share</span>
-        </button>
-        <button onclick="openSettingsModal()" id="mob-btn-settings" class="flex flex-col items-center text-slate-400 hover:text-slate-700 font-semibold text-[11px]" title="Settings & Theme">
-            <i class="fa-solid fa-gear text-lg mb-0.5"></i>
-            <span>Settings</span>
         </button>
     </div>
 
 
     <!-- Google Sign-In & Cloud Sync Popup Modal -->
     <div id="auth-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4 overflow-y-auto" onclick="if(event.target === this) continueAsGuest()">
-        <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-6 sm:p-7 border border-slate-100 animate-fade-in-up relative text-center my-auto">
+        <div class="bg-white dark:bg-[#0e1422] rounded-3xl shadow-2xl max-w-sm w-full p-6 sm:p-7 border border-slate-100 dark:border-slate-800 animate-fade-in-up relative text-center my-auto">
             <!-- Close 'X' button -->
-            <button onclick="continueAsGuest()" class="absolute top-4 right-4 w-8 h-8 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 flex items-center justify-center transition active:scale-95" title="Close">
+            <button onclick="continueAsGuest()" class="absolute top-4 right-4 w-8 h-8 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex items-center justify-center transition active:scale-95" title="Close">
                 <i class="fa-solid fa-xmark text-sm"></i>
             </button>
 
@@ -709,53 +818,53 @@
             </div>
 
             <!-- Crisp Headline & Subtext -->
-            <h3 class="text-xl font-black text-slate-900 tracking-tight">
+            <h3 class="text-xl font-black text-slate-900 dark:text-white tracking-tight">
                 Save Your Study Plan
             </h3>
-            <p class="text-xs text-slate-500 mt-1.5 leading-relaxed max-w-xs mx-auto">
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed max-w-xs mx-auto">
                 Sign in with Google to sync between your phone and laptop so you never lose your progress.
             </p>
 
             <!-- 3 Clean Benefit Chips -->
             <div class="grid grid-cols-3 gap-2 my-5 text-center">
-                <div class="bg-slate-50 border border-slate-100 rounded-xl p-2.5">
-                    <i class="fa-solid fa-mobile-screen text-blue-600 text-sm mb-1 block"></i>
-                    <span class="text-[11px] font-bold text-slate-700 block leading-tight">Phone & PC</span>
-                    <span class="text-[10px] text-slate-400">Auto-sync</span>
+                <div class="bg-slate-50 dark:bg-[#141d30] border border-slate-100 dark:border-slate-800/80 rounded-xl p-2.5">
+                    <i class="fa-solid fa-mobile-screen text-blue-600 dark:text-blue-400 text-sm mb-1 block"></i>
+                    <span class="text-[11px] font-bold text-slate-700 dark:text-slate-200 block leading-tight">Phone & PC</span>
+                    <span class="text-[10px] text-slate-400 dark:text-slate-500">Auto-sync</span>
                 </div>
-                <div class="bg-slate-50 border border-slate-100 rounded-xl p-2.5">
-                    <i class="fa-solid fa-shield-check text-emerald-600 text-sm mb-1 block"></i>
-                    <span class="text-[11px] font-bold text-slate-700 block leading-tight">Backup</span>
-                    <span class="text-[10px] text-slate-400">Zero loss</span>
+                <div class="bg-slate-50 dark:bg-[#141d30] border border-slate-100 dark:border-slate-800/80 rounded-xl p-2.5">
+                    <i class="fa-solid fa-shield-check text-emerald-600 dark:text-emerald-400 text-sm mb-1 block"></i>
+                    <span class="text-[11px] font-bold text-slate-700 dark:text-slate-200 block leading-tight">Backup</span>
+                    <span class="text-[10px] text-slate-400 dark:text-slate-500">Zero loss</span>
                 </div>
-                <div class="bg-slate-50 border border-slate-100 rounded-xl p-2.5">
-                    <i class="fa-solid fa-bolt text-amber-500 text-sm mb-1 block"></i>
-                    <span class="text-[11px] font-bold text-slate-700 block leading-tight">1-Tap Fast</span>
-                    <span class="text-[10px] text-slate-400">Free forever</span>
+                <div class="bg-slate-50 dark:bg-[#141d30] border border-slate-100 dark:border-slate-800/80 rounded-xl p-2.5">
+                    <i class="fa-solid fa-bolt text-amber-500 dark:text-amber-400 text-sm mb-1 block"></i>
+                    <span class="text-[11px] font-bold text-slate-700 dark:text-slate-200 block leading-tight">1-Tap Fast</span>
+                    <span class="text-[10px] text-slate-400 dark:text-slate-500">Free forever</span>
                 </div>
             </div>
 
             <!-- Action Buttons -->
             <div class="space-y-2">
                 <!-- Primary: Google Sign In Button -->
-                <button id="auth-modal-google-btn" onclick="signInWithGoogleFromModal()" class="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-50 text-slate-800 font-extrabold py-3 px-4 rounded-2xl border-2 border-slate-200 hover:border-blue-500 shadow-sm hover:shadow transition-all transform active:scale-[0.98] text-sm group">
+                <button id="auth-modal-google-btn" onclick="signInWithGoogleFromModal()" class="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-50 dark:bg-[#141d30] dark:hover:bg-[#1a2640] text-slate-800 dark:text-white font-extrabold py-3 px-4 rounded-2xl border-2 border-slate-200 dark:border-slate-700/80 hover:border-blue-500 shadow-sm hover:shadow transition-all transform active:scale-[0.98] text-sm group">
                     <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24">
                         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                         <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
                         <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
                         <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
                     </svg>
-                    <span class="group-hover:text-blue-600 transition-colors">Continue with Google</span>
+                    <span class="group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Continue with Google</span>
                 </button>
 
                 <!-- Secondary: Continue as Guest -->
-                <button onclick="continueAsGuest()" class="w-full text-center py-2 px-3 text-xs font-semibold text-slate-400 hover:text-slate-700 transition">
+                <button onclick="continueAsGuest()" class="w-full text-center py-2 px-3 text-xs font-semibold text-slate-400 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition">
                     Maybe later (use without signing in)
                 </button>
             </div>
 
             <!-- Footer microcopy -->
-            <p class="mt-3 text-[10px] text-slate-400 flex items-center justify-center gap-1">
+            <p class="mt-3 text-[10px] text-slate-400 dark:text-slate-500 flex items-center justify-center gap-1">
                 <i class="fa-solid fa-lock text-[9px]"></i>
                 <span>100% Free & Private • Only your study progress is saved</span>
             </p>
@@ -764,55 +873,55 @@
 
     <!-- Settings & Customization Modal -->
     <div id="settings-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4 overflow-y-auto" onclick="if(event.target === this) closeSettingsModal()">
-        <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-5 sm:p-6 border border-slate-100 animate-fade-in-up relative text-left my-auto">
+        <div class="bg-white dark:bg-[#0e1422] rounded-3xl shadow-2xl max-w-lg w-full p-5 sm:p-6 border border-slate-100 dark:border-slate-800/80 animate-fade-in-up relative text-left my-auto">
             <!-- Header -->
-            <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800/80 mb-4">
                 <div class="flex items-center gap-2.5">
                     <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white text-lg shadow-md shadow-blue-500/20">
                         <i class="fa-solid fa-sliders"></i>
                     </div>
                     <div>
-                        <h3 class="text-lg font-black text-slate-900 tracking-tight">Settings & Customization</h3>
-                        <p class="text-[11px] text-slate-500 font-medium">Personalize your Mission PlusTwo workspace</p>
+                        <h3 class="text-lg font-black text-slate-900 dark:text-white tracking-tight">Settings & Customization</h3>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Personalize your Mission PlusTwo workspace</p>
                     </div>
                 </div>
-                <button onclick="closeSettingsModal()" class="w-8 h-8 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 flex items-center justify-center transition active:scale-95" title="Close">
+                <button onclick="closeSettingsModal()" class="w-8 h-8 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 flex items-center justify-center transition active:scale-95" title="Close">
                     <i class="fa-solid fa-xmark text-sm"></i>
                 </button>
             </div>
 
             <div class="space-y-4 max-h-[75vh] overflow-y-auto pr-1">
                 <!-- 1. Theme Selection -->
-                <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
+                <div class="bg-slate-50 dark:bg-[#141d30] p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800/80">
                     <div class="flex items-center justify-between mb-2.5">
-                        <label class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                            <i class="fa-solid fa-circle-half-stroke text-blue-600"></i>
+                        <label class="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                            <i class="fa-solid fa-circle-half-stroke text-blue-600 dark:text-blue-400"></i>
                             <span>Theme & Appearance</span>
                         </label>
-                        <span class="text-[10px] text-slate-400 font-semibold">OLED Dark Mode</span>
+                        <span class="text-[10px] text-slate-400 dark:text-slate-400 font-semibold">OLED Dark Mode</span>
                     </div>
 
                     <!-- 3-Way Segmented Theme Switcher -->
-                    <div class="grid grid-cols-3 gap-1.5 p-1 bg-white rounded-xl border border-slate-200">
-                        <button type="button" id="theme-btn-light" onclick="setThemePreference('light')" class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-900">
+                    <div class="grid grid-cols-3 gap-1.5 p-1 bg-white dark:bg-[#0e1422] rounded-xl border border-slate-200 dark:border-slate-700/80">
+                        <button type="button" id="theme-btn-light" onclick="setThemePreference('light')" class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-bold transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
                             <i class="fa-solid fa-sun text-amber-500 text-xs"></i>
                             <span>Light</span>
                         </button>
-                        <button type="button" id="theme-btn-dark" onclick="setThemePreference('dark')" class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-900">
+                        <button type="button" id="theme-btn-dark" onclick="setThemePreference('dark')" class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-bold transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
                             <i class="fa-solid fa-moon text-indigo-400 text-xs"></i>
                             <span>Dark</span>
                         </button>
-                        <button type="button" id="theme-btn-system" onclick="setThemePreference('system')" class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-900">
+                        <button type="button" id="theme-btn-system" onclick="setThemePreference('system')" class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-bold transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
                             <i class="fa-solid fa-desktop text-blue-500 text-xs"></i>
                             <span>System</span>
                         </button>
                     </div>
-                    <p class="text-[10px] text-slate-400 mt-2">Dark mode features a high-contrast deep slate palette designed for long study sessions without eye strain.</p>
+                    <p class="text-[10px] text-slate-400 dark:text-slate-400 mt-2">Dark mode features a high-contrast deep slate palette designed for long study sessions without eye strain.</p>
                 </div>
 
                 <!-- 2. Study Experience Toggles -->
-                <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-100 space-y-3">
-                    <label class="text-xs font-bold text-slate-800 flex items-center gap-1.5 mb-1">
+                <div class="bg-slate-50 dark:bg-[#141d30] p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800/80 space-y-3">
+                    <label class="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 mb-1">
                         <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i>
                         <span>Study Experience & Feedback</span>
                     </label>
@@ -820,7 +929,7 @@
                     <!-- Audio Chimes Toggle -->
                     <div class="flex items-center justify-between py-1">
                         <div class="pr-2">
-                            <span class="text-xs font-bold text-slate-700 block">Sound Effects (Chimes)</span>
+                            <span class="text-xs font-bold text-slate-700 dark:text-slate-200 block">Sound Effects (Chimes)</span>
                             <span class="text-[10px] text-slate-400">Harmonic chimes when checking off completed chapters</span>
                         </div>
                         <button type="button" id="setting-toggle-sound" onclick="toggleUserSetting('sound')" class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-blue-600 transition-colors duration-200 ease-in-out focus:outline-none" role="switch" aria-checked="true">
@@ -829,9 +938,9 @@
                     </div>
 
                     <!-- Celebration Confetti Toggle -->
-                    <div class="flex items-center justify-between py-1 border-t border-slate-200/60">
+                    <div class="flex items-center justify-between py-1 border-t border-slate-200/60 dark:border-slate-800/80">
                         <div class="pr-2">
-                            <span class="text-xs font-bold text-slate-700 block">Milestone Celebration Confetti</span>
+                            <span class="text-xs font-bold text-slate-700 dark:text-slate-200 block">Milestone Celebration Confetti</span>
                             <span class="text-[10px] text-slate-400">Particle bursts when completing targets and full days</span>
                         </div>
                         <button type="button" id="setting-toggle-confetti" onclick="toggleUserSetting('confetti')" class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-blue-600 transition-colors duration-200 ease-in-out focus:outline-none" role="switch" aria-checked="true">
@@ -840,9 +949,9 @@
                     </div>
 
                     <!-- Auto Focus Next Topic Toggle -->
-                    <div class="flex items-center justify-between py-1 border-t border-slate-200/60">
+                    <div class="flex items-center justify-between py-1 border-t border-slate-200/60 dark:border-slate-800/80">
                         <div class="pr-2">
-                            <span class="text-xs font-bold text-slate-700 block">Focus Target Highlighter</span>
+                            <span class="text-xs font-bold text-slate-700 dark:text-slate-200 block">Focus Target Highlighter</span>
                             <span class="text-[10px] text-slate-400">Soft animated glow guiding you to your next chapter</span>
                         </div>
                         <button type="button" id="setting-toggle-autofocus" onclick="toggleUserSetting('autofocus')" class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-blue-600 transition-colors duration-200 ease-in-out focus:outline-none" role="switch" aria-checked="true">
@@ -852,57 +961,57 @@
                 </div>
 
                 <!-- 3. Daily Study Intensity / Pace -->
-                <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
+                <div class="bg-slate-50 dark:bg-[#141d30] p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800/80">
                     <div class="flex items-center justify-between mb-1.5">
-                        <label class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                        <label class="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                             <i class="fa-solid fa-gauge-high text-indigo-500"></i>
                             <span>Daily Study Pace</span>
                         </label>
-                        <span id="settings-current-pace-badge" class="text-[10px] bg-indigo-100 text-indigo-700 font-bold px-2 py-0.5 rounded-full">Standard</span>
+                        <span id="settings-current-pace-badge" class="text-[10px] bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 font-bold px-2 py-0.5 rounded-full">Standard</span>
                     </div>
                     <p class="text-[10px] text-slate-400 mb-2">Adjust your daily study workload intensity.</p>
                     <div class="grid grid-cols-3 gap-1.5">
-                        <button type="button" id="pace-btn-light" onclick="selectSettingsStudyPace('light')" class="p-2 rounded-xl text-center border border-slate-200 bg-white transition">
-                            <span class="block text-xs font-bold text-slate-700">Relaxed</span>
+                        <button type="button" id="pace-btn-light" onclick="selectSettingsStudyPace('light')" class="p-2 rounded-xl text-center border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#0e1422] transition">
+                            <span class="block text-xs font-bold text-slate-700 dark:text-slate-200">Relaxed</span>
                             <span class="block text-[9px] text-slate-400">1-2 ch/day</span>
                         </button>
-                        <button type="button" id="pace-btn-balanced" onclick="selectSettingsStudyPace('balanced')" class="p-2 rounded-xl text-center border border-slate-200 bg-white transition">
-                            <span class="block text-xs font-bold text-slate-700">Standard</span>
+                        <button type="button" id="pace-btn-balanced" onclick="selectSettingsStudyPace('balanced')" class="p-2 rounded-xl text-center border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#0e1422] transition">
+                            <span class="block text-xs font-bold text-slate-700 dark:text-slate-200">Standard</span>
                             <span class="block text-[9px] text-slate-400">2-3 ch/day</span>
                         </button>
-                        <button type="button" id="pace-btn-intense" onclick="selectSettingsStudyPace('intense')" class="p-2 rounded-xl text-center border border-slate-200 bg-white transition">
-                            <span class="block text-xs font-bold text-slate-700">Intensive</span>
+                        <button type="button" id="pace-btn-intense" onclick="selectSettingsStudyPace('intense')" class="p-2 rounded-xl text-center border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#0e1422] transition">
+                            <span class="block text-xs font-bold text-slate-700 dark:text-slate-200">Intensive</span>
                             <span class="block text-[9px] text-slate-400">3-4+ ch/day</span>
                         </button>
                     </div>
                 </div>
 
                 <!-- 4. Data Management: Backup & Restore -->
-                <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
-                    <label class="text-xs font-bold text-slate-800 flex items-center gap-1.5 mb-1.5">
-                        <i class="fa-solid fa-database text-emerald-600"></i>
+                <div class="bg-slate-50 dark:bg-[#141d30] p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800/80">
+                    <label class="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 mb-1.5">
+                        <i class="fa-solid fa-database text-emerald-600 dark:text-emerald-400"></i>
                         <span>Data Backup & Offline Sync</span>
                     </label>
                     <p class="text-[10px] text-slate-400 mb-3">Export a backup JSON file or restore your study timetable on any device.</p>
 
                     <div class="grid grid-cols-2 gap-2">
-                        <button type="button" onclick="exportStudyPlanJSON()" class="py-2 px-3 bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 transition flex items-center justify-center gap-1.5 shadow-xs">
-                            <i class="fa-solid fa-file-arrow-down text-emerald-600"></i>
+                        <button type="button" onclick="exportStudyPlanJSON()" class="py-2 px-3 bg-white hover:bg-slate-100 dark:bg-[#0e1422] dark:hover:bg-[#1a2640] text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-700/80 transition flex items-center justify-center gap-1.5 shadow-xs">
+                            <i class="fa-solid fa-file-arrow-down text-emerald-600 dark:text-emerald-400"></i>
                             <span>Export Backup</span>
                         </button>
-                        <label class="py-2 px-3 bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 transition flex items-center justify-center gap-1.5 shadow-xs cursor-pointer">
-                            <i class="fa-solid fa-file-arrow-up text-blue-600"></i>
+                        <label class="py-2 px-3 bg-white hover:bg-slate-100 dark:bg-[#0e1422] dark:hover:bg-[#1a2640] text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-700/80 transition flex items-center justify-center gap-1.5 shadow-xs cursor-pointer">
+                            <i class="fa-solid fa-file-arrow-up text-blue-600 dark:text-blue-400"></i>
                             <span>Restore Backup</span>
                             <input type="file" id="settings-import-input" accept=".json" class="hidden" onchange="importStudyPlanJSON(event)">
                         </label>
                     </div>
 
-                    <div class="mt-3 pt-3 border-t border-slate-200/60 flex items-center justify-between">
+                    <div class="mt-3 pt-3 border-t border-slate-200/60 dark:border-slate-800/80 flex items-center justify-between">
                         <div>
-                            <span class="text-xs font-bold text-rose-600 block">Reset Plan</span>
+                            <span class="text-xs font-bold text-rose-600 dark:text-rose-400 block">Reset Plan</span>
                             <span class="text-[10px] text-slate-400">Clear current timetable to start fresh</span>
                         </div>
-                        <button type="button" onclick="closeSettingsModal(); resetApp();" class="py-1.5 px-3 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-xl border border-rose-200 transition">
+                        <button type="button" onclick="closeSettingsModal(); resetApp();" class="py-1.5 px-3 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/50 text-rose-700 dark:text-rose-300 text-xs font-bold rounded-xl border border-rose-200 dark:border-rose-800/60 transition">
                             Reset
                         </button>
                     </div>
@@ -910,8 +1019,8 @@
             </div>
 
             <!-- Footer -->
-            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
-                <span class="text-[10px] text-slate-400 font-medium">Mission PlusTwo v5.2</span>
+            <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+                <span class="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Mission PlusTwo v5.2</span>
                 <button type="button" onclick="closeSettingsModal()" class="py-2 px-5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-500/25 transition">
                     Done
                 </button>
@@ -985,13 +1094,13 @@
                     
                     let topicTitle = '';
                     if (totalParts === 1) {
-                        topicTitle = 'Full Chapter Concepts & Key Problems';
-                    } else if (p === 1) {
-                        topicTitle = `Part 1 of ${totalParts}: Core Concepts & Theory`;
+                        topicTitle = 'Part 1/1 (Full Chapter): Core Concepts & Problems';
                     } else if (p === totalParts) {
-                        topicTitle = `Part ${p} of ${totalParts}: Exercise Problems & PYQs`;
+                        topicTitle = `Part ${p}/${totalParts} (Full Chapter): Exercise Problems & PYQs`;
+                    } else if (p === 1) {
+                        topicTitle = `Part 1/${totalParts}: Core Concepts & Theory`;
                     } else {
-                        topicTitle = `Part ${p} of ${totalParts}: Mechanisms & Practice`;
+                        topicTitle = `Part ${p}/${totalParts}: Mechanisms & Practice`;
                     }
 
                     let taskType = (p === totalParts || p > 1) ? 'PRACTICE' : 'LEARN';
@@ -1700,19 +1809,19 @@
         }
 
         function updateAuthHeaderUI() {
-            const signinBtn = document.getElementById('auth-signin-btn');
-            const userMenu = document.getElementById('auth-user-menu');
             const userAvatarImg = document.getElementById('user-avatar-img');
+            const guestAvatarIcon = document.getElementById('guest-avatar-icon');
             const userNameShort = document.getElementById('user-name-short');
+            const dropdownSignedInBlock = document.getElementById('dropdown-signed-in-block');
+            const dropdownGuestBlock = document.getElementById('dropdown-guest-block');
             const dropdownAvatarImg = document.getElementById('dropdown-avatar-img');
             const dropdownUserName = document.getElementById('dropdown-user-name');
             const dropdownUserEmail = document.getElementById('dropdown-user-email');
+            const signoutBlock = document.getElementById('dropdown-signout-block');
 
             if (currentUser) {
-                signinBtn?.classList.add('hidden');
-                userMenu?.classList.remove('hidden');
-                userMenu?.classList.add('flex');
-
+                userAvatarImg?.classList.remove('hidden');
+                guestAvatarIcon?.classList.add('hidden');
                 const photoUrl = currentUser.photoURL || 'icon.png';
                 const displayName = currentUser.displayName || currentUser.email?.split('@')[0] || 'Student';
 
@@ -1721,11 +1830,21 @@
                 if (userNameShort) userNameShort.innerText = displayName;
                 if (dropdownUserName) dropdownUserName.innerText = displayName;
                 if (dropdownUserEmail) dropdownUserEmail.innerText = currentUser.email || '';
+
+                dropdownSignedInBlock?.classList.remove('hidden');
+                dropdownGuestBlock?.classList.add('hidden');
+                signoutBlock?.classList.remove('hidden');
             } else {
-                signinBtn?.classList.remove('hidden');
-                userMenu?.classList.add('hidden');
-                userMenu?.classList.remove('flex');
-                closeUserDropdown();
+                userAvatarImg?.classList.add('hidden');
+                guestAvatarIcon?.classList.remove('hidden');
+                if (userNameShort) userNameShort.innerText = 'Guest';
+
+                dropdownSignedInBlock?.classList.add('hidden');
+                dropdownGuestBlock?.classList.remove('hidden');
+                signoutBlock?.classList.add('hidden');
+            }
+            if (typeof updateThemeUI === 'function') {
+                updateThemeUI(getThemePreference ? getThemePreference() : 'system');
             }
         }
 
@@ -2589,7 +2708,7 @@
                             id: `REV_DAY_${r + 1}_MOCK`,
                             grade: '+2',
                             subject: 'All Subjects',
-                            chapterName: `Final Examination Simulation (Day ${r + 1} of ${revisionDaysCount})`,
+                            chapterName: `Final Examination Simulation (Day ${r + 1}/${revisionDaysCount})`,
                             topicTitle: 'Full 3-Hour Model Exam Simulation under timed board exam conditions & self-evaluation',
                             taskType: 'MOCK',
                             isRevision: true,
@@ -2601,7 +2720,7 @@
                             id: `REV_DAY_${r + 1}_PYQ`,
                             grade: '+2',
                             subject: 'All Subjects',
-                            chapterName: `Previous Year Questions (PYQ) Sprint (Day ${r + 1} of ${revisionDaysCount})`,
+                            chapterName: `Previous Year Questions (PYQ) Sprint (Day ${r + 1}/${revisionDaysCount})`,
                             topicTitle: 'High-frequency 3-mark & 5-mark repeated questions from past 5 years DHSE board papers',
                             taskType: 'PYQ',
                             isRevision: true,
@@ -2626,7 +2745,7 @@
                             id: `REV_DAY_${r + 1}_${activeSub.replace(/\s+/g, '_')}`,
                             grade: '+2',
                             subject: activeSub,
-                            chapterName: `Targeted Revision: ${activeSub} (Day ${r + 1} of ${revisionDaysCount})`,
+                            chapterName: `Targeted Revision: ${activeSub} (Day ${r + 1}/${revisionDaysCount})`,
                             topicTitle: topicTitle,
                             taskType: 'REVISION',
                             isRevision: true,
@@ -4473,6 +4592,8 @@
                 } else {
                     document.documentElement.classList.remove('dark');
                 }
+                const metaTheme = document.querySelector('meta[name="theme-color"]');
+                if (metaTheme) metaTheme.setAttribute('content', isDark ? '#080c14' : '#2563eb');
             }
             updateThemeUI(pref);
         }
@@ -4493,12 +4614,22 @@
 
             const modes = ['light', 'dark', 'system'];
             modes.forEach(m => {
+                // Modal buttons
                 const btn = document.getElementById(`theme-btn-${m}`);
                 if (btn) {
                     if (m === pref) {
                         btn.className = 'flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-black transition-all bg-blue-600 text-white shadow-xs';
                     } else {
-                        btn.className = 'flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-semibold transition-all text-slate-600 hover:text-slate-900';
+                        btn.className = 'flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-semibold transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white';
+                    }
+                }
+                // Dropdown menu buttons
+                const menuBtn = document.getElementById(`menu-theme-btn-${m}`);
+                if (menuBtn) {
+                    if (m === pref) {
+                        menuBtn.className = 'py-1.5 px-2 rounded-lg text-center font-black text-xs transition-all flex items-center justify-center gap-1 bg-blue-600 text-white shadow-xs';
+                    } else {
+                        menuBtn.className = 'py-1.5 px-2 rounded-lg text-center font-bold text-xs transition-all flex items-center justify-center gap-1 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white';
                     }
                 }
             });
