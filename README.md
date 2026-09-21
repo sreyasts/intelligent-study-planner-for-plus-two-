@@ -108,6 +108,29 @@ npm run build
 
 ---
 
+## 🚀 Deployment to Firebase Hosting
+
+To build and deploy the latest app version to [https://mission-plustwo.web.app](https://mission-plustwo.web.app):
+
+```powershell
+# 1. Switch to your project directory
+cd d:\GitHub\intelligent-study-planner-for-plus-two-
+
+# 2. Deploy using npm script (automatically builds & deploys)
+npm run deploy
+
+# Alternatively, run the 3 steps manually:
+npm run build
+npx -y firebase-tools@latest deploy --only hosting
+```
+
+Or run the included PowerShell script directly from anywhere:
+```powershell
+.\deploy.ps1
+```
+
+---
+
 ## 🤝 Contributing
 
 Contributions from students, teachers, and developers are welcome!

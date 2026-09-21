@@ -13,7 +13,8 @@
     "test:legacy": "node tests/engine_test.cjs",
     "test:e2e": "playwright test",
     "lint": "eslint src --ext .js",
-    "format": "prettier --write \"src/**/*.{js,json,css,html}\""
+    "format": "prettier --write \"src/**/*.{js,json,css,html}\"",
+    "deploy": "npm run build && npx -y firebase-tools@latest deploy --only hosting"
   },
   "keywords": [
     "kerala",
