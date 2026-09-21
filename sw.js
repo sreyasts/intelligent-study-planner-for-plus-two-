@@ -1,5 +1,5 @@
-// Mission PlusTwo Service Worker v5.5 (Plus Two badges, chapter numbering & Full Chapter X/Y formatting)
-const CACHE_NAME = 'plustwo-mission-v5.5';
+// Mission PlusTwo Service Worker v5.6 (High-contrast light & dark mode theme engine)
+const CACHE_NAME = 'plustwo-mission-v5.6';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

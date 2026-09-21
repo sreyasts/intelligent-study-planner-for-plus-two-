@@ -30,7 +30,15 @@ const context = {
     getElementById: () => null,
     querySelector: () => null,
     querySelectorAll: () => [],
-    createElement: () => ({ setAttribute: () => {}, appendChild: () => {}, style: {} })
+    createElement: () => ({ setAttribute: () => {}, appendChild: () => {}, style: {} }),
+    documentElement: {
+      classList: {
+        _classes: new Set(),
+        add(c) { this._classes.add(c); },
+        remove(c) { this._classes.delete(c); },
+        contains(c) { return this._classes.has(c); }
+      }
+    }
   },
   localStorage: {
     _data: {},
@@ -55,7 +63,11 @@ const exportSnippet = `
   getTaskChapterTitle,
   formatTaskTopicTitle,
   renderTaskGradeBadge,
-  renderTaskPartBadge
+  renderTaskPartBadge,
+  getThemePreference,
+  isDarkModeActive,
+  applyTheme,
+  setThemePreference
 });
 `;
 
@@ -81,7 +93,11 @@ const {
   getTaskChapterTitle,
   formatTaskTopicTitle,
   renderTaskGradeBadge,
-  renderTaskPartBadge
+  renderTaskPartBadge,
+  getThemePreference,
+  isDarkModeActive,
+  applyTheme,
+  setThemePreference
 } = context.window;
 
 let totalChecks = 0;
@@ -565,6 +581,51 @@ assert(nonFinalPartBadge.includes('Part 1/2'), 'Test 7.4: Non-final part has "Pa
 
 const finalPartBadge = renderTaskPartBadge({ part: 2, totalParts: 2 });
 assert(finalPartBadge.includes('Full Chapter (2/2)') && finalPartBadge.includes('bg-emerald-100'), 'Test 7.4: Final part has "Full Chapter (2/2)" badge with emerald styling');
+
+// --- 8. THEME ENGINE & CONTRAST INVARIANTS ---
+console.log('\n--- 8. THEME ENGINE & CONTRAST INVARIANTS ---');
+
+// Test 8.1: Dark Mode Activation
+setThemePreference('dark');
+assert(getThemePreference() === 'dark', 'Test 8.1: Theme preference stored as dark');
+assert(isDarkModeActive() === true, 'Test 8.1: isDarkModeActive returns true for dark mode');
+assert(context.document.documentElement.classList.contains('dark'), 'Test 8.1: documentElement has "dark" class');
+
+// Test 8.2: Light Mode Activation (Full theme switch)
+setThemePreference('light');
+assert(getThemePreference() === 'light', 'Test 8.2: Theme preference stored as light');
+assert(isDarkModeActive() === false, 'Test 8.2: isDarkModeActive returns false for light mode');
+assert(!context.document.documentElement.classList.contains('dark'), 'Test 8.2: documentElement removes "dark" class in light mode');
+
+// Test 8.3: System Mode
+setThemePreference('system');
+assert(getThemePreference() === 'system', 'Test 8.3: Theme preference stored as system');
+
+// Test 8.4: Static Inspection of index.html CSS & Tailwind Configuration
+assert(
+  html.indexOf('<script src="https://cdn.tailwindcss.com"></script>') < html.indexOf("darkMode: 'class'"),
+  'Test 8.4: Tailwind CDN loaded BEFORE tailwind.config darkMode: "class" to enforce class-based dark mode'
+);
+
+assert(
+  html.includes('html:not(.dark)'),
+  'Test 8.4: html:not(.dark) high-contrast light mode CSS rules exist'
+);
+
+assert(
+  html.includes('html:not(.dark) .today-task-card') && html.includes('html.dark .today-task-card'),
+  'Test 8.4: Both light and dark mode have explicit card styling'
+);
+
+assert(
+  html.includes('html:not(.dark) .task-text-content') && html.includes('html.dark .task-text-content'),
+  'Test 8.4: Both light and dark mode have explicit task text styling'
+);
+
+assert(
+  html.includes('html:not(.dark) .text-slate-800') && html.includes('html.dark .text-slate-800'),
+  'Test 8.4: text-slate-800 has explicit contrast overrides for both themes'
+);
 console.log(`TOTAL CHECKS: ${totalChecks}`);
 console.log(`PASSED: ${passedChecks}`);
 console.log(`FAILED: ${failedChecks}`);

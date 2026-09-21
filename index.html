@@ -105,14 +105,7 @@
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="icon" type="image/png" href="icon.png">
 
-    <!-- Tailwind Configuration & Immediate Theme Preload (Prevents FOUC) -->
-    <script id="tailwind-config">
-        tailwind = {
-            config: {
-                darkMode: 'class'
-            }
-        };
-    </script>
+    <!-- Immediate Theme Preload (Prevents FOUC) -->
     <script id="theme-init">
         (function() {
             try {
@@ -129,8 +122,13 @@
         })();
     </script>
 
-    <!-- Tailwind CSS CDN -->
+    <!-- Tailwind CSS CDN & Class-Based Dark Mode Configuration -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: 'class'
+        };
+    </script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
@@ -247,6 +245,204 @@
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
             }
+        }
+
+        /* ==========================================================================
+           HIGH-CONTRAST LIGHT MODE THEME (Crisp, High-Readability Palette)
+           Optimized for day study: pure deep contrast text, soft slate borders, pristine white cards
+           ========================================================================== */
+        html:not(.dark) {
+            color-scheme: light;
+        }
+        html:not(.dark) body {
+            background-color: #f8fafc !important;
+            color: #0f172a !important;
+        }
+        html:not(.dark) header {
+            background-color: rgba(255, 255, 255, 0.95) !important;
+            border-color: #e2e8f0 !important;
+            backdrop-filter: blur(12px) !important;
+            -webkit-backdrop-filter: blur(12px) !important;
+        }
+        html:not(.dark) #mobile-nav {
+            background-color: rgba(255, 255, 255, 0.96) !important;
+            border-color: #e2e8f0 !important;
+            backdrop-filter: blur(12px) !important;
+            -webkit-backdrop-filter: blur(12px) !important;
+        }
+        html:not(.dark) #nav-desktop-tabs {
+            background-color: #f1f5f9 !important;
+            border: 1px solid #e2e8f0 !important;
+            color: #475569 !important;
+        }
+        html:not(.dark) #nav-desktop-tabs button.text-blue-600 {
+            background-color: #ffffff !important;
+            color: #2563eb !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+        }
+        html:not(.dark) #nav-desktop-tabs button:not(.text-blue-600) {
+            color: #64748b !important;
+        }
+        html:not(.dark) #nav-desktop-tabs button:not(.text-blue-600):hover {
+            color: #0f172a !important;
+        }
+        html:not(.dark) #date-display {
+            background-color: #f1f5f9 !important;
+            border-color: #e2e8f0 !important;
+            color: #475569 !important;
+        }
+        /* Surfaces & Elevation in Light Mode */
+        html:not(.dark) .bg-white {
+            background-color: #ffffff !important;
+            border-color: #e2e8f0 !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+            color: #0f172a !important;
+        }
+        html:not(.dark) .bg-slate-50,
+        html:not(.dark) .bg-slate-50\/40,
+        html:not(.dark) .bg-slate-50\/50,
+        html:not(.dark) .bg-slate-50\/70,
+        html:not(.dark) .bg-slate-50\/80 {
+            background-color: #f8fafc !important;
+            border-color: #e2e8f0 !important;
+        }
+        html:not(.dark) .bg-slate-100 {
+            background-color: #f1f5f9 !important;
+            border-color: #e2e8f0 !important;
+        }
+        html:not(.dark) .bg-slate-200,
+        html:not(.dark) .bg-slate-200\/80 {
+            background-color: #e2e8f0 !important;
+            border-color: #cbd5e1 !important;
+        }
+        /* Task Cards in Light Mode */
+        html:not(.dark) .today-task-card {
+            background-color: #ffffff !important;
+            border-color: #e2e8f0 !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        html:not(.dark) .today-task-card:hover {
+            background-color: #ffffff !important;
+            border-color: #cbd5e1 !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+        }
+        html:not(.dark) .today-task-card.task-done {
+            background-color: #f8fafc !important;
+            border-color: #e2e8f0 !important;
+        }
+        html:not(.dark) .task-text-content {
+            color: #0f172a !important;
+        }
+        html:not(.dark) .task-text-content.line-through {
+            color: #94a3b8 !important;
+        }
+        /* Checkbox in Light Mode */
+        html:not(.dark) .task-checkbox {
+            background-color: #ffffff !important;
+            border: 2px solid #cbd5e1 !important;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+        }
+        html:not(.dark) .task-checkbox:hover {
+            border-color: #3b82f6 !important;
+            transform: scale(1.06);
+        }
+        html:not(.dark) .task-checkbox.checked {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+            border-color: #2563eb !important;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35) !important;
+        }
+        /* Typography & Contrast in Light Mode */
+        html:not(.dark) .text-slate-900 { color: #0f172a !important; }
+        html:not(.dark) .text-slate-800 { color: #1e293b !important; }
+        html:not(.dark) .text-slate-700 { color: #334155 !important; }
+        html:not(.dark) .text-slate-600 { color: #475569 !important; }
+        html:not(.dark) .text-slate-500 { color: #64748b !important; }
+        html:not(.dark) .text-slate-400 { color: #94a3b8 !important; }
+        html:not(.dark) .text-slate-300 { color: #cbd5e1 !important; }
+        /* Borders & Dividers in Light Mode */
+        html:not(.dark) .border-slate-100 { border-color: #f1f5f9 !important; }
+        html:not(.dark) .border-slate-200,
+        html:not(.dark) .border-slate-200\/70,
+        html:not(.dark) .border-slate-200\/80,
+        html:not(.dark) .border-slate-200\/90 { border-color: #e2e8f0 !important; }
+        html:not(.dark) .border-slate-300 { border-color: #cbd5e1 !important; }
+        html:not(.dark) .divide-slate-100 > * + * { border-color: #f1f5f9 !important; }
+        html:not(.dark) .divide-slate-200 > * + * { border-color: #e2e8f0 !important; }
+        /* Inputs & Form Controls in Light Mode */
+        html:not(.dark) input[type="text"],
+        html:not(.dark) input[type="date"],
+        html:not(.dark) select,
+        html:not(.dark) textarea {
+            background-color: #ffffff !important;
+            border-color: #cbd5e1 !important;
+            color: #0f172a !important;
+        }
+        html:not(.dark) input:focus,
+        html:not(.dark) select:focus {
+            border-color: #3b82f6 !important;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2) !important;
+        }
+        /* High-Contrast Light Badges */
+        html:not(.dark) .bg-emerald-50,
+        html:not(.dark) .bg-emerald-50\/60 { background-color: #ecfdf5 !important; }
+        html:not(.dark) .bg-blue-50,
+        html:not(.dark) .bg-blue-50\/60,
+        html:not(.dark) .bg-blue-50\/70 { background-color: #eff6ff !important; }
+        html:not(.dark) .bg-amber-50 { background-color: #fffbeb !important; }
+        html:not(.dark) .bg-rose-50 { background-color: #fff1f2 !important; }
+        html:not(.dark) .bg-purple-50 { background-color: #faf5ff !important; }
+        html:not(.dark) .bg-indigo-50 { background-color: #eef2ff !important; }
+        html:not(.dark) .bg-cyan-50 { background-color: #ecfeff !important; }
+        html:not(.dark) .bg-teal-50 { background-color: #f0fdfa !important; }
+        html:not(.dark) .bg-blue-100 { background-color: #dbeafe !important; color: #1e40af !important; }
+        html:not(.dark) .bg-emerald-100 { background-color: #d1fae5 !important; color: #065f46 !important; }
+        html:not(.dark) .bg-amber-100 { background-color: #fef3c7 !important; color: #92400e !important; }
+        html:not(.dark) .bg-purple-100 { background-color: #f3e8ff !important; color: #6b21a8 !important; }
+        html:not(.dark) .bg-rose-100 { background-color: #ffe4e6 !important; color: #9f1239 !important; }
+        html:not(.dark) .text-emerald-700, html:not(.dark) .text-emerald-800 { color: #047857 !important; }
+        html:not(.dark) .text-blue-700, html:not(.dark) .text-blue-800 { color: #1d4ed8 !important; }
+        html:not(.dark) .text-amber-700, html:not(.dark) .text-amber-800 { color: #b45309 !important; }
+        html:not(.dark) .text-purple-700, html:not(.dark) .text-purple-800 { color: #7e22ce !important; }
+        html:not(.dark) .text-rose-700, html:not(.dark) .text-rose-800 { color: #be123c !important; }
+        html:not(.dark) .text-indigo-700, html:not(.dark) .text-indigo-800 { color: #4338ca !important; }
+        html:not(.dark) .text-cyan-700, html:not(.dark) .text-cyan-800 { color: #0e7490 !important; }
+        html:not(.dark) .text-teal-700, html:not(.dark) .text-teal-800 { color: #0f766e !important; }
+        html:not(.dark) .border-emerald-100, html:not(.dark) .border-emerald-200 { border-color: #a7f3d0 !important; }
+        html:not(.dark) .border-blue-100, html:not(.dark) .border-blue-200 { border-color: #bfdbfe !important; }
+        html:not(.dark) .border-amber-100, html:not(.dark) .border-amber-200, html:not(.dark) .border-amber-200\/70 { border-color: #fde68a !important; }
+        /* Modals & Dropdowns in Light Mode */
+        html:not(.dark) #user-dropdown,
+        html:not(.dark) #settings-modal > div,
+        html:not(.dark) #auth-modal > div,
+        html:not(.dark) #regenerate-modal > div {
+            background-color: #ffffff !important;
+            border-color: #e2e8f0 !important;
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.12) !important;
+            color: #0f172a !important;
+        }
+        html:not(.dark) #auth-modal,
+        html:not(.dark) #settings-modal,
+        html:not(.dark) #regenerate-modal {
+            background-color: rgba(15, 23, 42, 0.45) !important;
+            backdrop-filter: blur(8px) !important;
+            -webkit-backdrop-filter: blur(8px) !important;
+        }
+        html:not(.dark) details {
+            background-color: #ffffff !important;
+            border-color: #e2e8f0 !important;
+        }
+        html:not(.dark) details summary {
+            color: #0f172a !important;
+        }
+        html:not(.dark) footer {
+            border-color: #e2e8f0 !important;
+        }
+        html:not(.dark) #toast-content {
+            background-color: rgba(15, 23, 42, 0.95) !important;
+            border-color: #334155 !important;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15) !important;
+            color: #ffffff !important;
         }
 
         /* ==========================================================================
@@ -4672,6 +4868,12 @@
                 localStorage.setItem('plustwo_theme', pref);
             } catch(e) {}
             applyTheme(pref);
+            if (typeof renderApp === 'function') {
+                try { renderApp(); } catch(e) {}
+            }
+            if (typeof updateSettingsUI === 'function') {
+                try { updateSettingsUI(); } catch(e) {}
+            }
             const label = pref === 'dark' ? 'Dark mode enabled' : (pref === 'light' ? 'Light mode enabled' : 'System theme matched');
             const icon = pref === 'dark' ? 'fa-moon text-indigo-400' : (pref === 'light' ? 'fa-sun text-amber-400' : 'fa-desktop text-blue-400');
             showToastMessage(label, icon);
@@ -4917,6 +5119,9 @@
                 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
                     if (getThemePreference() === 'system') {
                         applyTheme('system');
+                        if (typeof renderApp === 'function') {
+                            try { renderApp(); } catch(e) {}
+                        }
                     }
                 });
             } catch(e) {}
