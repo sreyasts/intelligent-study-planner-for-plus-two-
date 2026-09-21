@@ -1,5 +1,5 @@
-// Mission PlusTwo Service Worker v5.2 (Dark mode & customization engine)
-const CACHE_NAME = 'plustwo-mission-v5.2';
+// Mission PlusTwo Service Worker v5.3 (CS stream preset & prominent +1 improvement option)
+const CACHE_NAME = 'plustwo-mission-v5.3';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

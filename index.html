@@ -1861,7 +1861,7 @@
             appState = null;
             selectedCompletedChapters.clear();
             currentView = 'today';
-            selectedStream = 'bio';
+            selectedStream = 'cs';
             activeSetupSubjectTab = 'Physics';
             activeSetupGradeTab = '+2';
 
@@ -2859,6 +2859,7 @@
 
             // 3. Reset in-memory state and re-render setup screen
             appState = null;
+            selectedStream = 'cs';
             selectedCompletedChapters.clear();
             currentView = 'today';
             showToastMessage("Study plan reset. Ready to start fresh!", "fa-rotate text-blue-400");
@@ -2980,7 +2981,7 @@
             };
         }
 
-        let selectedStream = 'bio'; // 'bio' or 'cs'
+        let selectedStream = 'cs'; // default: 'cs' (Computer Science preset)
         let activeSetupSubjectTab = 'Physics';
         let activeSetupGradeTab = '+2'; // '+2' or '+1'
         const selectedCompletedChapters = new Set();
@@ -2999,26 +3000,26 @@
             const cardCs = document.getElementById('stream-card-cs');
             if (cardBio && cardCs) {
                 if (stream === 'bio') {
-                    cardBio.className = 'cursor-pointer p-4 rounded-2xl border-2 border-emerald-600 bg-emerald-50/60 ring-2 ring-emerald-500/20 transition text-left flex flex-col justify-between relative shadow-sm';
+                    cardBio.className = 'cursor-pointer p-3.5 sm:p-4 rounded-2xl border-2 border-emerald-600 bg-emerald-50/60 ring-2 ring-emerald-500/20 transition text-left flex flex-col justify-between relative shadow-sm';
                     const checkBio = cardBio.querySelector('.stream-check');
                     if (checkBio) {
                         checkBio.className = 'w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px] stream-check';
                         checkBio.innerHTML = '<i class="fa-solid fa-check"></i>';
                     }
-                    cardCs.className = 'cursor-pointer p-4 rounded-2xl border-2 border-slate-200 bg-white hover:border-slate-300 transition text-left flex flex-col justify-between';
+                    cardCs.className = 'cursor-pointer p-3.5 sm:p-4 rounded-2xl border-2 border-slate-200 bg-white hover:border-slate-300 transition text-left flex flex-col justify-between relative';
                     const checkCs = cardCs.querySelector('.stream-check');
                     if (checkCs) {
                         checkCs.className = 'w-5 h-5 rounded-full border border-slate-300 flex items-center justify-center stream-check';
                         checkCs.innerHTML = '';
                     }
                 } else {
-                    cardCs.className = 'cursor-pointer p-4 rounded-2xl border-2 border-blue-600 bg-blue-50/60 ring-2 ring-blue-500/20 transition text-left flex flex-col justify-between relative shadow-sm';
+                    cardCs.className = 'cursor-pointer p-3.5 sm:p-4 rounded-2xl border-2 border-blue-600 bg-blue-50/60 ring-2 ring-blue-500/20 transition text-left flex flex-col justify-between relative shadow-sm';
                     const checkCs = cardCs.querySelector('.stream-check');
                     if (checkCs) {
                         checkCs.className = 'w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] stream-check';
                         checkCs.innerHTML = '<i class="fa-solid fa-check"></i>';
                     }
-                    cardBio.className = 'cursor-pointer p-4 rounded-2xl border-2 border-slate-200 bg-white hover:border-slate-300 transition text-left flex flex-col justify-between';
+                    cardBio.className = 'cursor-pointer p-3.5 sm:p-4 rounded-2xl border-2 border-slate-200 bg-white hover:border-slate-300 transition text-left flex flex-col justify-between relative';
                     const checkBio = cardBio.querySelector('.stream-check');
                     if (checkBio) {
                         checkBio.className = 'w-5 h-5 rounded-full border border-slate-300 flex items-center justify-center stream-check';
@@ -3051,7 +3052,7 @@
                 chapsContainer.innerHTML = renderSetupSubjectChapters(activeSetupSubjectTab, activeSetupGradeTab);
             }
 
-            // Re-render Improvement Options in Step 5
+            // Re-render Improvement Options in Step 3
             const impContainer = document.getElementById('improvement-subject-items-container');
             if (impContainer) {
                 impContainer.innerHTML = renderImprovementSubjectItems();
@@ -3085,6 +3086,57 @@
             `).join('');
         }
 
+        function setImprovementToggle(enabled) {
+            const cb = document.getElementById('has-improvement');
+            if (cb) cb.checked = enabled;
+
+            const noCard = document.getElementById('imp-choice-no');
+            const yesCard = document.getElementById('imp-choice-yes');
+            const optionsPanel = document.getElementById('improvement-options');
+
+            if (enabled) {
+                if (yesCard) {
+                    yesCard.className = 'cursor-pointer p-3 sm:p-3.5 rounded-2xl border-2 border-amber-500 bg-amber-50/80 ring-2 ring-amber-400/25 transition text-left flex items-center justify-between shadow-xs';
+                    const check = yesCard.querySelector('.choice-check');
+                    if (check) {
+                        check.innerHTML = '<i class="fa-solid fa-check text-white"></i>';
+                        check.className = 'w-5 h-5 rounded-full bg-amber-600 flex items-center justify-center text-[10px] choice-check';
+                    }
+                }
+                if (noCard) {
+                    noCard.className = 'cursor-pointer p-3 sm:p-3.5 rounded-2xl border-2 border-slate-200 bg-white hover:border-slate-300 transition text-left flex items-center justify-between';
+                    const check = noCard.querySelector('.choice-check');
+                    if (check) {
+                        check.innerHTML = '';
+                        check.className = 'w-5 h-5 rounded-full border border-slate-300 flex items-center justify-center text-[10px] choice-check';
+                    }
+                }
+                if (optionsPanel) {
+                    optionsPanel.classList.remove('hidden');
+                }
+            } else {
+                if (noCard) {
+                    noCard.className = 'cursor-pointer p-3 sm:p-3.5 rounded-2xl border-2 border-slate-700 bg-slate-50 ring-2 ring-slate-400/20 transition text-left flex items-center justify-between shadow-xs';
+                    const check = noCard.querySelector('.choice-check');
+                    if (check) {
+                        check.innerHTML = '<i class="fa-solid fa-check text-white"></i>';
+                        check.className = 'w-5 h-5 rounded-full bg-slate-700 flex items-center justify-center text-[10px] choice-check';
+                    }
+                }
+                if (yesCard) {
+                    yesCard.className = 'cursor-pointer p-3 sm:p-3.5 rounded-2xl border-2 border-slate-200 bg-white hover:border-slate-300 transition text-left flex items-center justify-between';
+                    const check = yesCard.querySelector('.choice-check');
+                    if (check) {
+                        check.innerHTML = '';
+                        check.className = 'w-5 h-5 rounded-full border border-slate-300 flex items-center justify-center text-[10px] choice-check';
+                    }
+                }
+                if (optionsPanel) {
+                    optionsPanel.classList.add('hidden');
+                }
+            }
+        }
+
         function renderImprovementSubjectItems() {
             const defaultDates = {
                 'Physics': '2026-10-12',
@@ -3099,14 +3151,14 @@
                 const subId = sub.replace(/\s+/g, '-').toLowerCase();
                 const defaultDate = defaultDates[sub] || '2026-10-19';
                 return `
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-white rounded-xl border border-slate-200 shadow-sm">
-                        <label class="flex items-center gap-2.5 cursor-pointer text-xs font-bold text-slate-800">
-                            <input type="checkbox" id="imp-${subId}" class="rounded border-slate-300 text-blue-600 w-4 h-4">
-                            <span>${sub} Improvement</span>
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-white rounded-xl border border-amber-200/80 shadow-xs hover:border-amber-300 transition">
+                        <label class="flex items-center gap-2.5 cursor-pointer text-xs font-bold text-slate-800 select-none">
+                            <input type="checkbox" id="imp-${subId}" class="rounded border-slate-300 text-amber-600 focus:ring-amber-500 w-4 h-4">
+                            <span>${sub} (+1 Improvement)</span>
                         </label>
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 self-end sm:self-auto">
                             <span class="text-[11px] text-slate-500 font-medium">Exam Date:</span>
-                            <input type="date" id="input-date-${subId}" value="${defaultDate}" class="border border-slate-300 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-700 bg-slate-50 focus:bg-white focus:border-blue-600 outline-none">
+                            <input type="date" id="input-date-${subId}" value="${defaultDate}" class="border border-slate-300 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-700 bg-slate-50 focus:bg-white focus:border-amber-600 outline-none transition">
                         </div>
                     </div>
                 `;
@@ -3551,29 +3603,11 @@
                                     <span>Select Stream</span>
                                 </label>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    <!-- Option 1: Biology Science -->
-                                    <div id="stream-card-bio" onclick="setStreamSelection('bio')" class="cursor-pointer p-3.5 sm:p-4 rounded-2xl border-2 ${selectedStream === 'bio' ? 'border-emerald-600 bg-emerald-50/60 ring-2 ring-emerald-500/20 shadow-sm' : 'border-slate-200 bg-white hover:border-slate-300'} transition text-left flex flex-col justify-between">
-                                        <div class="flex items-start justify-between">
-                                            <div class="flex items-center gap-2.5">
-                                                <div class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-sm font-bold">
-                                                    <i class="fa-solid fa-seedling"></i>
-                                                </div>
-                                                <div>
-                                                    <h4 class="font-bold text-slate-900 text-sm">Biology Science</h4>
-                                                    <span class="text-[10px] font-semibold text-emerald-700">Bio-Maths / General</span>
-                                                </div>
-                                            </div>
-                                            <span class="w-5 h-5 rounded-full ${selectedStream === 'bio' ? 'bg-emerald-600 text-white' : 'border border-slate-300'} flex items-center justify-center text-[10px] stream-check">
-                                                ${selectedStream === 'bio' ? '<i class="fa-solid fa-check"></i>' : ''}
-                                            </span>
+                                    <!-- Option 1: Computer Science (Preset) -->
+                                    <div id="stream-card-cs" onclick="setStreamSelection('cs')" class="cursor-pointer p-3.5 sm:p-4 rounded-2xl border-2 ${selectedStream === 'cs' ? 'border-blue-600 bg-blue-50/60 ring-2 ring-blue-500/20 shadow-sm' : 'border-slate-200 bg-white hover:border-slate-300'} transition text-left flex flex-col justify-between relative">
+                                        <div class="absolute -top-2.5 right-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-sm uppercase tracking-wider">
+                                            Preset
                                         </div>
-                                        <p class="text-[11px] text-slate-500 mt-2 pt-2 border-t border-slate-100 font-medium">
-                                            Physics • Chemistry • Maths • <strong>Botany & Zoology</strong>
-                                        </p>
-                                    </div>
-
-                                    <!-- Option 2: Computer Science -->
-                                    <div id="stream-card-cs" onclick="setStreamSelection('cs')" class="cursor-pointer p-3.5 sm:p-4 rounded-2xl border-2 ${selectedStream === 'cs' ? 'border-blue-600 bg-blue-50/60 ring-2 ring-blue-500/20 shadow-sm' : 'border-slate-200 bg-white hover:border-slate-300'} transition text-left flex flex-col justify-between">
                                         <div class="flex items-start justify-between">
                                             <div class="flex items-center gap-2.5">
                                                 <div class="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center text-sm font-bold">
@@ -3590,6 +3624,27 @@
                                         </div>
                                         <p class="text-[11px] text-slate-500 mt-2 pt-2 border-t border-slate-100 font-medium">
                                             Physics • Chemistry • Maths • <strong>Computer Science</strong>
+                                        </p>
+                                    </div>
+
+                                    <!-- Option 2: Biology Science -->
+                                    <div id="stream-card-bio" onclick="setStreamSelection('bio')" class="cursor-pointer p-3.5 sm:p-4 rounded-2xl border-2 ${selectedStream === 'bio' ? 'border-emerald-600 bg-emerald-50/60 ring-2 ring-emerald-500/20 shadow-sm' : 'border-slate-200 bg-white hover:border-slate-300'} transition text-left flex flex-col justify-between relative">
+                                        <div class="flex items-start justify-between">
+                                            <div class="flex items-center gap-2.5">
+                                                <div class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-sm font-bold">
+                                                    <i class="fa-solid fa-seedling"></i>
+                                                </div>
+                                                <div>
+                                                    <h4 class="font-bold text-slate-900 text-sm">Biology Science</h4>
+                                                    <span class="text-[10px] font-semibold text-emerald-700">Bio-Maths / General</span>
+                                                </div>
+                                            </div>
+                                            <span class="w-5 h-5 rounded-full ${selectedStream === 'bio' ? 'bg-emerald-600 text-white' : 'border border-slate-300'} flex items-center justify-center text-[10px] stream-check">
+                                                ${selectedStream === 'bio' ? '<i class="fa-solid fa-check"></i>' : ''}
+                                            </span>
+                                        </div>
+                                        <p class="text-[11px] text-slate-500 mt-2 pt-2 border-t border-slate-100 font-medium">
+                                            Physics • Chemistry • Maths • <strong>Botany & Zoology</strong>
                                         </p>
                                     </div>
                                 </div>
@@ -3644,10 +3699,81 @@
                                 </div>
                             </div>
 
-                            <!-- Step 3: Target Completion Deadline -->
+                            <!-- Step 3: Plus One (+1) Improvement Papers -->
+                            <div class="border-2 border-amber-200/90 bg-gradient-to-br from-amber-50/70 via-orange-50/30 to-amber-50/50 rounded-3xl p-4 sm:p-5 shadow-sm transition">
+                                <div class="flex items-center justify-between mb-2.5">
+                                    <label class="text-xs font-extrabold uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                                        <span class="w-5 h-5 rounded-full bg-amber-600 text-white flex items-center justify-center text-[11px] font-black">3</span>
+                                        <span>Plus One (+1) Improvement Papers</span>
+                                    </label>
+                                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-amber-800 bg-amber-200/80 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                        <i class="fa-solid fa-bolt text-amber-600"></i> Important Option
+                                    </span>
+                                </div>
+                                <p class="text-xs text-slate-600 mb-3">
+                                    Are you writing the DHSE <strong>Plus One (+1) Improvement / Supplementary Exam</strong> this year?
+                                </p>
+
+                                <!-- Hidden form checkbox kept in sync for handleInitialSetup() compatibility -->
+                                <input type="checkbox" id="has-improvement" class="hidden">
+
+                                <!-- Prominent Choice Cards -->
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-3">
+                                    <!-- Option A: No Improvement -->
+                                    <div id="imp-choice-no" onclick="setImprovementToggle(false)" class="cursor-pointer p-3 sm:p-3.5 rounded-2xl border-2 border-slate-700 bg-slate-50 ring-2 ring-slate-400/20 transition text-left flex items-center justify-between shadow-xs">
+                                        <div class="flex items-center gap-2.5">
+                                            <div class="w-8 h-8 rounded-xl bg-slate-200 text-slate-700 flex items-center justify-center text-sm font-bold shrink-0">
+                                                <i class="fa-solid fa-graduation-cap"></i>
+                                            </div>
+                                            <div>
+                                                <h4 class="font-bold text-slate-900 text-xs sm:text-sm">No, Plus Two (+2) Only</h4>
+                                                <p class="text-[10px] text-slate-500">I am only preparing for 12th standard</p>
+                                            </div>
+                                        </div>
+                                        <span class="w-5 h-5 rounded-full bg-slate-700 flex items-center justify-center text-[10px] choice-check">
+                                            <i class="fa-solid fa-check text-white"></i>
+                                        </span>
+                                    </div>
+
+                                    <!-- Option B: Yes, Has Improvement Papers -->
+                                    <div id="imp-choice-yes" onclick="setImprovementToggle(true)" class="cursor-pointer p-3 sm:p-3.5 rounded-2xl border-2 border-slate-200 bg-white hover:border-amber-400 hover:bg-amber-50/40 transition text-left flex items-center justify-between">
+                                        <div class="flex items-center gap-2.5">
+                                            <div class="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-sm font-bold shrink-0">
+                                                <i class="fa-solid fa-file-pen"></i>
+                                            </div>
+                                            <div>
+                                                <h4 class="font-bold text-slate-900 text-xs sm:text-sm">Yes, I Have +1 Papers!</h4>
+                                                <p class="text-[10px] text-amber-700 font-semibold">Weave +1 chapters before exam dates</p>
+                                            </div>
+                                        </div>
+                                        <span class="w-5 h-5 rounded-full border border-slate-300 flex items-center justify-center text-[10px] choice-check">
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- Improvement Subjects & Exam Dates Panel (Toggled via setImprovementToggle) -->
+                                <div id="improvement-options" class="hidden p-3 sm:p-4 bg-white rounded-2xl border border-amber-300 shadow-xs space-y-2.5 animate-fade-in-up">
+                                    <div class="flex items-center justify-between border-b border-amber-100 pb-2">
+                                        <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                                            <i class="fa-solid fa-list-check text-amber-600"></i>
+                                            <span>Select Your +1 Improvement Subjects & Exam Dates</span>
+                                        </span>
+                                        <span class="text-[10px] font-semibold text-slate-400">Strictly 2025–26 syllabus</span>
+                                    </div>
+                                    <div id="improvement-subject-items-container" class="space-y-2">
+                                        ${renderImprovementSubjectItems()}
+                                    </div>
+                                    <p class="text-[11px] text-slate-500 pt-1">
+                                        <i class="fa-solid fa-circle-info text-blue-500 mr-1"></i>
+                                        The planner will automatically prioritize these +1 chapters and finish them well in advance of each subject's exam date!
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Step 4: Target Completion Deadline -->
                             <div>
                                 <label class="text-xs font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-2 mb-2">
-                                    <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[11px] font-black">3</span>
+                                    <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[11px] font-black">4</span>
                                     <span>Target Deadline</span>
                                 </label>
 
@@ -3673,11 +3799,11 @@
                                 <div id="deadline-calc-label" class="mt-2 p-2.5 rounded-xl bg-blue-50/70 border border-blue-100 text-xs text-slate-600"></div>
                             </div>
 
-                            <!-- Step 4: Personalize Study Routine -->
+                            <!-- Step 5: Personalize Study Routine -->
                             <div class="bg-gradient-to-b from-indigo-50/50 via-white to-slate-50/50 border-2 border-indigo-100/80 rounded-3xl p-4 sm:p-5 shadow-xs space-y-4">
                                 <div class="flex items-center justify-between">
                                     <label class="text-xs font-extrabold uppercase tracking-wider text-slate-800 flex items-center gap-2">
-                                        <span class="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[11px] font-black">4</span>
+                                        <span class="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[11px] font-black">5</span>
                                         <span>Personalize Your Study Routine</span>
                                     </label>
                                     <span class="text-[10px] font-extrabold uppercase tracking-wider text-indigo-700 bg-indigo-100/80 px-2 py-0.5 rounded-full">
@@ -3685,7 +3811,7 @@
                                     </span>
                                 </div>
 
-                                <!-- 4.1 Subject Confidence Level -->
+                                <!-- 5.1 Subject Confidence Level -->
                                 <div>
                                     <div class="flex items-center justify-between mb-1.5">
                                         <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
@@ -3699,7 +3825,7 @@
                                     </div>
                                 </div>
 
-                                <!-- 4.2 Weekly Study Rhythm -->
+                                <!-- 5.2 Weekly Study Rhythm -->
                                 <div>
                                     <span class="text-xs font-bold text-slate-700 block mb-1.5 flex items-center gap-1.5">
                                         <i class="fa-regular fa-calendar-days text-indigo-600"></i>
@@ -3741,7 +3867,7 @@
                                     </div>
                                 </div>
 
-                                <!-- 4.3 Daily Study Hours Window -->
+                                <!-- 5.3 Daily Study Hours Window -->
                                 <div>
                                     <div class="flex items-center justify-between mb-1.5">
                                         <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
@@ -3772,7 +3898,7 @@
                                 <summary class="p-3.5 sm:p-4 flex items-center justify-between cursor-pointer font-bold text-xs sm:text-sm text-slate-700 hover:bg-slate-100/60 transition list-none select-none">
                                     <div class="flex items-center gap-2.5">
                                         <i class="fa-solid fa-sliders text-blue-600"></i>
-                                        <span>More Options (Skip finished chapters, +1 improvement papers)</span>
+                                        <span>More Options (Skip finished chapters, daily pace)</span>
                                     </div>
                                     <i class="fa-solid fa-chevron-down text-slate-400 text-xs transition duration-200 group-open:rotate-180"></i>
                                 </summary>
@@ -3833,28 +3959,6 @@
                                             <!-- Active Chapter List Container -->
                                             <div id="setup-subject-chapters-list" class="bg-slate-50/50 p-2.5 rounded-xl border border-slate-200/80">
                                                 ${renderSetupSubjectChapters(activeSetupSubjectTab, activeSetupGradeTab)}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Plus One Improvement Section -->
-                                    <div class="border border-slate-200 rounded-xl overflow-hidden bg-slate-50/40">
-                                        <label class="p-3.5 flex items-center justify-between cursor-pointer hover:bg-slate-100/60 transition">
-                                            <div class="flex items-center gap-2.5">
-                                                <input type="checkbox" id="has-improvement" onchange="document.getElementById('improvement-options').classList.toggle('hidden', !this.checked)" class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
-                                                <div>
-                                                    <div class="flex items-center gap-2">
-                                                        <span class="text-xs font-bold text-slate-800">Add Plus One Improvement Papers</span>
-                                                        <span class="text-[9px] font-bold uppercase tracking-wider text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">Optional</span>
-                                                    </div>
-                                                    <span class="text-[11px] text-slate-500 block">Weaves +1 papers into your timetable before their exam dates.</span>
-                                                </div>
-                                            </div>
-                                        </label>
-
-                                        <div id="improvement-options" class="hidden p-3.5 bg-white border-t border-slate-200 space-y-3">
-                                            <div id="improvement-subject-items-container" class="space-y-2">
-                                                ${renderImprovementSubjectItems()}
                                             </div>
                                         </div>
                                     </div>
