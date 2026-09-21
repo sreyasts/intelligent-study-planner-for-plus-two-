@@ -80,8 +80,8 @@ Most students download static PDF timetables from Telegram or HSSLive, try to fo
 
 Help your school and tuition friends ace their higher secondary exams:
 
-- 👉 [**Share on WhatsApp**](https://api.whatsapp.com/send?text=Bro%2C%20found%20a%20lifesaver%20to%20finish%20Plus%20Two%20portions%20before%20exams!%20%F0%9F%94%A5%0ASet%20your%20target%20date%2C%20get%20a%20daily%20study%20plan.%20Miss%20a%20day%3F%20Adjust%20and%20carry%20on.%20(%2B1%20Improvement%20included)%20%F0%9F%91%87%0Ahttps%3A%2F%2Fsreyasts.github.io%2Fintelligent-study-planner-for-plus-two-%2F)
-- 👉 [**Share on Telegram**](https://t.me/share/url?url=https://sreyasts.github.io/intelligent-study-planner-for-plus-two-/&text=%F0%9F%8E%93%20Mission%20PlusTwo%20-%20Intelligent%20Study%20Planner%20for%20Kerala%20DHSE%20%2B2%20%26%20%2B1%20Improvement%20Students!)
+- 👉 [**Share on WhatsApp**](https://api.whatsapp.com/send?text=Mission%20PlusTwo%3A%20Free%20intelligent%20daily%20study%20planner%20for%20Kerala%20DHSE%20Plus%20Two%20%28%2B2%29%20%26%20%2B1%20Improvement%20students%20with%20built-in%20revision%20buffer.%20Set%20your%20target%20date%20and%20generate%20your%20daily%20study%20plan%3A%0Ahttps%3A%2F%2Fsreyasts.github.io%2Fintelligent-study-planner-for-plus-two-%2F)
+- 👉 [**Share on Telegram**](https://t.me/share/url?url=https%3A%2F%2Fsreyasts.github.io%2Fintelligent-study-planner-for-plus-two-%2F&text=%F0%9F%8E%93%20Mission%20PlusTwo%20%E2%80%94%20Free%20intelligent%20daily%20study%20planner%20for%20Kerala%20DHSE%20Plus%20Two%20%28%2B2%29%20%26%20%2B1%20Improvement%20students%20with%20built-in%20revision%20buffer!)
 
 ---
 

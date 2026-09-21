@@ -1,5 +1,5 @@
-// Mission PlusTwo Service Worker v4.3 (Prominent Google Auth Modal & Guest Continuity)
-const CACHE_NAME = 'plustwo-mission-v4.3';
+// Mission PlusTwo Service Worker v4.4 (English Share Links Release)
+const CACHE_NAME = 'plustwo-mission-v4.4';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

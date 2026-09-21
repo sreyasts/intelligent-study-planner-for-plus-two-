@@ -2229,7 +2229,7 @@
 
         function shareApp() {
             const shareTitle = 'Mission PlusTwo — Kerala DHSE Study Planner';
-            const shareText = 'Mission PlusTwo: Free intelligent daily study planner for Kerala DHSE Plus Two and Plus One Improvement with built-in revision buffer. Plan your syllabus here:';
+            const shareText = 'Mission PlusTwo: Free intelligent daily study planner for Kerala DHSE Plus Two (+2) & Plus One Improvement students with built-in revision buffer. Plan your syllabus here:';
             const shareUrl = 'https://sreyasts.github.io/intelligent-study-planner-for-plus-two-/';
 
             if (navigator.share) {
@@ -2241,9 +2241,22 @@
                     showToastMessage("Thanks for sharing!", "fa-circle-check text-emerald-400");
                 }).catch(() => {});
             } else {
-                const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + '\n' + shareUrl)}`;
-                window.open(whatsappUrl, '_blank');
+                shareOnWhatsApp();
             }
+        }
+
+        function shareOnWhatsApp() {
+            const shareText = 'Mission PlusTwo: Free intelligent daily study planner for Kerala DHSE Plus Two (+2) & Plus One Improvement students with built-in revision buffer. Set your target date and generate your personalized daily study plan:';
+            const shareUrl = 'https://sreyasts.github.io/intelligent-study-planner-for-plus-two-/';
+            const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + '\n' + shareUrl)}`;
+            window.open(whatsappUrl, '_blank');
+        }
+
+        function shareOnTelegram() {
+            const shareText = '🎓 Mission PlusTwo — Free intelligent daily study planner for Kerala DHSE Plus Two (+2) & Plus One Improvement students. Generate your personalized study timetable with built-in revision buffer:';
+            const shareUrl = 'https://sreyasts.github.io/intelligent-study-planner-for-plus-two-/';
+            const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
+            window.open(telegramUrl, '_blank');
         }
 
         // Safe aliases in case any caller references them
@@ -3388,10 +3401,14 @@
                                 <p class="text-[11px] text-slate-500 mt-0.5">Help friends stay on track for Higher Secondary & Improvement exams.</p>
                             </div>
                         </div>
-                        <div class="flex items-center gap-2 w-full sm:w-auto shrink-0">
-                            <button onclick="shareApp()" class="flex-1 sm:flex-initial bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2 px-3.5 rounded-xl shadow-sm transition flex items-center justify-center gap-1.5 active:scale-95" title="Share with Classmates">
-                                <i class="fa-solid fa-arrow-up-from-bracket text-xs"></i>
-                                <span>Share Link</span>
+                        <div class="flex items-center gap-2 w-full sm:w-auto shrink-0 flex-wrap sm:flex-nowrap">
+                            <button onclick="shareOnWhatsApp()" class="flex-1 sm:flex-initial bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2 px-3.5 rounded-xl shadow-sm transition flex items-center justify-center gap-1.5 active:scale-95" title="Share on WhatsApp">
+                                <i class="fa-brands fa-whatsapp text-sm"></i>
+                                <span>WhatsApp</span>
+                            </button>
+                            <button onclick="shareOnTelegram()" class="flex-1 sm:flex-initial bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs py-2 px-3.5 rounded-xl shadow-sm transition flex items-center justify-center gap-1.5 active:scale-95" title="Share on Telegram">
+                                <i class="fa-brands fa-telegram text-sm"></i>
+                                <span>Telegram</span>
                             </button>
                             <a href="https://github.com/sreyasts/intelligent-study-planner-for-plus-two-" target="_blank" rel="noopener noreferrer" class="flex-1 sm:flex-initial bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs py-2 px-3 rounded-xl border border-slate-200 transition flex items-center justify-center gap-1.5 active:scale-95" title="Star on GitHub">
                                 <svg class="w-3.5 h-3.5 fill-slate-700" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
