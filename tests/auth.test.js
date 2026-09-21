@@ -2,17 +2,15 @@ import { describe, it, expect } from 'vitest';
 import fs from 'fs';
 import path from 'path';
 
-describe('Authentication & Service Worker Invariants', () => {
+describe('Authentication & Cross-Domain Unification Invariants', () => {
   const appJsPath = path.resolve(__dirname, '../src/app.js');
   const swJsPath = path.resolve(__dirname, '../sw.js');
   const publicSwJsPath = path.resolve(__dirname, '../public/sw.js');
+  const indexPath = path.resolve(__dirname, '../index.html');
 
   it('declares authModalTimer at module scope in src/app.js', () => {
     const appJsContent = fs.readFileSync(appJsPath, 'utf8');
-    // Ensure let authModalTimer = null is explicitly declared
     expect(appJsContent).toMatch(/let\s+authModalTimer\s*=\s*null;/);
-
-    // Ensure authModalTimer is cleared properly
     expect(appJsContent).toContain('clearTimeout(authModalTimer)');
   });
 
@@ -26,6 +24,40 @@ describe('Authentication & Service Worker Invariants', () => {
     expect(signInBlock).toMatch(/const\s+headerBtn\s*=\s*document\.getElementById/);
     expect(signInBlock).toMatch(/const\s+originalModalBtnHTML/);
     expect(signInBlock).toMatch(/const\s+originalHeaderBtnHTML/);
+  });
+
+  it('does not force prompt: select_account so device Google accounts authenticate smoothly', () => {
+    const appJsContent = fs.readFileSync(appJsPath, 'utf8');
+    const signInIdx = appJsContent.indexOf('async function signInWithGoogle(');
+    const signInBlock = appJsContent.slice(signInIdx, signInIdx + 1500);
+    // Should NOT force select_account prompt
+    expect(signInBlock).not.toContain("prompt: 'select_account'");
+    expect(signInBlock).not.toContain('prompt: "select_account"');
+  });
+
+  it('tracks mpt_was_logged_in and cleans up completely on explicit signOutUser()', () => {
+    const appJsContent = fs.readFileSync(appJsPath, 'utf8');
+    const signOutIdx = appJsContent.indexOf('async function signOutUser(');
+    expect(signOutIdx).toBeGreaterThan(0);
+
+    const signOutBlock = appJsContent.slice(signOutIdx, signOutIdx + 1500);
+    expect(signOutBlock).toContain("localStorage.removeItem('mpt_was_logged_in')");
+    expect(signOutBlock).toContain("sessionStorage.removeItem('mpt_auto_auth_requested')");
+  });
+
+  it('includes Canonical Domain Bridge in index.html for seamless cross-domain unification', () => {
+    const indexContent = fs.readFileSync(indexPath, 'utf8');
+    expect(indexContent).toContain('id="canonical-domain-bridge"');
+    expect(indexContent).toContain("CANONICAL_HOST = 'mission-plustwo.web.app'");
+    expect(indexContent).toContain('mpt_sync=');
+    expect(indexContent).toContain('window.location.replace(');
+  });
+
+  it('contains processDomainBridgePayload in src/app.js to deserialize bridged cross-domain state', () => {
+    const appJsContent = fs.readFileSync(appJsPath, 'utf8');
+    expect(appJsContent).toContain('function processDomainBridgePayload()');
+    expect(appJsContent).toContain('mpt_sync=');
+    expect(appJsContent).toContain('window.history.replaceState');
   });
 
   it('keeps root sw.js and public/sw.js cache versions in lockstep', () => {

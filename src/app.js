@@ -702,6 +702,8 @@ function loadInitialState() {
             // 3. Clear local storage so this device starts completely fresh
             localStorage.removeItem('plusTwoMissionState_v2');
             localStorage.removeItem('plusTwoPlanState');
+            localStorage.removeItem('mpt_was_logged_in');
+            sessionStorage.removeItem('mpt_auto_auth_requested');
 
             // 4. Reset in-memory state variables to initial setup defaults
             currentUser = null;

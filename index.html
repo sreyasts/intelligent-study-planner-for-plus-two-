@@ -4,6 +4,42 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
+    <!-- Canonical Domain Bridge: Unify multiple domains into one seamless application -->
+    <script id="canonical-domain-bridge">
+    (function() {
+        try {
+            var CANONICAL_HOST = 'mission-plustwo.web.app';
+            var currentHost = window.location.hostname;
+            var isLocal = currentHost === 'localhost' || currentHost === '127.0.0.1' || currentHost.startsWith('192.168.');
+            if (!isLocal && currentHost !== CANONICAL_HOST && currentHost.includes('github.io')) {
+                var syncPayload = '';
+                var v2 = localStorage.getItem('plusTwoMissionState_v2');
+                var v1 = localStorage.getItem('plusTwoPlanState');
+                var theme = localStorage.getItem('plustwo_theme');
+                var lang = localStorage.getItem('plustwo_lang');
+                var wasLoggedIn = localStorage.getItem('mpt_was_logged_in') || (v2 && v2.includes('"userEmail"'));
+
+                if (v2 || v1 || theme || lang || wasLoggedIn) {
+                    syncPayload = encodeURIComponent(JSON.stringify({
+                        v2: v2 ? JSON.parse(v2) : null,
+                        v1: v1 ? JSON.parse(v1) : null,
+                        theme: theme || null,
+                        lang: lang || null,
+                        autoAuth: !!wasLoggedIn
+                    }));
+                }
+
+                var cleanPath = window.location.pathname.replace(/^\/intelligent-study-planner-for-plus-two-?/, '');
+                if (!cleanPath || cleanPath === '') cleanPath = '/';
+                var target = 'https://' + CANONICAL_HOST + cleanPath + window.location.search + (syncPayload ? '#mpt_sync=' + syncPayload : window.location.hash);
+                window.location.replace(target);
+            }
+        } catch(e) {
+            console.warn('Domain bridge forward note:', e);
+        }
+    })();
+    </script>
+    
     <!-- Primary Meta Tags -->
     <title>Mission PlusTwo</title>
     <meta name="title" content="Mission PlusTwo">

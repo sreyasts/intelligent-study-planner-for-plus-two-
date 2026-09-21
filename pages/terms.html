@@ -3,6 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script id="canonical-domain-bridge">
+    (function() {
+        try {
+            var CANONICAL_HOST = 'mission-plustwo.web.app';
+            var currentHost = window.location.hostname;
+            var isLocal = currentHost === 'localhost' || currentHost === '127.0.0.1' || currentHost.startsWith('192.168.');
+            if (!isLocal && currentHost !== CANONICAL_HOST && currentHost.includes('github.io')) {
+                var cleanPath = window.location.pathname.replace(/^\/intelligent-study-planner-for-plus-two-?/, '');
+                if (!cleanPath || cleanPath === '') cleanPath = '/';
+                var target = 'https://' + CANONICAL_HOST + cleanPath + window.location.search + window.location.hash;
+                window.location.replace(target);
+            }
+        } catch(e) {}
+    })();
+    </script>
     <title>Terms of Service | Mission PlusTwo</title>
     <meta name="description" content="Terms of Service for Mission PlusTwo - Free Kerala DHSE Study Planner.">
     <link rel="icon" type="image/png" href="../icon-192.png">
