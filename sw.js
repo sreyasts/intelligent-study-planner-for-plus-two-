@@ -1,5 +1,5 @@
-// Mission PlusTwo Service Worker v5.0 (Direct manual sign-in without modal interception)
-const CACHE_NAME = 'plustwo-mission-v5.0';
+// Mission PlusTwo Service Worker v5.1 (Personalized study planning engine)
+const CACHE_NAME = 'plustwo-mission-v5.1';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

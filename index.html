@@ -1763,8 +1763,8 @@
                         issues.push(`Chronology error: Day numbering broken.`);
                     }
                 }
-                if (!day.isRevisionDay && (!day.tasks || day.tasks.length === 0)) {
-                    const hasFutureSyllabusTasks = planDays.slice(i + 1).some(d => !d.isRevisionDay && d.tasks && d.tasks.some(t => !t.isRevision));
+                if (!day.isRevisionDay && !day.isRestDay && (!day.tasks || day.tasks.length === 0)) {
+                    const hasFutureSyllabusTasks = planDays.slice(i + 1).some(d => !d.isRevisionDay && !d.isRestDay && d.tasks && d.tasks.some(t => !t.isRevision));
                     if (hasFutureSyllabusTasks) {
                         emptyWorkDays++;
                         issues.push(`Blank study day on Day ${day.dayNumber}.`);
@@ -1825,30 +1825,54 @@
 
             const syllabusStudyDays = Math.max(1, totalDaysCount - revisionDaysCount);
 
+            // Personalization configuration extraction
+            const pers = capacityOptions.personalization || capacityOptions || {};
+            const subjectWeights = pers.subjectWeights || {};
+            const weeklyRhythm = pers.weeklyRhythm || 'balanced'; // 'balanced', 'weekend_booster', 'rest_day'
+            const restDayOfWeek = (pers.restDayOfWeek !== undefined && pers.restDayOfWeek !== null && pers.restDayOfWeek !== '')
+                ? parseInt(pers.restDayOfWeek)
+                : null;
+            const dailyHours = pers.dailyHours ? parseFloat(pers.dailyHours) : null;
+            const intensity = capacityOptions.intensity || pers.intensity || (appState && appState.studyIntensity) || 'balanced';
+
             const planDays = [];
             for (let i = 0; i < totalDaysCount; i++) {
                 let d = new Date(startDateStr);
                 d.setDate(d.getDate() + i);
                 const isRevisionDay = (i >= syllabusStudyDays);
+                const dayOfWeek = d.getDay();
+                const isRestDay = (!isRevisionDay && weeklyRhythm === 'rest_day' && restDayOfWeek !== null && dayOfWeek === restDayOfWeek);
                 planDays.push({
                     dayNumber: i + 1,
                     date: getLocalDateStr(d),
                     isRevisionDay: isRevisionDay,
-                    dayOfWeek: d.getDay(),
+                    isRestDay: isRestDay,
+                    dayOfWeek: dayOfWeek,
                     tasks: []
                 });
             }
 
+            // In short deadlines, avoid turning every day into a rest day
+            const activeStudyDaysCount = planDays.slice(0, syllabusStudyDays).filter(d => !d.isRestDay).length;
+            if (activeStudyDaysCount === 0) {
+                planDays.forEach(d => { if (!d.isRevisionDay) d.isRestDay = false; });
+            }
+
             // Workload & Capacity Calculation
-            const intensity = capacityOptions.intensity || (appState && appState.studyIntensity) || 'balanced';
-            const baseWeekdayCapacity = capacityOptions.weekdayDailyTasks || (intensity === 'light' ? 1.5 : intensity === 'intense' ? 3.5 : 2.5);
-            const baseWeekendCapacity = capacityOptions.weekendDailyTasks || (intensity === 'light' ? 2 : intensity === 'intense' ? 4.5 : 3.5);
+            const baseWeekdayCapacity = capacityOptions.weekdayDailyTasks || (dailyHours ? Math.max(1.5, dailyHours * 0.7) : (intensity === 'light' ? 1.5 : intensity === 'intense' ? 3.5 : 2.5));
+            const baseWeekendCapacity = capacityOptions.weekendDailyTasks || (dailyHours ? Math.max(2, dailyHours * 0.9) : (intensity === 'light' ? 2 : intensity === 'intense' ? 4.5 : 3.5));
 
             let totalStandardCapacity = 0;
             for (let i = 0; i < syllabusStudyDays; i++) {
-                const dow = planDays[i].dayOfWeek;
+                const day = planDays[i];
+                if (day.isRestDay) continue;
+                const dow = day.dayOfWeek;
                 const isWeekend = (dow === 0 || dow === 6);
-                totalStandardCapacity += isWeekend ? baseWeekendCapacity : baseWeekdayCapacity;
+                let dayCap = isWeekend ? baseWeekendCapacity : baseWeekdayCapacity;
+                if (weeklyRhythm === 'weekend_booster') {
+                    dayCap = isWeekend ? (dayCap * 1.4) : (dayCap * 0.85);
+                }
+                totalStandardCapacity += dayCap;
             }
 
             const totalTasksCount = applicableTasks.length;
@@ -1865,7 +1889,14 @@
                 overloadFactor: Number(overloadFactor.toFixed(2)),
                 warningMessage: isInfeasible
                     ? `The current deadline requires more study capacity (${totalTasksCount} units) than standard availability (~${Math.round(totalStandardCapacity)} units). The plan prioritizes the nearest exam and preserves the final revision buffer.`
-                    : null
+                    : null,
+                personalization: {
+                    weeklyRhythm: weeklyRhythm,
+                    restDayOfWeek: restDayOfWeek,
+                    hasRestDays: planDays.some(d => d.isRestDay),
+                    focusSubjects: streamSubjects.filter(s => (subjectWeights[s] || 1.0) >= 1.3),
+                    dailyHours: dailyHours
+                }
             };
 
             // Canonical Sorting: Grade -> Subject -> ChapNumber -> Part
@@ -1887,18 +1918,28 @@
 
                     const daysUntilExam = calculateDaysBetween(startDateStr, cfg.examDate);
                     const latestStudyDay = Math.max(0, Math.min(daysUntilExam > 1 ? daysUntilExam - 2 : 0, syllabusStudyDays - 1));
-                    const availableImpDaysCount = latestStudyDay + 1;
+                    
+                    let availableDays = [];
+                    for (let d = 0; d <= latestStudyDay; d++) {
+                        if (!planDays[d].isRestDay) availableDays.push(d);
+                    }
+                    if (availableDays.length === 0) {
+                        for (let d = 0; d <= latestStudyDay; d++) availableDays.push(d);
+                    }
 
                     const partsCount = subTasks.length;
+                    const isFocus = (subjectWeights[cfg.subject] || 1.0) >= 1.3;
+
                     subTasks.forEach((task, tIdx) => {
                         let targetDayIndex;
-                        if (availableImpDaysCount <= 1) {
-                            targetDayIndex = 0;
+                        if (availableDays.length <= 1) {
+                            targetDayIndex = availableDays[0] || 0;
                         } else {
-                            targetDayIndex = Math.min(
-                                latestStudyDay,
-                                Math.floor((tIdx / partsCount) * availableImpDaysCount)
+                            const stepIdx = Math.min(
+                                availableDays.length - 1,
+                                Math.floor((tIdx / partsCount) * availableDays.length)
                             );
+                            targetDayIndex = availableDays[stepIdx];
                         }
 
                         if (tIdx > 0) {
@@ -1912,7 +1953,8 @@
                         planDays[targetDayIndex].tasks.push({
                             ...task,
                             completed: false,
-                            isImprovement: true
+                            isImprovement: true,
+                            isFocusSubject: isFocus
                         });
                     });
                 });
@@ -1954,18 +1996,39 @@
                 };
             });
 
+            // Compute day capacity weights for Plus Two distribution
+            let totalActiveWeight = 0;
+            const dayCapacityWeights = [];
+            for (let dayIndex = 0; dayIndex < syllabusStudyDays; dayIndex++) {
+                const day = planDays[dayIndex];
+                let w = 1.0;
+                if (day.isRestDay) {
+                    w = 0.0;
+                } else if (weeklyRhythm === 'weekend_booster') {
+                    const isWeekend = (day.dayOfWeek === 0 || day.dayOfWeek === 6);
+                    w = isWeekend ? 1.6 : 0.8;
+                }
+                dayCapacityWeights.push(w);
+                totalActiveWeight += w;
+            }
+            if (totalActiveWeight <= 0) totalActiveWeight = 1.0;
+
             const remainingP2TasksCount = p2Tasks.length;
-            let p2DailyTarget = remainingP2TasksCount / syllabusStudyDays;
             let p2Accumulator = 0;
-            let subjectTurnIndex = 0;
 
             for (let dayIndex = 0; dayIndex < syllabusStudyDays; dayIndex++) {
                 const day = planDays[dayIndex];
-                p2Accumulator += p2DailyTarget;
+                if (day.isRestDay) {
+                    continue; // Zero tasks on scheduled rest day
+                }
+
+                const dayWeightRatio = dayCapacityWeights[dayIndex] / totalActiveWeight;
+                p2Accumulator += (remainingP2TasksCount * dayWeightRatio);
                 let p2TasksToScheduleToday = Math.floor(p2Accumulator);
                 p2Accumulator -= p2TasksToScheduleToday;
 
-                if (dayIndex === syllabusStudyDays - 1) {
+                const isLastActiveDay = !planDays.slice(dayIndex + 1, syllabusStudyDays).some(d => !d.isRestDay);
+                if (isLastActiveDay) {
                     let totalUnscheduledP2 = 0;
                     streamSubjects.forEach(s => {
                         const state = subjectState[s];
@@ -1982,10 +2045,33 @@
                 let subjectAttempts = 0;
                 const subjectsStudiedToday = new Set();
 
-                while (scheduledTodayCount < p2TasksToScheduleToday && subjectAttempts < (streamSubjects.length * 2)) {
-                    const candidateSubject = streamSubjects[subjectTurnIndex];
-                    subjectTurnIndex = (subjectTurnIndex + 1) % streamSubjects.length;
+                while (scheduledTodayCount < p2TasksToScheduleToday && subjectAttempts < (streamSubjects.length * 3)) {
                     subjectAttempts++;
+
+                    const availableSubjects = streamSubjects.filter(s => {
+                        const state = subjectState[s];
+                        const chapters = subjectChapterMap[s];
+                        return state.chapterIndex < chapters.length;
+                    });
+                    if (availableSubjects.length === 0) break;
+
+                    let pool = availableSubjects.filter(s => !subjectsStudiedToday.has(s));
+                    if (pool.length === 0) pool = availableSubjects;
+
+                    let candidateSubject = pool[0];
+                    let bestScore = -Infinity;
+
+                    pool.forEach(s => {
+                        const w = subjectWeights[s] || 1.0;
+                        const st = subjectState[s];
+                        const inProgBonus = st.partIndex > 0 ? 1.8 : 0.0;
+                        const recencyGap = (st.lastScheduledDay === -1) ? 4 : (dayIndex - st.lastScheduledDay);
+                        const score = (w * 2.2) + inProgBonus + (recencyGap * 0.5);
+                        if (score > bestScore) {
+                            bestScore = score;
+                            candidateSubject = s;
+                        }
+                    });
 
                     const state = subjectState[candidateSubject];
                     const chapters = subjectChapterMap[candidateSubject];
@@ -1999,14 +2085,12 @@
                         continue;
                     }
 
-                    const alreadyStudiedThisSubjectToday = subjectsStudiedToday.has(candidateSubject);
-                    if (alreadyStudiedThisSubjectToday && subjectsStudiedToday.size < streamSubjects.filter(s => subjectState[s].chapterIndex < subjectChapterMap[s].length).length) {
-                        continue;
-                    }
+                    const isFocus = (subjectWeights[candidateSubject] || 1.0) >= 1.3;
 
                     day.tasks.push({
                         ...nextPart,
-                        completed: false
+                        completed: false,
+                        isFocusSubject: isFocus
                     });
 
                     subjectsStudiedToday.add(candidateSubject);
@@ -2023,18 +2107,20 @@
                 }
             }
 
-            // Fallback for any leftover tasks
+            // Fallback for any leftover tasks (placed on last active syllabus study day)
+            const fallbackDayIdx = planDays.slice(0, syllabusStudyDays).map((d, i) => (!d.isRestDay ? i : -1)).filter(i => i !== -1).pop() ?? (syllabusStudyDays - 1);
             streamSubjects.forEach(s => {
                 const state = subjectState[s];
                 const chapters = subjectChapterMap[s];
+                const isFocus = (subjectWeights[s] || 1.0) >= 1.3;
                 while (state.chapterIndex < chapters.length) {
                     const currentChapter = chapters[state.chapterIndex];
                     while (state.partIndex < currentChapter.parts.length) {
                         const task = currentChapter.parts[state.partIndex];
-                        const targetDay = Math.min(syllabusStudyDays - 1, planDays.length - 1);
-                        planDays[targetDay].tasks.push({
+                        planDays[fallbackDayIdx].tasks.push({
                             ...task,
-                            completed: false
+                            completed: false,
+                            isFocusSubject: isFocus
                         });
                         state.partIndex++;
                     }
@@ -2109,6 +2195,7 @@
                             topicTitle: topicTitle,
                             taskType: 'REVISION',
                             isRevision: true,
+                            isFocusSubject: (subjectWeights[activeSub] || 1.0) >= 1.3,
                             completed: false,
                             term: 3
                         });
@@ -2342,6 +2429,120 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
+        let setupPersonalization = {
+            subjectConfidence: {}, // e.g. { 'Physics': 'focus' }
+            weeklyRhythm: 'balanced', // 'balanced' | 'weekend_booster' | 'rest_day'
+            restDayOfWeek: 0, // 0 = Sunday, 5 = Friday
+            dailyHours: 3.5
+        };
+
+        function setSubjectConfidence(sub, level) {
+            setupPersonalization.subjectConfidence[sub] = level;
+            const subSafe = sub.replace(/\s+/g, '-');
+            ['focus', 'standard', 'strong'].forEach(lvl => {
+                const btn = document.getElementById(`conf-btn-${subSafe}-${lvl}`);
+                if (btn) {
+                    if (lvl === level) {
+                        if (lvl === 'focus') {
+                            btn.className = 'py-1 px-2 text-[11px] font-black rounded-lg bg-rose-600 text-white shadow-xs transition';
+                        } else if (lvl === 'strong') {
+                            btn.className = 'py-1 px-2 text-[11px] font-black rounded-lg bg-emerald-600 text-white shadow-xs transition';
+                        } else {
+                            btn.className = 'py-1 px-2 text-[11px] font-black rounded-lg bg-blue-600 text-white shadow-xs transition';
+                        }
+                    } else {
+                        btn.className = 'py-1 px-2 text-[11px] font-semibold rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition';
+                    }
+                }
+            });
+            // Also re-render rows to update priority tag
+            const container = document.getElementById('personalization-subjects-container');
+            if (container) {
+                container.innerHTML = renderPersonalizationSubjectRows();
+            }
+        }
+
+        function renderPersonalizationSubjectRows() {
+            const subs = getStreamSubjects(selectedStream);
+            return subs.map(sub => {
+                const currentConf = setupPersonalization.subjectConfidence[sub] || 'standard';
+                const subSafe = sub.replace(/\s+/g, '-');
+                return `
+                    <div class="flex flex-col xs:flex-row xs:items-center justify-between gap-1.5 p-2.5 bg-white rounded-xl border border-slate-200/80 shadow-xs">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold text-slate-800">${sub}</span>
+                            ${currentConf === 'focus' ? '<span class="text-[9px] font-extrabold uppercase tracking-wider text-rose-700 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200/60">High Priority</span>' : (currentConf === 'strong' ? '<span class="text-[9px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200/60">Fast Paced</span>' : '')}
+                        </div>
+                        <div class="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-200/60 self-start xs:self-auto">
+                            <button type="button" id="conf-btn-${subSafe}-focus" onclick="setSubjectConfidence('${sub}', 'focus')" class="py-1 px-2 text-[11px] ${currentConf === 'focus' ? 'font-black bg-rose-600 text-white shadow-xs' : 'font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200'} rounded-lg transition" title="Needs extra practice & prioritized in daily rotation">
+                                🎯 Focus
+                            </button>
+                            <button type="button" id="conf-btn-${subSafe}-standard" onclick="setSubjectConfidence('${sub}', 'standard')" class="py-1 px-2 text-[11px] ${currentConf === 'standard' ? 'font-black bg-blue-600 text-white shadow-xs' : 'font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200'} rounded-lg transition" title="Standard balanced study pace">
+                                ⚡ Normal
+                            </button>
+                            <button type="button" id="conf-btn-${subSafe}-strong" onclick="setSubjectConfidence('${sub}', 'strong')" class="py-1 px-2 text-[11px] ${currentConf === 'strong' ? 'font-black bg-emerald-600 text-white shadow-xs' : 'font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200'} rounded-lg transition" title="Confident in concepts & spaced out lighter frequency">
+                                🌟 Strong
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function setWeeklyRhythmSelection(rhythm, restDay = null) {
+            setupPersonalization.weeklyRhythm = rhythm;
+            if (restDay !== null) setupPersonalization.restDayOfWeek = restDay;
+
+            const cards = [
+                { id: 'rhythm-card-balanced', match: rhythm === 'balanced' },
+                { id: 'rhythm-card-weekend', match: rhythm === 'weekend_booster' },
+                { id: 'rhythm-card-sunday', match: rhythm === 'rest_day' && setupPersonalization.restDayOfWeek === 0 },
+                { id: 'rhythm-card-friday', match: rhythm === 'rest_day' && setupPersonalization.restDayOfWeek === 5 }
+            ];
+
+            cards.forEach(c => {
+                const el = document.getElementById(c.id);
+                if (el) {
+                    if (c.match) {
+                        el.className = 'cursor-pointer p-3 rounded-2xl border-2 border-blue-600 bg-blue-50/70 ring-2 ring-blue-500/20 transition text-left flex flex-col justify-between relative shadow-xs';
+                    } else {
+                        el.className = 'cursor-pointer p-3 rounded-2xl border-2 border-slate-200 bg-white hover:border-slate-300 transition text-left flex flex-col justify-between';
+                    }
+                }
+            });
+        }
+
+        function setDailyHoursSelection(hrs) {
+            setupPersonalization.dailyHours = hrs;
+            [2, 3.5, 5].forEach(h => {
+                const btn = document.getElementById(`hours-chip-${String(h).replace('.', '_')}`);
+                if (btn) {
+                    if (h === hrs) {
+                        btn.className = 'flex-1 py-2 px-3 text-xs font-black rounded-xl bg-blue-600 text-white shadow-sm transition flex flex-col items-center';
+                    } else {
+                        btn.className = 'flex-1 py-2 px-3 text-xs font-semibold rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition flex flex-col items-center';
+                    }
+                }
+            });
+        }
+
+        function getPersonalizationConfig() {
+            const weights = {};
+            const subs = getStreamSubjects(selectedStream);
+            subs.forEach(s => {
+                const conf = setupPersonalization.subjectConfidence[s] || 'standard';
+                weights[s] = (conf === 'focus') ? 1.5 : (conf === 'strong' ? 0.7 : 1.0);
+            });
+
+            return {
+                subjectWeights: weights,
+                subjectConfidence: { ...setupPersonalization.subjectConfidence },
+                weeklyRhythm: setupPersonalization.weeklyRhythm || 'balanced',
+                restDayOfWeek: (setupPersonalization.weeklyRhythm === 'rest_day') ? (setupPersonalization.restDayOfWeek ?? 0) : null,
+                dailyHours: setupPersonalization.dailyHours || 3.5
+            };
+        }
+
         let selectedStream = 'bio'; // 'bio' or 'cs'
         let activeSetupSubjectTab = 'Physics';
         let activeSetupGradeTab = '+2'; // '+2' or '+1'
@@ -2393,6 +2594,12 @@
             const validSubs = getStreamSubjects(stream);
             if (!validSubs.includes(activeSetupSubjectTab)) {
                 activeSetupSubjectTab = 'Physics';
+            }
+
+            // Re-render Personalization Subjects container
+            const persContainer = document.getElementById('personalization-subjects-container');
+            if (persContainer) {
+                persContainer.innerHTML = renderPersonalizationSubjectRows();
             }
 
             // Re-render Subject Tabs in Exclude Chapters section
@@ -2727,8 +2934,10 @@
                 return;
             }
 
+            const personalization = getPersonalizationConfig();
             const planResult = buildIntelligentPlan(deadlineInput, tasksToPlan, TODAY_STR, improvementConfig, selectedStream, {
-                intensity: studyIntensity
+                intensity: studyIntensity,
+                personalization: personalization
             });
 
             if (planResult && planResult.planDays) {
@@ -2736,6 +2945,7 @@
                     engineVersion: PLANNER_ENGINE_VERSION,
                     stream: selectedStream,
                     studyIntensity: studyIntensity,
+                    personalization: personalization,
                     startDate: TODAY_STR,
                     deadlineDate: deadlineInput,
                     targetTerm: targetTerm,
@@ -2840,7 +3050,8 @@
             }
 
             const result = buildIntelligentPlan(appState.deadlineDate, uncompletedTasks, tomorrowStr, appState.improvementConfig || [], userStream, {
-                intensity: appState.studyIntensity || 'balanced'
+                intensity: appState.studyIntensity || 'balanced',
+                personalization: appState.personalization || {}
             });
 
             if (result && result.planDays) {
@@ -3025,12 +3236,106 @@
                                 <div id="deadline-calc-label" class="mt-2 p-2.5 rounded-xl bg-blue-50/70 border border-blue-100 text-xs text-slate-600"></div>
                             </div>
 
+                            <!-- Step 4: Personalize Study Routine -->
+                            <div class="bg-gradient-to-b from-indigo-50/50 via-white to-slate-50/50 border-2 border-indigo-100/80 rounded-3xl p-4 sm:p-5 shadow-xs space-y-4">
+                                <div class="flex items-center justify-between">
+                                    <label class="text-xs font-extrabold uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                                        <span class="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[11px] font-black">4</span>
+                                        <span>Personalize Your Study Routine</span>
+                                    </label>
+                                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-indigo-700 bg-indigo-100/80 px-2 py-0.5 rounded-full">
+                                        ✨ Tailored Pacing
+                                    </span>
+                                </div>
+
+                                <!-- 4.1 Subject Confidence Level -->
+                                <div>
+                                    <div class="flex items-center justify-between mb-1.5">
+                                        <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                                            <i class="fa-solid fa-bullseye text-indigo-600"></i>
+                                            <span>Subject Confidence & Priority</span>
+                                        </span>
+                                        <span class="text-[11px] text-slate-400">Mark weak subjects to get higher frequency</span>
+                                    </div>
+                                    <div id="personalization-subjects-container" class="space-y-1.5">
+                                        ${renderPersonalizationSubjectRows()}
+                                    </div>
+                                </div>
+
+                                <!-- 4.2 Weekly Study Rhythm -->
+                                <div>
+                                    <span class="text-xs font-bold text-slate-700 block mb-1.5 flex items-center gap-1.5">
+                                        <i class="fa-regular fa-calendar-days text-indigo-600"></i>
+                                        <span>Weekly Study Rhythm & Rest Day</span>
+                                    </span>
+                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                        <!-- Card A: Daily Balanced -->
+                                        <div id="rhythm-card-balanced" onclick="setWeeklyRhythmSelection('balanced')" class="cursor-pointer p-3 rounded-2xl border-2 border-blue-600 bg-blue-50/70 ring-2 ring-blue-500/20 transition text-left flex flex-col justify-between relative shadow-xs">
+                                            <div>
+                                                <div class="flex items-center justify-between mb-0.5">
+                                                    <span class="font-bold text-slate-900 text-xs">Daily Balanced</span>
+                                                    <span class="text-[9px] font-extrabold text-blue-600 bg-blue-100 px-1.5 rounded">Standard</span>
+                                                </div>
+                                                <p class="text-[11px] text-slate-500">Even portions every day across the week.</p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Card B: Weekend Booster -->
+                                        <div id="rhythm-card-weekend" onclick="setWeeklyRhythmSelection('weekend_booster')" class="cursor-pointer p-3 rounded-2xl border-2 border-slate-200 bg-white hover:border-slate-300 transition text-left flex flex-col justify-between">
+                                            <div>
+                                                <div class="flex items-center justify-between mb-0.5">
+                                                    <span class="font-bold text-slate-900 text-xs">Weekend Booster</span>
+                                                    <span class="text-[9px] font-bold text-purple-600 bg-purple-50 px-1.5 rounded">School</span>
+                                                </div>
+                                                <p class="text-[11px] text-slate-500">Light weekdays (school), power study on Sat/Sun.</p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Card C: Sunday Rest Day -->
+                                        <div id="rhythm-card-sunday" onclick="setWeeklyRhythmSelection('rest_day', 0)" class="cursor-pointer p-3 rounded-2xl border-2 border-slate-200 bg-white hover:border-slate-300 transition text-left flex flex-col justify-between">
+                                            <div>
+                                                <div class="flex items-center justify-between mb-0.5">
+                                                    <span class="font-bold text-slate-900 text-xs">Sunday Rest Day</span>
+                                                    <span class="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 rounded">Recharge</span>
+                                                </div>
+                                                <p class="text-[11px] text-slate-500">Zero new chapters on Sunday (free recharge/recall).</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 4.3 Daily Study Hours Window -->
+                                <div>
+                                    <div class="flex items-center justify-between mb-1.5">
+                                        <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                                            <i class="fa-solid fa-clock text-indigo-600"></i>
+                                            <span>Daily Self-Study Time Budget</span>
+                                        </span>
+                                        <span class="text-[11px] text-slate-400">Maps to chapter effort scores</span>
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <button type="button" id="hours-chip-2" onclick="setDailyHoursSelection(2)" class="flex-1 py-2 px-3 text-xs font-semibold rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition flex flex-col items-center">
+                                            <span class="font-black">2 Hours/day</span>
+                                            <span class="text-[10px] text-slate-400">Paced (~1-2 parts)</span>
+                                        </button>
+                                        <button type="button" id="hours-chip-3_5" onclick="setDailyHoursSelection(3.5)" class="flex-1 py-2 px-3 text-xs font-black rounded-xl bg-blue-600 text-white shadow-sm transition flex flex-col items-center">
+                                            <span class="font-black">3–4 Hours/day</span>
+                                            <span class="text-[10px] text-blue-100">Optimal (~2-3 parts)</span>
+                                        </button>
+                                        <button type="button" id="hours-chip-5" onclick="setDailyHoursSelection(5)" class="flex-1 py-2 px-3 text-xs font-semibold rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition flex flex-col items-center">
+                                            <span class="font-black">5+ Hours/day</span>
+                                            <span class="text-[10px] text-slate-400">Intensive (~3-4 parts)</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
                             <!-- Optional Advanced Options Collapsible Accordion -->
                             <details class="group border border-slate-200 rounded-2xl bg-slate-50/50 overflow-hidden">
                                 <summary class="p-3.5 sm:p-4 flex items-center justify-between cursor-pointer font-bold text-xs sm:text-sm text-slate-700 hover:bg-slate-100/60 transition list-none select-none">
                                     <div class="flex items-center gap-2.5">
                                         <i class="fa-solid fa-sliders text-blue-600"></i>
-                                        <span>More Options (Skip chapters, +1 improvement, study pace)</span>
+                                        <span>More Options (Skip finished chapters, +1 improvement papers)</span>
                                     </div>
                                     <i class="fa-solid fa-chevron-down text-slate-400 text-xs transition duration-200 group-open:rotate-180"></i>
                                 </summary>
@@ -3160,8 +3465,8 @@
                             <div class="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4">
                                 <i class="fa-solid fa-mug-hot"></i>
                             </div>
-                            <h3 class="text-xl font-bold text-slate-900 mb-1">Rest & Retention Day!</h3>
-                            <p class="text-xs sm:text-sm text-slate-500">No new chapters assigned today. Take a breather or review past formulas.</p>
+                            <h3 class="text-xl font-bold text-slate-900 mb-1">${todayPlan.isRestDay ? 'Personalized Rest & Recharge Day!' : 'Rest & Retention Day!'}</h3>
+                            <p class="text-xs sm:text-sm text-slate-500 max-w-md mx-auto">${todayPlan.isRestDay ? 'Zero new chapters assigned today per your personalized schedule. Relax, recharge, or do a light 15-minute formula glance.' : 'No new chapters assigned today. Take a breather or review past formulas.'}</p>
                         </div>
                     `;
                 } else {
@@ -3235,6 +3540,7 @@
                                                 <span class="text-[11px] font-bold px-2 py-0.5 rounded-md ${subjectBadgeClass}">
                                                     ${task.subject}
                                                 </span>
+                                                ${task.isFocusSubject ? '<span class="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 border border-rose-200/70"><i class="fa-solid fa-bullseye mr-1"></i>Focus</span>' : ''}
                                                 ${task.grade === '+1' ? '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">+1 Imp</span>' : `<span class="text-[10px] font-semibold text-slate-400">Term ${task.term}</span>`}
                                                 ${task.isRevision ? '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-100 text-purple-800">Buffer Revision</span>' : ''}
                                             </div>
@@ -3365,12 +3671,13 @@
                                     <span class="text-[11px] font-semibold text-slate-400">(${day.date})</span>
                                     ${isToday ? '<span class="text-[10px] font-extrabold bg-blue-600 text-white px-2 py-0.5 rounded-full no-print">TODAY</span>' : ''}
                                     ${day.isRevisionDay ? '<span class="text-[10px] font-bold bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full">Revision Day</span>' : ''}
+                                    ${day.isRestDay ? '<span class="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full"><i class="fa-solid fa-mug-hot mr-1"></i>Rest Day</span>' : ''}
                                 </div>
                                 <span class="text-[11px] font-bold text-slate-500">${displayedTasks.filter(t => t.completed).length}/${displayedTasks.length} Done</span>
                             </div>
 
                             <div class="p-3 sm:p-4 divide-y divide-slate-100">
-                                ${displayedTasks.length === 0 ? '<p class="text-xs text-slate-400 italic py-1">Free / Buffer Day</p>' : ''}
+                                ${displayedTasks.length === 0 ? (day.isRestDay ? '<p class="text-xs text-emerald-700 font-semibold py-1.5 flex items-center gap-2"><i class="fa-solid fa-mug-hot text-emerald-600"></i><span>Personalized Rest & Recharge Day (0 new chapters)</span></p>' : '<p class="text-xs text-slate-400 italic py-1">Free / Buffer Day</p>') : ''}
                                 ${displayedTasks.map(task => {
                                     const badgeColor = getSubjectColorBadge(task.subject);
                                     return `
@@ -3384,6 +3691,7 @@
                                             <div class="flex-1 cursor-pointer" onclick="toggleTaskDirect('${task.id}')">
                                                 <div class="flex items-center gap-2 mb-0.5">
                                                     <span class="text-[10px] font-bold px-1.5 py-0.2 rounded ${badgeColor}">${task.subject}</span>
+                                                    ${task.isFocusSubject ? '<span class="text-[9px] font-black px-1.5 py-0.2 rounded bg-rose-100 text-rose-800 border border-rose-200">🎯 FOCUS</span>' : ''}
                                                     ${task.grade === '+1' ? '<span class="text-[10px] font-bold text-amber-700 bg-amber-50 px-1 rounded">+1 Imp</span>' : `<span class="text-[10px] text-slate-400">Term ${task.term}</span>`}
                                                 </div>
                                                 <div class="text-xs sm:text-sm font-bold text-slate-800 task-text-content ${task.completed ? 'line-through opacity-50' : ''}">

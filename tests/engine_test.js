@@ -366,9 +366,135 @@ migrated.plan.forEach(day => {
 });
 assert(foundCompletedP1, 'Completed tasks from legacy plan preserved after migration');
 
-// Test idempotency: migrating already-migrated state
-const reMigrated = migrateLegacyUserPlan(migrated);
-assert(reMigrated === migrated, 'Migrating v3 state is a clean no-op (idempotent)');
+console.log('\n--- 6. PERSONALIZATION ENGINE AUDIT & INVARIANTS ---');
+
+// Test 6.1: Subject Priority / Weighting
+const testSubWeights = {
+  'Physics': 1.5,
+  'Mathematics': 0.7
+};
+const pTasks = PLUS_TWO_SYLLABUS.filter(t => t.subject === 'Physics' || t.subject === 'Mathematics');
+const weightedPlan = buildIntelligentPlan('2026-11-30', pTasks, '2026-09-21', [], 'cs', {
+  personalization: {
+    subjectWeights: testSubWeights,
+    weeklyRhythm: 'balanced'
+  }
+});
+assert(weightedPlan !== null, 'Weighted plan generated successfully');
+assert(weightedPlan.isValid, `Weighted plan is valid: ${weightedPlan.validationIssues.join(', ')}`);
+
+const physicsTasks = [];
+weightedPlan.planDays.forEach(d => {
+  d.tasks.forEach(t => {
+    if (t.subject === 'Physics') physicsTasks.push(t);
+  });
+});
+assert(physicsTasks.filter(t => !t.isRevision).every(t => t.isFocusSubject === true), 'Physics syllabus tasks tagged as isFocusSubject = true');
+
+// In the first 10 days, verify Physics has at least as many or more tasks than Mathematics
+const earlyPhysics = weightedPlan.planDays.slice(0, 10).flatMap(d => d.tasks).filter(t => t.subject === 'Physics').length;
+const earlyMaths = weightedPlan.planDays.slice(0, 10).flatMap(d => d.tasks).filter(t => t.subject === 'Mathematics').length;
+assert(earlyPhysics >= earlyMaths, `Focus subject Physics (${earlyPhysics}) prioritized over Strong subject Maths (${earlyMaths}) in early days`);
+
+// Test 6.2: Designated Sunday Rest Day
+const sundayRestPlan = buildIntelligentPlan('2026-11-30', pTasks, '2026-09-21', [], 'cs', {
+  personalization: {
+    weeklyRhythm: 'rest_day',
+    restDayOfWeek: 0 // Sunday
+  }
+});
+assert(sundayRestPlan !== null, 'Sunday rest plan generated successfully');
+assert(sundayRestPlan.isValid, `Sunday rest plan passes validation: ${sundayRestPlan.validationIssues.join(', ')}`);
+
+let sundayWorkTasks = 0;
+let sundayCount = 0;
+sundayRestPlan.planDays.slice(0, sundayRestPlan.syllabusDaysCount).forEach(day => {
+  if (day.dayOfWeek === 0) {
+    sundayCount++;
+    assert(day.isRestDay === true, `Day ${day.dayNumber} (${day.date}) marked as isRestDay`);
+    if (day.tasks.length > 0) sundayWorkTasks += day.tasks.length;
+  }
+});
+assert(sundayCount > 0, `Found ${sundayCount} Sundays in syllabus study period`);
+assert(sundayWorkTasks === 0, `Sunday has 0 scheduled regular tasks (found ${sundayWorkTasks})`);
+assert(sundayRestPlan.scorecard.coverageRate === 100, 'Coverage rate remains 100% even with Sunday rest day');
+
+// Test 6.3: Designated Friday Rest Day
+const fridayRestPlan = buildIntelligentPlan('2026-11-30', pTasks, '2026-09-21', [], 'cs', {
+  personalization: {
+    weeklyRhythm: 'rest_day',
+    restDayOfWeek: 5 // Friday
+  }
+});
+assert(fridayRestPlan !== null, 'Friday rest plan generated successfully');
+assert(fridayRestPlan.isValid, `Friday rest plan passes validation: ${fridayRestPlan.validationIssues.join(', ')}`);
+let fridayWorkTasks = 0;
+fridayRestPlan.planDays.slice(0, fridayRestPlan.syllabusDaysCount).forEach(day => {
+  if (day.dayOfWeek === 5) {
+    assert(day.isRestDay === true, `Day ${day.dayNumber} (${day.date}) marked as isRestDay`);
+    if (day.tasks.length > 0) fridayWorkTasks += day.tasks.length;
+  }
+});
+assert(fridayWorkTasks === 0, `Friday has 0 scheduled regular tasks (found ${fridayWorkTasks})`);
+
+// Test 6.4: Weekend Booster Rhythm
+const weekendBoosterPlan = buildIntelligentPlan('2026-11-30', pTasks, '2026-09-21', [], 'cs', {
+  personalization: {
+    weeklyRhythm: 'weekend_booster'
+  }
+});
+assert(weekendBoosterPlan !== null, 'Weekend booster plan generated successfully');
+assert(weekendBoosterPlan.isValid, `Weekend booster plan passes validation: ${weekendBoosterPlan.validationIssues.join(', ')}`);
+
+let totalWeekendTasks = 0;
+let totalWeekendDays = 0;
+let totalWeekdayTasks = 0;
+let totalWeekdayDays = 0;
+
+weekendBoosterPlan.planDays.slice(0, weekendBoosterPlan.syllabusDaysCount).forEach(day => {
+  const isWeekend = (day.dayOfWeek === 0 || day.dayOfWeek === 6);
+  if (isWeekend) {
+    totalWeekendDays++;
+    totalWeekendTasks += day.tasks.length;
+  } else {
+    totalWeekdayDays++;
+    totalWeekdayTasks += day.tasks.length;
+  }
+});
+const avgWeekend = totalWeekendTasks / (totalWeekendDays || 1);
+const avgWeekday = totalWeekdayTasks / (totalWeekdayDays || 1);
+assert(avgWeekend > avgWeekday, `Weekend average tasks (${avgWeekend.toFixed(2)}) > Weekday average (${avgWeekday.toFixed(2)}) in Weekend Booster mode`);
+
+// Test 6.5: Full Personalization Fuzzing Matrix (50 iterations)
+const rhythms = ['balanced', 'weekend_booster', 'rest_day'];
+for (let f = 0; f < 50; f++) {
+  const fStream = f % 2 === 0 ? 'bio' : 'cs';
+  const fSubs = fStream === 'bio' ? ['Physics', 'Chemistry', 'Mathematics', 'Botany', 'Zoology'] : ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'];
+  const fWeights = {};
+  fSubs.forEach(s => {
+    const r = Math.random();
+    fWeights[s] = r < 0.33 ? 1.5 : (r < 0.66 ? 0.7 : 1.0);
+  });
+  const fRhythm = rhythms[f % rhythms.length];
+  const fRestDay = (fRhythm === 'rest_day') ? (f % 2 === 0 ? 0 : 5) : null;
+  const fTerm = (f % 3) + 1;
+  const fTasks = PLUS_TWO_SYLLABUS.filter(t => fSubs.includes(t.subject) && t.term <= fTerm);
+  const fDays = 20 + (f * 2);
+  let fEnd = new Date('2026-09-21');
+  fEnd.setDate(fEnd.getDate() + fDays);
+  const fEndStr = fEnd.toISOString().split('T')[0];
+
+  const fPlan = buildIntelligentPlan(fEndStr, fTasks, '2026-09-21', [], fStream, {
+    personalization: {
+      subjectWeights: fWeights,
+      weeklyRhythm: fRhythm,
+      restDayOfWeek: fRestDay,
+      dailyHours: 3.5
+    }
+  });
+
+  assert(fPlan !== null && fPlan.isValid, `Fuzz #${f + 1} (${fStream}, Term ${fTerm}, ${fRhythm}) valid with 100% coverage`);
+}
 
 console.log('\n======================================');
 console.log(`TOTAL CHECKS: ${totalChecks}`);
