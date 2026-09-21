@@ -1,5 +1,5 @@
-// Mission PlusTwo Service Worker v4.9 (Google sign-in popup fix & redirect fallback)
-const CACHE_NAME = 'plustwo-mission-v4.9';
+// Mission PlusTwo Service Worker v5.0 (Direct manual sign-in without modal interception)
+const CACHE_NAME = 'plustwo-mission-v5.0';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
