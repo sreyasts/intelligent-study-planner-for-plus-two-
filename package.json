@@ -14,7 +14,8 @@
     "test:e2e": "playwright test",
     "lint": "eslint src --ext .js",
     "format": "prettier --write \"src/**/*.{js,json,css,html}\"",
-    "deploy": "npm run build && npx -y firebase-tools@latest deploy --only hosting"
+    "deploy": "npm run build && npx -y firebase-tools@latest deploy --only hosting",
+    "deploy:all": "powershell -ExecutionPolicy Bypass -File ./deploy-all.ps1"
   },
   "keywords": [
     "kerala",
