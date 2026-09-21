@@ -655,3 +655,67 @@ export const PLUS_TWO_CHAPTERS = {
     },
   ],
 };
+
+export const createCanonicalTasks = (subject, grade, chapters) => {
+  const list = [];
+  chapters.forEach((ch, idx) => {
+    const chapNumber = ch.num || (idx + 1);
+    const totalParts = Array.isArray(ch.parts) ? ch.parts.length : (ch.parts || 2);
+    const chapId = `${grade}_${subject.replace(/\s+/g, '_')}_${chapNumber}`;
+    const effort = ch.effort || (totalParts >= 3 ? 'HIGH' : 'MEDIUM');
+
+    for (let p = 1; p <= totalParts; p++) {
+      const taskId = `${chapId}_P${p}`;
+      const prereqId = p > 1 ? `${chapId}_P${p - 1}` : null;
+
+      let topicTitle = '';
+      let estimatedMinutes = 60;
+      if (Array.isArray(ch.parts) && ch.parts[p - 1]) {
+        const partObj = ch.parts[p - 1];
+        topicTitle = typeof partObj === 'string' ? partObj : (partObj.title || '');
+        estimatedMinutes = (typeof partObj === 'object' && partObj.minutes) ? partObj.minutes : 60;
+      } else {
+        if (totalParts === 1) {
+          topicTitle = 'Part 1/1 (Full Chapter): Core Concepts & Problems';
+        } else if (p === totalParts) {
+          topicTitle = `Part ${p}/${totalParts} (Full Chapter): Exercise Problems & PYQs`;
+        } else if (p === 1) {
+          topicTitle = `Part 1/${totalParts}: Core Concepts & Theory`;
+        } else {
+          topicTitle = `Part ${p}/${totalParts}: Mechanisms & Practice`;
+        }
+      }
+
+      const taskType = (p === totalParts || p > 1) ? 'PRACTICE' : 'LEARN';
+
+      list.push({
+        id: taskId,
+        chapId: chapId,
+        grade: grade,
+        subject: subject,
+        chapNumber: chapNumber,
+        chapterName: ch.name,
+        part: p,
+        totalParts: totalParts,
+        topicTitle: topicTitle,
+        term: ch.term || 1,
+        taskType: taskType,
+        prerequisiteId: prereqId,
+        estimatedEffort: effort,
+        estimatedMinutes: estimatedMinutes,
+      });
+    }
+  });
+  return list;
+};
+
+export const createTasks = createCanonicalTasks;
+
+export const PLUS_TWO_SYLLABUS = [
+  ...createCanonicalTasks('Physics', '+2', PLUS_TWO_CHAPTERS.Physics),
+  ...createCanonicalTasks('Chemistry', '+2', PLUS_TWO_CHAPTERS.Chemistry),
+  ...createCanonicalTasks('Mathematics', '+2', PLUS_TWO_CHAPTERS.Mathematics),
+  ...createCanonicalTasks('Computer Science', '+2', PLUS_TWO_CHAPTERS['Computer Science']),
+  ...createCanonicalTasks('Botany', '+2', PLUS_TWO_CHAPTERS.Botany),
+  ...createCanonicalTasks('Zoology', '+2', PLUS_TWO_CHAPTERS.Zoology),
+];

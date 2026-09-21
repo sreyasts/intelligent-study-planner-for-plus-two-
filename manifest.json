@@ -1,7 +1,7 @@
 {
   "id": "/intelligent-study-planner-for-plus-two-/",
-  "name": "Mission PlusTwo - Kerala Class 12 Study Planner",
-  "short_name": "Mission +2",
+  "name": "Mission PlusTwo",
+  "short_name": "Mission PlusTwo",
   "description": "Adaptive daily study timetable & revision engine for Kerala DHSE Plus Two and Plus One Improvement students.",
   "start_url": "./index.html?source=pwa",
   "scope": "./",

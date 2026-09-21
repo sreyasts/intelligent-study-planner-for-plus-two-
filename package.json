@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && node -e \"const fs=require('fs'); fs.copyFileSync('sw.js', 'dist/sw.js'); ['favicon-32.png','apple-touch-icon.png','icon.png','icon-192.png','icon-512.png','icon-maskable-192.png','icon-maskable-512.png'].forEach(f => { if(fs.existsSync(f)) fs.copyFileSync(f, 'dist/' + f); });\"",
+    "build": "vite build && node scripts/post-build.js",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
