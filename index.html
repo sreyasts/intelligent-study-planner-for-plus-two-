@@ -496,13 +496,13 @@
             <div class="mb-5 pr-8">
                 <div class="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 border border-blue-200/80 rounded-full px-2.5 py-0.5 text-[11px] font-bold mb-2.5">
                     <i class="fa-solid fa-cloud-arrow-up text-blue-600"></i>
-                    <span>Cloud Sync & Backup</span>
+                    <span>Cloud Backup & Multi-Device Sync</span>
                 </div>
                 <h3 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-snug">
-                    Never Lose Your Study Progress
+                    Save Your Study Plan
                 </h3>
                 <p class="text-xs text-slate-500 mt-1.5 leading-relaxed">
-                    Connect your Google account to sync your personalized timetable between phone, tablet, and PC with zero data loss.
+                    Connect your Google account to back up your custom timetable and sync completed targets across phone, tablet, and PC.
                 </p>
             </div>
 
@@ -1274,20 +1274,35 @@
                     }
                     renderApp();
 
-                    // Prominently highlight Google Sign-In via full-screen modal on first visit
-                    if (!sessionStorage.getItem('auth_modal_dismissed')) {
-                        setTimeout(() => {
-                            if (!currentUser && !sessionStorage.getItem('auth_modal_dismissed')) {
-                                openAuthModal();
-                            }
-                        }, 800);
+                    // If user already has a generated plan and hasn't seen the prompt yet,
+                    // schedule it after 8 seconds of engagement on their dashboard
+                    if (appState && !localStorage.getItem('has_seen_auth_modal')) {
+                        schedulePostPlanAuthModal(8000);
                     }
                 }
                 isInitialAuthCheck = false;
             });
         }
 
-        /* Full-Screen Google Auth Modal Management */
+        /* Full-Screen Google Auth Modal Management (High-Conversion Post-Plan Trigger) */
+        let authModalTimer = null;
+
+        function schedulePostPlanAuthModal(delayMs = 8000) {
+            // Only trigger if user is not signed in, has a generated plan, and hasn't seen it yet
+            if (currentUser) return;
+            if (localStorage.getItem('has_seen_auth_modal')) return;
+            if (!appState || !Array.isArray(appState.plan) || appState.plan.length === 0) return;
+
+            if (authModalTimer) clearTimeout(authModalTimer);
+
+            authModalTimer = setTimeout(() => {
+                if (!currentUser && appState && !localStorage.getItem('has_seen_auth_modal')) {
+                    localStorage.setItem('has_seen_auth_modal', 'true');
+                    openAuthModal();
+                }
+            }, delayMs);
+        }
+
         function openAuthModal() {
             const modal = document.getElementById('auth-modal');
             if (modal) {
@@ -1297,6 +1312,8 @@
         }
 
         function closeAuthModal() {
+            if (authModalTimer) clearTimeout(authModalTimer);
+            localStorage.setItem('has_seen_auth_modal', 'true');
             const modal = document.getElementById('auth-modal');
             if (modal) {
                 modal.classList.add('hidden');
@@ -1305,7 +1322,6 @@
         }
 
         function continueAsGuest() {
-            sessionStorage.setItem('auth_modal_dismissed', 'true');
             closeAuthModal();
             showToastMessage("Continuing as Guest (Progress saved on this device)", "fa-circle-info text-blue-400");
         }
@@ -1384,9 +1400,9 @@
             try {
                 const provider = new firebase.auth.GoogleAuthProvider();
                 provider.setCustomParameters({ prompt: 'select_account' });
-                await auth.signInWithPopup(provider);
+                if (authModalTimer) clearTimeout(authModalTimer);
+                localStorage.setItem('has_seen_auth_modal', 'true');
                 closeAuthModal();
-                sessionStorage.setItem('auth_modal_dismissed', 'true');
                 // onAuthStateChanged will handle performCloudSync and UI updates
             } catch(err) {
                 console.error("Sign-in error:", err);
@@ -2315,6 +2331,8 @@
             // 2. Clear local storage
             localStorage.removeItem('plusTwoMissionState_v2');
             localStorage.removeItem('plusTwoPlanState');
+            localStorage.removeItem('has_seen_auth_modal');
+            if (authModalTimer) clearTimeout(authModalTimer);
 
             // 3. Reset in-memory state and re-render setup screen
             appState = null;
@@ -2733,6 +2751,7 @@
                 };
                 saveAppState();
                 goToDashboard();
+                schedulePostPlanAuthModal(8000);
             }
         }
 

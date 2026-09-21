@@ -1,5 +1,5 @@
-// Mission PlusTwo Service Worker v4.4 (English Share Links Release)
-const CACHE_NAME = 'plustwo-mission-v4.4';
+// Mission PlusTwo Service Worker v4.5 (High-Conversion Once-Only Post-Plan Auth Trigger)
+const CACHE_NAME = 'plustwo-mission-v4.5';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
