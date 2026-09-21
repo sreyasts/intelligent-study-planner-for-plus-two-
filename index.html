@@ -1158,6 +1158,17 @@
 
         // Handle user authentication and real-time syncing
         if (auth) {
+            // Handle redirect result if redirected on mobile
+            if (typeof auth.getRedirectResult === 'function') {
+                auth.getRedirectResult().then((result) => {
+                    if (result && result.user) {
+                        showToastMessage("Signed in with Google! Cloud sync active.", "fa-circle-check text-emerald-400");
+                    }
+                }).catch((err) => {
+                    console.warn("Redirect auth note:", err);
+                });
+            }
+
             let isInitialAuthCheck = true;
             auth.onAuthStateChanged(async (user) => {
                 const wasSignedIn = !!currentUser;
@@ -1264,13 +1275,7 @@
         }
 
         async function signInWithGoogleFromModal() {
-            const btn = document.getElementById('auth-modal-google-btn');
-            if (btn) btn.classList.add('opacity-70', 'pointer-events-none');
-            try {
-                await signInWithGoogle();
-            } finally {
-                if (btn) btn.classList.remove('opacity-70', 'pointer-events-none');
-            }
+            await signInWithGoogle();
         }
 
         function triggerManualSync() {
@@ -1331,29 +1336,71 @@
 
         async function signInWithGoogle() {
             if (!auth) {
+                if (window.firebase) {
+                    try {
+                        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+                        auth = firebase.auth();
+                        db = firebase.firestore();
+                    } catch(e) {
+                        console.error("Firebase init retry failed:", e);
+                    }
+                }
+            }
+
+            if (!auth) {
                 alert("Authentication service is not available. Please check your internet connection.");
                 return;
             }
+
+            const btn = document.getElementById('auth-modal-google-btn');
+            const originalBtnHTML = btn ? btn.innerHTML : '';
+
             try {
+                if (btn) {
+                    btn.disabled = true;
+                    btn.classList.add('opacity-75', 'cursor-wait');
+                    btn.innerHTML = `
+                        <i class="fa-solid fa-circle-notch fa-spin text-blue-600 text-sm"></i>
+                        <span>Connecting to Google...</span>
+                    `;
+                }
+
                 const provider = new firebase.auth.GoogleAuthProvider();
                 provider.setCustomParameters({ prompt: 'select_account' });
+
                 if (authModalTimer) clearTimeout(authModalTimer);
                 localStorage.setItem('has_seen_auth_modal', 'true');
+
+                // Trigger Google Sign-In Popup
+                await auth.signInWithPopup(provider);
+
                 closeAuthModal();
-                // onAuthStateChanged will handle performCloudSync and UI updates
+                showToastMessage("Signed in with Google! Cloud sync active.", "fa-circle-check text-emerald-400");
             } catch(err) {
                 console.error("Sign-in error:", err);
-                if (err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-user') {
+
+                if (err.code === 'auth/popup-blocked' || err.code === 'auth/cancelled-popup-request') {
                     try {
                         const provider = new firebase.auth.GoogleAuthProvider();
                         await auth.signInWithRedirect(provider);
+                        return;
                     } catch(e) {
                         alert("Popup was blocked. Please allow popups or use Google Chrome.");
                     }
+                } else if (err.code === 'auth/popup-closed-by-user') {
+                    console.log("Sign-in popup closed by user.");
                 } else if (err.code === 'auth/unauthorized-domain') {
                     alert("This domain is not authorized yet in Firebase Console. Please add 'sreyasts.github.io' to Authentication -> Settings -> Authorized Domains.");
+                } else if (err.code === 'auth/network-request-failed') {
+                    alert("Network error. Please check your internet connection and try again.");
                 } else {
                     alert("Sign-in error: " + (err.message || err));
+                }
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-75', 'cursor-wait');
+                    btn.innerHTML = originalBtnHTML;
                 }
             }
         }
