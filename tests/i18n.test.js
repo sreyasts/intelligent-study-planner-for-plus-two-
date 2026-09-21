@@ -120,4 +120,36 @@ describe('i18n Language & Browser Translation Auto-Detector', () => {
     expect(ML_STRINGS.nav.plan).toBe('പൂർണ്ണ ഷെഡ്യൂൾ');
     expect(ML_STRINGS.nav.syllabus).toBe('പാഠ്യപദ്ധതി');
   });
+
+  it('validates comprehensive dictionary coverage across all app views and modals', () => {
+    // Setup Wizard
+    expect(ML_STRINGS.setup.title).toBe('നിങ്ങളുടെ പഠന പ്ലാൻ തയ്യാറാക്കുക');
+    expect(ML_STRINGS.setup.streamLabel).toBe('1. സ്ട്രീം തിരഞ്ഞെടുക്കുക');
+    expect(ML_STRINGS.setup.generateBtn).toBe('പഠന പ്ലാൻ തയ്യാറാക്കുക');
+    expect(ML_STRINGS.setup.rhythmTitle).toBe('ആഴ്ചയിലെ പഠന രീതിയും വിശ്രമ ദിനവും');
+
+    // Dashboard
+    expect(ML_STRINGS.dashboard.todaysMission).toBe('ഇന്നത്തെ പഠന ലക്ഷ്യം');
+    expect(ML_STRINGS.dashboard.missionDoneTitle).toContain('100% പൂർത്തിയായി');
+    expect(ML_STRINGS.dashboard.restDayTitle).toContain('വിശ്രമ & റീചാർജ്');
+
+    // Full Plan
+    expect(ML_STRINGS.plan.title).toBe('പൂർണ്ണ പഠന ഷെഡ്യൂൾ');
+    expect(ML_STRINGS.plan.todayBadge).toBe('ഇന്ന്');
+    expect(ML_STRINGS.plan.revisionDay).toBe('റിവിഷൻ ദിനം');
+    expect(ML_STRINGS.plan.restDay).toBe('വിശ്രമ ദിനം');
+
+    // Syllabus
+    expect(ML_STRINGS.syllabus.title).toBe('ഔദ്യോഗിക DHSE സിലബസ് & അധ്യായങ്ങൾ');
+    expect(ML_STRINGS.syllabus.mastered).toBe('പഠിച്ചു കഴിഞ്ഞു');
+
+    // Modals
+    expect(ML_STRINGS.authModal.title).toBe('പഠന പ്ലാൻ സൂക്ഷിച്ചു വെക്കാം');
+    expect(ML_STRINGS.authModal.googleBtn).toBe('Google വഴി തുടരുക');
+    expect(ML_STRINGS.settingsModal.title).toBe('ക്രമീകരണങ്ങൾ (Settings)');
+    expect(ML_STRINGS.settingsModal.doneBtn).toBe('പൂർത്തിയായി');
+    expect(ML_STRINGS.regenerateModal.title).toBe('പ്ലാൻ പുനഃക്രമീകരിക്കുക');
+    expect(ML_STRINGS.regenerateModal.rebalanceBtn).toBe('പുനഃക്രമീകരിക്കുക');
+  });
 });
+
