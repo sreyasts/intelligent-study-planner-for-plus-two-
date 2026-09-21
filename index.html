@@ -3401,8 +3401,8 @@
                     <label class="flex items-start gap-2.5 p-2 rounded-xl ${isChecked ? 'bg-emerald-50/70 border-emerald-200' : 'hover:bg-slate-50 border-slate-200/80'} border cursor-pointer transition text-xs select-none">
                         <input type="checkbox" data-grade="${grade}" data-subject="${subject}" value="${ch.chapId}" ${isChecked ? 'checked' : ''} onchange="toggleChapterSelection('${ch.chapId}', this.checked); this.closest('label').classList.toggle('bg-emerald-50/70', this.checked); this.closest('label').classList.toggle('border-emerald-200', this.checked); this.closest('label').classList.toggle('border-slate-200/80', !this.checked);" class="completed-chapter-cb mt-0.5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4">
                         <div class="flex-1 truncate">
-                            <span class="font-bold text-slate-800 block truncate" title="${ch.chapterName}">${ch.chapNumber}. ${ch.chapterName}</span>
-                            <span class="text-[10px] ${grade === '+1' ? 'text-amber-700' : 'text-slate-400'} font-medium">${grade === '+1' ? '+1 Paper' : 'Term ' + ch.term} • ${ch.totalParts} study parts</span>
+                            <span class="font-bold text-slate-800 dark:text-slate-100 block truncate" title="${ch.chapterName}">Chapter ${ch.chapNumber}: ${ch.chapterName.replace(/^Chapter\s+\d+:\s*/i, '').replace(/^\d+\.\s*/, '')}</span>
+                            <span class="text-[10px] ${grade === '+1' ? 'text-amber-700 dark:text-amber-400' : 'text-slate-400'} font-medium">${grade === '+1' ? '+1 Improvement Paper' : 'Term ' + ch.term} • ${ch.totalParts} study parts</span>
                         </div>
                     </label>
                 `;
@@ -4176,7 +4176,7 @@
                                     <span class="text-xs font-bold bg-blue-100 text-blue-700 py-0.5 px-2.5 rounded-full">Day ${todayPlan.dayNumber}</span>
                                     ${todayPlan.isRevisionDay ? '<span class="text-xs font-bold bg-purple-100 text-purple-700 py-0.5 px-2.5 rounded-full">Revision Phase</span>' : ''}
                                 </h3>
-                                <p class="text-xs text-slate-400 mt-0.5">${doneToday} of ${totalToday} chapters completed today</p>
+                                <p class="text-xs text-slate-400 mt-0.5">${doneToday}/${totalToday} tasks completed today</p>
                             </div>
                             <span class="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-xl">${todayPlan.date}</span>
                         </div>
@@ -4196,19 +4196,19 @@
 
                                         <!-- Content -->
                                         <div class="flex-1 cursor-pointer" onclick="toggleTaskDirect('${task.id}')">
-                                            <div class="flex flex-wrap items-center gap-2 mb-1">
+                                            <div class="flex flex-wrap items-center gap-1.5 mb-1.5">
                                                 <span class="text-[11px] font-bold px-2 py-0.5 rounded-md ${subjectBadgeClass}">
                                                     ${task.subject}
                                                 </span>
                                                 ${task.isFocusSubject ? '<span class="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 border border-rose-200/70"><i class="fa-solid fa-bullseye mr-1"></i>Focus</span>' : ''}
-                                                ${task.grade === '+1' ? '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">+1 Imp</span>' : `<span class="text-[10px] font-semibold text-slate-400">Term ${task.term}</span>`}
-                                                ${task.isRevision ? '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-100 text-purple-800">Buffer Revision</span>' : ''}
+                                                ${renderTaskGradeBadge(task)}
+                                                ${renderTaskPartBadge(task)}
                                             </div>
-                                            <h4 class="text-sm sm:text-base font-bold text-slate-800 task-text-content ${task.completed ? 'line-through opacity-50' : ''}">
-                                                ${task.chapNumber && !task.isRevision ? `<span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded mr-1">Ch.${task.chapNumber}</span>` : ''}${task.chapterName}
+                                            <h4 class="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-100 task-text-content ${task.completed ? 'line-through opacity-50' : ''}">
+                                                ${getTaskChapterTitle(task)}
                                             </h4>
-                                            <p class="text-xs text-slate-500 mt-0.5 font-medium">
-                                                ${task.topicTitle}
+                                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
+                                                ${formatTaskTopicTitle(task)}
                                             </p>
                                         </div>
 
@@ -4228,7 +4228,7 @@
                         <div class="flex items-center justify-between mb-2.5">
                             <div class="flex items-baseline gap-2">
                                 <span class="text-xl sm:text-2xl font-black text-slate-900">${overallStats.percentage}%</span>
-                                <span class="text-xs text-slate-400 font-medium">${overallStats.completedCount} of ${overallStats.totalCount} chapters finished</span>
+                                <span class="text-xs text-slate-400 font-medium">${overallStats.completedCount}/${overallStats.totalCount} tasks finished</span>
                             </div>
                             <span class="inline-flex items-center gap-1.5 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200/70 px-2.5 py-1 rounded-xl">
                                 <i class="fa-solid fa-fire text-amber-500"></i>
@@ -4313,6 +4313,8 @@
                     let displayedTasks = day.tasks;
                     if (currentPlanSubjectFilter === '+1 Improvement') {
                         displayedTasks = day.tasks.filter(t => t.grade === '+1');
+                    } else if (currentPlanSubjectFilter === '+2 Regular') {
+                        displayedTasks = day.tasks.filter(t => t.grade === '+2');
                     } else if (currentPlanSubjectFilter !== 'All') {
                         displayedTasks = day.tasks.filter(t => t.subject === currentPlanSubjectFilter);
                     }
@@ -4349,13 +4351,14 @@
                                                 </svg>
                                             </div>
                                             <div class="flex-1 cursor-pointer" onclick="toggleTaskDirect('${task.id}')">
-                                                <div class="flex items-center gap-2 mb-0.5">
-                                                    <span class="text-[10px] font-bold px-1.5 py-0.2 rounded ${badgeColor}">${task.subject}</span>
-                                                    ${task.isFocusSubject ? '<span class="text-[9px] font-black px-1.5 py-0.2 rounded bg-rose-100 text-rose-800 border border-rose-200">🎯 FOCUS</span>' : ''}
-                                                    ${task.grade === '+1' ? '<span class="text-[10px] font-bold text-amber-700 bg-amber-50 px-1 rounded">+1 Imp</span>' : `<span class="text-[10px] text-slate-400">Term ${task.term}</span>`}
+                                                <div class="flex flex-wrap items-center gap-1.5 mb-1">
+                                                    <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${badgeColor}">${task.subject}</span>
+                                                    ${task.isFocusSubject ? '<span class="text-[9px] font-black px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 border border-rose-200">🎯 FOCUS</span>' : ''}
+                                                    ${renderTaskGradeBadge(task)}
+                                                    ${renderTaskPartBadge(task)}
                                                 </div>
-                                                <div class="text-xs sm:text-sm font-bold text-slate-800 task-text-content ${task.completed ? 'line-through opacity-50' : ''}">
-                                                    ${task.chapNumber && !task.isRevision ? `<span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-1 py-0.5 rounded mr-1">Ch.${task.chapNumber}</span>` : ''}${task.chapterName} - <span class="font-normal text-slate-500">${task.topicTitle}</span>
+                                                <div class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 task-text-content ${task.completed ? 'line-through opacity-50' : ''}">
+                                                    ${getTaskChapterTitle(task)} - <span class="font-normal text-slate-500 dark:text-slate-400">${formatTaskTopicTitle(task)}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -4420,6 +4423,7 @@
                                 { id: 'Mathematics', label: 'Maths', icon: 'fa-calculator' },
                                 { id: 'Botany', label: 'Botany', icon: 'fa-seedling' },
                                 { id: 'Zoology', label: 'Zoology', icon: 'fa-dna' },
+                                { id: '+2 Regular', label: '+2 Regular', icon: 'fa-graduation-cap' },
                                 { id: '+1 Improvement', label: '+1 Improvement', icon: 'fa-arrow-up-right-dots' }
                             ] : [
                                 { id: 'All', label: 'All Subjects', icon: 'fa-layer-group' },
@@ -4427,6 +4431,7 @@
                                 { id: 'Chemistry', label: 'Chemistry', icon: 'fa-flask' },
                                 { id: 'Mathematics', label: 'Maths', icon: 'fa-calculator' },
                                 { id: 'Computer Science', label: 'CS', icon: 'fa-laptop-code' },
+                                { id: '+2 Regular', label: '+2 Regular', icon: 'fa-graduation-cap' },
                                 { id: '+1 Improvement', label: '+1 Improvement', icon: 'fa-arrow-up-right-dots' }
                             ];
 
@@ -4479,7 +4484,7 @@
                         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5 mb-4">
                             <h3 class="text-sm sm:text-base font-extrabold text-slate-900 mb-3 flex items-center justify-between border-b pb-2">
                                 <span>${sub} <span class="text-xs text-slate-400 font-normal">(${uniqueP2.length} Official Chapters)</span></span>
-                                <span class="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-lg">Plus Two DHSE</span>
+                                <span class="text-xs font-extrabold text-blue-700 bg-blue-50 border border-blue-200/60 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800/60 px-2.5 py-0.5 rounded-lg"><i class="fa-solid fa-graduation-cap mr-1"></i> Plus Two (+2) DHSE</span>
                             </h3>
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -4499,13 +4504,13 @@
                                     }
 
                                     return `
-                                        <div class="p-2.5 rounded-xl border ${isAllDone ? 'bg-emerald-50/60 border-emerald-200' : 'bg-slate-50/50 border-slate-100'} flex items-start gap-2 text-xs">
-                                            <div class="w-5 h-5 rounded-md ${isAllDone ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-400'} flex items-center justify-center shrink-0 mt-0.5 text-[10px]">
+                                        <div class="p-2.5 rounded-xl border ${isAllDone ? 'bg-emerald-50/60 border-emerald-200 dark:bg-emerald-950/40 dark:border-emerald-800/60' : 'bg-slate-50/50 border-slate-100 dark:bg-slate-800/50 dark:border-slate-700/60'} flex items-start gap-2 text-xs">
+                                            <div class="w-5 h-5 rounded-md ${isAllDone ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-400 dark:bg-slate-700 dark:text-slate-400'} flex items-center justify-center shrink-0 mt-0.5 text-[10px]">
                                                 <i class="fa-solid ${isAllDone ? 'fa-check' : 'fa-book'}"></i>
                                             </div>
                                             <div class="flex-1">
-                                                <span class="font-bold text-slate-800 block">${ch.chapNumber}. ${ch.chapterName}</span>
-                                                <span class="text-[10px] text-slate-400">Term ${ch.term} ${isAllDone ? '• <strong class="text-emerald-700">Mastered</strong>' : ''}</span>
+                                                <span class="font-bold text-slate-800 dark:text-slate-100 block">Chapter ${ch.chapNumber}: ${ch.chapterName.replace(/^Chapter\s+\d+:\s*/i, '').replace(/^\d+\.\s*/, '')}</span>
+                                                <span class="text-[10px] text-slate-400">Term ${ch.term} ${isAllDone ? '• <strong class="text-emerald-700 dark:text-emerald-400">Mastered</strong>' : ''}</span>
                                             </div>
                                         </div>
                                     `;
@@ -4544,6 +4549,70 @@
                 case 'Zoology': return 'bg-teal-50 text-teal-700 border border-teal-200/60 dark:bg-teal-950/60 dark:text-teal-300 dark:border-teal-800/60';
                 default: return 'bg-purple-50 text-purple-700 border border-purple-200/60 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800/60';
             }
+        }
+
+        function getTaskChapterTitle(task) {
+            if (!task) return '';
+            if (task.isRevision) return task.chapterName;
+            let chapNum = task.chapNumber;
+            if (!chapNum && task.id) {
+                const m = task.id.match(/_(\d+)_P\d+$/);
+                if (m) chapNum = parseInt(m[1]);
+            }
+            const rawName = task.chapterName || '';
+            const cleanName = rawName.replace(/^Chapter\s+\d+:\s*/i, '').replace(/^\d+\.\s*/, '');
+            if (chapNum) {
+                return `Chapter ${chapNum}: ${cleanName}`;
+            }
+            return cleanName || rawName;
+        }
+
+        function formatTaskTopicTitle(task) {
+            if (!task) return '';
+            if (task.isRevision) return task.topicTitle || '';
+            const p = task.part || 1;
+            const total = task.totalParts || 1;
+            
+            // Extract the descriptive text after any "Part X of Y:" or "Part X/Y:"
+            let desc = task.topicTitle || '';
+            desc = desc.replace(/^Part\s+\d+\s*(?:of|\/)\s*\d+(?:\s*\([^)]*\))?:\s*/i, '');
+            desc = desc.replace(/^Full\s+Chapter(?:\s*Concepts\s*&\s*Key\s*Problems)?:\s*/i, '');
+            if (!desc) {
+                desc = (p === total || p > 1) ? 'Exercise Problems & PYQs' : 'Core Concepts & Theory';
+            }
+
+            if (total === 1) {
+                return `Part 1/1 (Full Chapter): ${desc}`;
+            }
+            if (p === total) {
+                return `Part ${p}/${total} (Full Chapter): ${desc}`;
+            }
+            return `Part ${p}/${total}: ${desc}`;
+        }
+
+        function renderTaskGradeBadge(task) {
+            if (!task) return '';
+            if (task.isRevision) {
+                return `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-purple-100 text-purple-800 border border-purple-200/70 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800/60">Revision</span>`;
+            }
+            if (task.grade === '+1') {
+                return `<span class="text-[10px] font-extrabold px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-800 border border-amber-300/80 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-700/60 flex items-center gap-1 shadow-xs"><i class="fa-solid fa-arrow-up-right-dots text-[9px] text-amber-600"></i> +1 Imp</span>`;
+            }
+            // Plus Two (+2)
+            return `
+                <span class="text-[10px] font-extrabold px-1.5 py-0.5 rounded-md bg-blue-100 text-blue-800 border border-blue-300/80 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-700/60 flex items-center gap-1 shadow-xs"><i class="fa-solid fa-graduation-cap text-[9px] text-blue-600"></i> +2</span>
+                ${task.term ? `<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 border border-slate-200/50 dark:border-slate-700/50">Term ${task.term}</span>` : ''}
+            `;
+        }
+
+        function renderTaskPartBadge(task) {
+            if (!task || task.isRevision) return '';
+            const p = task.part || 1;
+            const total = task.totalParts || 1;
+            if (p === total) {
+                return `<span class="text-[10px] font-black px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-300/80 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-700/60 flex items-center gap-1 shadow-xs"><i class="fa-solid fa-circle-check text-[9px] text-emerald-600"></i> Full Chapter (${p}/${total})</span>`;
+            }
+            return `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60">Part ${p}/${total}</span>`;
         }
 
         function getOverallStats() {

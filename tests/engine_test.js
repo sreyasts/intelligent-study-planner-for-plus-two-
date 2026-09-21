@@ -51,7 +51,11 @@ const exportSnippet = `
   migrateLegacyUserPlan,
   getLocalDateStr,
   calculateDaysBetween,
-  TODAY_STR
+  TODAY_STR,
+  getTaskChapterTitle,
+  formatTaskTopicTitle,
+  renderTaskGradeBadge,
+  renderTaskPartBadge
 });
 `;
 
@@ -73,7 +77,11 @@ const {
   migrateLegacyUserPlan,
   getLocalDateStr,
   calculateDaysBetween,
-  TODAY_STR
+  TODAY_STR,
+  getTaskChapterTitle,
+  formatTaskTopicTitle,
+  renderTaskGradeBadge,
+  renderTaskPartBadge
 } = context.window;
 
 let totalChecks = 0;
@@ -496,7 +504,67 @@ for (let f = 0; f < 50; f++) {
   assert(fPlan !== null && fPlan.isValid, `Fuzz #${f + 1} (${fStream}, Term ${fTerm}, ${fRhythm}) valid with 100% coverage`);
 }
 
-console.log('\n======================================');
+console.log('\n--- 7. LABELING, BADGING & CHAPTER NUMBERING INVARIANTS ---');
+
+// Test 7.1: Chapter Numbering
+const p2TaskSample = PLUS_TWO_SYLLABUS.find(t => t.chapNumber === 1 && t.subject === 'Physics');
+assert(
+  getTaskChapterTitle(p2TaskSample) === 'Chapter 1: Electric Charges and Fields',
+  'Test 7.1: Plus Two Chapter 1 formatted as "Chapter 1: Electric Charges and Fields"'
+);
+
+const p1TaskSample = PLUS_ONE_SYLLABUS.find(t => t.chapNumber === 3 && t.subject === 'Physics');
+assert(
+  getTaskChapterTitle(p1TaskSample) === 'Chapter 3: Motion in a Plane',
+  'Test 7.1: Plus One Chapter 3 formatted as "Chapter 3: Motion in a Plane"'
+);
+
+// Test 7.2: Part X/Y and Full Chapter Formatting
+const part1Task = { part: 1, totalParts: 2, topicTitle: 'Part 1/2: Core Concepts & Theory' };
+assert(
+  formatTaskTopicTitle(part1Task) === 'Part 1/2: Core Concepts & Theory',
+  'Test 7.2: Part 1/2 topic title format'
+);
+
+const part2Task = { part: 2, totalParts: 2, topicTitle: 'Part 2/2 (Full Chapter): Exercise Problems & PYQs' };
+assert(
+  formatTaskTopicTitle(part2Task) === 'Part 2/2 (Full Chapter): Exercise Problems & PYQs',
+  'Test 7.2: Part 2/2 (Full Chapter) topic title format'
+);
+
+// Backward-compatibility: legacy strings with "of"
+const legacyPart1 = { part: 1, totalParts: 3, topicTitle: 'Part 1 of 3: Core Concepts & Theory' };
+assert(
+  formatTaskTopicTitle(legacyPart1) === 'Part 1/3: Core Concepts & Theory',
+  'Test 7.2: Legacy "Part 1 of 3" migrated to "Part 1/3"'
+);
+
+const legacyPart3 = { part: 3, totalParts: 3, topicTitle: 'Part 3 of 3: Exercise Problems & PYQs' };
+assert(
+  formatTaskTopicTitle(legacyPart3) === 'Part 3/3 (Full Chapter): Exercise Problems & PYQs',
+  'Test 7.2: Legacy "Part 3 of 3" migrated to "Part 3/3 (Full Chapter)"'
+);
+
+// Single part chapter
+const singlePartTask = { part: 1, totalParts: 1, topicTitle: 'Full Chapter Concepts & Key Problems' };
+assert(
+  formatTaskTopicTitle(singlePartTask).includes('Full Chapter'),
+  'Test 7.2: Single-part chapter includes "Full Chapter"'
+);
+
+// Test 7.3: Grade Badging (+2 Blue vs +1 Amber)
+const p2Badge = renderTaskGradeBadge({ grade: '+2', term: 1 });
+assert(p2Badge.includes('+2') && p2Badge.includes('bg-blue-100'), 'Test 7.3: +2 task has +2 label and blue badge');
+
+const p1Badge = renderTaskGradeBadge({ grade: '+1' });
+assert(p1Badge.includes('+1 Imp') && p1Badge.includes('bg-amber-100'), 'Test 7.3: +1 improvement task has +1 Imp label and amber badge');
+
+// Test 7.4: Part Badge (X/Y and Full Chapter)
+const nonFinalPartBadge = renderTaskPartBadge({ part: 1, totalParts: 2 });
+assert(nonFinalPartBadge.includes('Part 1/2'), 'Test 7.4: Non-final part has "Part 1/2" badge');
+
+const finalPartBadge = renderTaskPartBadge({ part: 2, totalParts: 2 });
+assert(finalPartBadge.includes('Full Chapter (2/2)') && finalPartBadge.includes('bg-emerald-100'), 'Test 7.4: Final part has "Full Chapter (2/2)" badge with emerald styling');
 console.log(`TOTAL CHECKS: ${totalChecks}`);
 console.log(`PASSED: ${passedChecks}`);
 console.log(`FAILED: ${failedChecks}`);

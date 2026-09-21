@@ -1,5 +1,5 @@
-// Mission PlusTwo Service Worker v5.4 (Ultra-premium dark mode & unified profile settings)
-const CACHE_NAME = 'plustwo-mission-v5.4';
+// Mission PlusTwo Service Worker v5.5 (Plus Two badges, chapter numbering & Full Chapter X/Y formatting)
+const CACHE_NAME = 'plustwo-mission-v5.5';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
