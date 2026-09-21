@@ -105,6 +105,28 @@
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="icon" type="image/png" href="icon.png">
 
+    <!-- Tailwind Configuration & Immediate Theme Preload (Prevents FOUC) -->
+    <script id="tailwind-config">
+        tailwind = {
+            config: {
+                darkMode: 'class'
+            }
+        };
+    </script>
+    <script id="theme-init">
+        (function() {
+            try {
+                var theme = localStorage.getItem('plustwo_theme') || 'system';
+                var isDark = theme === 'dark' || (theme === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                if (isDark) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            } catch(e) {}
+        })();
+    </script>
+
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -224,6 +246,223 @@
                 print-color-adjust: exact !important;
             }
         }
+
+        /* ==========================================================================
+           HIGH-PERFORMANCE DARK MODE (OLED Deep Slate Palette)
+           ========================================================================== */
+        html.dark {
+            color-scheme: dark;
+        }
+        html.dark body {
+            background-color: #0b0f19 !important;
+            color: #f1f5f9 !important;
+        }
+        html.dark header {
+            background-color: rgba(11, 15, 25, 0.94) !important;
+            border-color: #1e293b !important;
+        }
+        html.dark #mobile-nav {
+            background-color: rgba(11, 15, 25, 0.96) !important;
+            border-color: #1e293b !important;
+        }
+        html.dark #nav-desktop-tabs {
+            background-color: #162036 !important;
+            color: #94a3b8 !important;
+        }
+        html.dark #nav-desktop-tabs button.text-blue-600 {
+            background-color: #0b0f19 !important;
+            color: #60a5fa !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5) !important;
+        }
+        html.dark #nav-desktop-tabs button:not(.text-blue-600) {
+            color: #94a3b8 !important;
+        }
+        html.dark #nav-desktop-tabs button:not(.text-blue-600):hover {
+            color: #f8fafc !important;
+        }
+        html.dark #date-display {
+            background-color: #162036 !important;
+            border-color: #1e293b !important;
+            color: #94a3b8 !important;
+        }
+        html.dark .bg-white {
+            background-color: #131b2e !important;
+        }
+        html.dark .bg-slate-50,
+        html.dark .bg-slate-50\/80,
+        html.dark .bg-slate-50\/70,
+        html.dark .bg-slate-50\/50 {
+            background-color: #0f172a !important;
+        }
+        html.dark .bg-slate-100 {
+            background-color: #1e293b !important;
+        }
+        html.dark .border-slate-100,
+        html.dark .border-slate-200,
+        html.dark .border-slate-200\/70,
+        html.dark .border-slate-200\/80,
+        html.dark .border-slate-200\/90 {
+            border-color: #1e293b !important;
+        }
+        html.dark .border-slate-300 {
+            border-color: #334155 !important;
+        }
+        html.dark .divide-slate-100 > * + *,
+        html.dark .divide-slate-200 > * + * {
+            border-color: #1e293b !important;
+        }
+        html.dark .text-slate-900,
+        html.dark .text-slate-800 {
+            color: #f8fafc !important;
+        }
+        html.dark .text-slate-700 {
+            color: #e2e8f0 !important;
+        }
+        html.dark .text-slate-600 {
+            color: #cbd5e1 !important;
+        }
+        html.dark .text-slate-500 {
+            color: #94a3b8 !important;
+        }
+        html.dark .text-slate-400 {
+            color: #64748b !important;
+        }
+        html.dark .task-checkbox {
+            background-color: #0f172a !important;
+            border-color: #334155 !important;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4) !important;
+        }
+        html.dark .task-checkbox:hover {
+            border-color: #60a5fa !important;
+        }
+        html.dark .task-checkbox.checked {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+            border-color: #3b82f6 !important;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.45) !important;
+        }
+        html.dark .today-task-card.task-done {
+            background-color: rgba(15, 23, 42, 0.6) !important;
+            border-color: #1e293b !important;
+        }
+        html.dark input[type="text"],
+        html.dark input[type="date"],
+        html.dark select,
+        html.dark textarea {
+            background-color: #0f172a !important;
+            border-color: #334155 !important;
+            color: #f8fafc !important;
+        }
+        html.dark input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(0.85);
+            cursor: pointer;
+        }
+        html.dark ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        html.dark ::-webkit-scrollbar-track {
+            background: #0b0f19;
+        }
+        html.dark ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 9999px;
+        }
+        html.dark ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+        html.dark #user-dropdown,
+        html.dark #settings-modal > div,
+        html.dark #auth-modal > div,
+        html.dark #regenerate-modal > div {
+            background-color: #131b2e !important;
+            border-color: #1e293b !important;
+            color: #f8fafc !important;
+        }
+        html.dark details {
+            background-color: #131b2e !important;
+            border-color: #1e293b !important;
+        }
+        html.dark details summary {
+            color: #f1f5f9 !important;
+        }
+        html.dark footer {
+            border-color: #1e293b !important;
+        }
+        html.dark #toast-content {
+            background-color: rgba(30, 41, 59, 0.95) !important;
+            border-color: #334155 !important;
+        }
+        /* Subdued Dark Mode Accents for Better Contrast */
+        html.dark .bg-emerald-50,
+        html.dark .bg-emerald-50\/60 {
+            background-color: rgba(6, 78, 59, 0.28) !important;
+        }
+        html.dark .bg-blue-50,
+        html.dark .bg-blue-50\/60,
+        html.dark .bg-blue-50\/70 {
+            background-color: rgba(30, 58, 138, 0.28) !important;
+        }
+        html.dark .bg-amber-50 {
+            background-color: rgba(120, 53, 15, 0.28) !important;
+        }
+        html.dark .bg-rose-50 {
+            background-color: rgba(136, 19, 55, 0.28) !important;
+        }
+        html.dark .bg-purple-50 {
+            background-color: rgba(88, 28, 135, 0.28) !important;
+        }
+        html.dark .text-emerald-700,
+        html.dark .text-emerald-800 {
+            color: #34d399 !important;
+        }
+        html.dark .text-blue-700,
+        html.dark .text-blue-800 {
+            color: #60a5fa !important;
+        }
+        html.dark .text-amber-700,
+        html.dark .text-amber-800 {
+            color: #fbbf24 !important;
+        }
+        html.dark .text-rose-700,
+        html.dark .text-rose-800 {
+            color: #fb7185 !important;
+        }
+        html.dark .text-purple-700,
+        html.dark .text-purple-800 {
+            color: #c084fc !important;
+        }
+        html.dark .border-emerald-100,
+        html.dark .border-emerald-200 {
+            border-color: rgba(16, 185, 129, 0.25) !important;
+        }
+        html.dark .border-blue-100,
+        html.dark .border-blue-200 {
+            border-color: rgba(59, 130, 246, 0.25) !important;
+        }
+        html.dark .border-amber-100,
+        html.dark .border-amber-200 {
+            border-color: rgba(245, 158, 11, 0.25) !important;
+        }
+        html.dark .bg-blue-100 {
+            background-color: rgba(37, 99, 235, 0.25) !important;
+            color: #93c5fd !important;
+        }
+        html.dark .bg-emerald-100 {
+            background-color: rgba(16, 185, 129, 0.25) !important;
+            color: #6ee7b7 !important;
+        }
+        html.dark .bg-amber-100 {
+            background-color: rgba(245, 158, 11, 0.25) !important;
+            color: #fde68a !important;
+        }
+        html.dark .bg-rose-100 {
+            background-color: rgba(244, 63, 94, 0.25) !important;
+            color: #fecdd3 !important;
+        }
+        html.dark .bg-purple-100 {
+            background-color: rgba(168, 85, 247, 0.25) !important;
+            color: #e9d5ff !important;
+        }
     </style>
 </head>
 <body class="text-slate-800 min-h-screen flex flex-col antialiased selection:bg-blue-100 selection:text-blue-900 pb-20 md:pb-12">
@@ -298,6 +537,13 @@
                                 <i class="fa-solid fa-cloud-arrow-up text-emerald-600 text-sm"></i>
                                 <span class="font-semibold text-[11px]">Cloud Sync Active (Auto-saved)</span>
                             </div>
+                            <button onclick="openSettingsModal(); closeUserDropdown();" class="w-full py-2 px-3 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold rounded-xl transition flex items-center justify-between mb-2">
+                                <span class="flex items-center gap-2">
+                                    <i class="fa-solid fa-gear text-slate-500"></i>
+                                    <span>Settings & Theme</span>
+                                </span>
+                                <span id="dropdown-theme-badge" class="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-bold uppercase">System</span>
+                            </button>
                             <button onclick="triggerManualSync()" class="w-full py-2 px-3 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold rounded-xl transition flex items-center justify-center gap-2 mb-2">
                                 <i class="fa-solid fa-rotate"></i>
                                 <span>Sync with Cloud Now</span>
@@ -314,6 +560,12 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Dedicated Settings Button (Visible for all users) -->
+                <button id="header-settings-btn" onclick="openSettingsModal()" class="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold py-1.5 px-2.5 sm:px-3 rounded-xl border border-slate-200/90 transition active:scale-95 shrink-0" title="Settings & Customization">
+                    <i class="fa-solid fa-gear text-slate-600"></i>
+                    <span class="hidden sm:inline">Settings</span>
+                </button>
 
                 <!-- Share with Classmates Button -->
                 <button onclick="shareApp()" class="flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200/80 text-xs font-bold py-1.5 px-2.5 sm:px-3 rounded-xl shadow-sm transition active:scale-95 shrink-0" title="Share with Classmates on WhatsApp & Telegram">
@@ -419,7 +671,7 @@
     </footer>
 
     <!-- Mobile Bottom Navigation Bar -->
-    <div id="mobile-nav" class="sm:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 z-30 px-4 py-2 flex justify-around items-center">
+    <div id="mobile-nav" class="sm:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 z-30 px-3 py-2 flex justify-around items-center">
         <button onclick="goToDashboard()" id="mob-btn-today" class="flex flex-col items-center text-blue-600 font-bold text-[11px]">
             <i class="fa-solid fa-bolt text-lg mb-0.5"></i>
             <span>Today</span>
@@ -435,6 +687,10 @@
         <button onclick="shareApp()" class="flex flex-col items-center text-emerald-600 hover:text-emerald-700 font-semibold text-[11px]">
             <i class="fa-solid fa-share-nodes text-lg mb-0.5"></i>
             <span>Share</span>
+        </button>
+        <button onclick="openSettingsModal()" id="mob-btn-settings" class="flex flex-col items-center text-slate-400 hover:text-slate-700 font-semibold text-[11px]" title="Settings & Theme">
+            <i class="fa-solid fa-gear text-lg mb-0.5"></i>
+            <span>Settings</span>
         </button>
     </div>
 
@@ -503,6 +759,163 @@
                 <i class="fa-solid fa-lock text-[9px]"></i>
                 <span>100% Free & Private • Only your study progress is saved</span>
             </p>
+        </div>
+    </div>
+
+    <!-- Settings & Customization Modal -->
+    <div id="settings-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4 overflow-y-auto" onclick="if(event.target === this) closeSettingsModal()">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-5 sm:p-6 border border-slate-100 animate-fade-in-up relative text-left my-auto">
+            <!-- Header -->
+            <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white text-lg shadow-md shadow-blue-500/20">
+                        <i class="fa-solid fa-sliders"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-black text-slate-900 tracking-tight">Settings & Customization</h3>
+                        <p class="text-[11px] text-slate-500 font-medium">Personalize your Mission PlusTwo workspace</p>
+                    </div>
+                </div>
+                <button onclick="closeSettingsModal()" class="w-8 h-8 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 flex items-center justify-center transition active:scale-95" title="Close">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4 max-h-[75vh] overflow-y-auto pr-1">
+                <!-- 1. Theme Selection -->
+                <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
+                    <div class="flex items-center justify-between mb-2.5">
+                        <label class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                            <i class="fa-solid fa-circle-half-stroke text-blue-600"></i>
+                            <span>Theme & Appearance</span>
+                        </label>
+                        <span class="text-[10px] text-slate-400 font-semibold">OLED Dark Mode</span>
+                    </div>
+
+                    <!-- 3-Way Segmented Theme Switcher -->
+                    <div class="grid grid-cols-3 gap-1.5 p-1 bg-white rounded-xl border border-slate-200">
+                        <button type="button" id="theme-btn-light" onclick="setThemePreference('light')" class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-900">
+                            <i class="fa-solid fa-sun text-amber-500 text-xs"></i>
+                            <span>Light</span>
+                        </button>
+                        <button type="button" id="theme-btn-dark" onclick="setThemePreference('dark')" class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-900">
+                            <i class="fa-solid fa-moon text-indigo-400 text-xs"></i>
+                            <span>Dark</span>
+                        </button>
+                        <button type="button" id="theme-btn-system" onclick="setThemePreference('system')" class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-900">
+                            <i class="fa-solid fa-desktop text-blue-500 text-xs"></i>
+                            <span>System</span>
+                        </button>
+                    </div>
+                    <p class="text-[10px] text-slate-400 mt-2">Dark mode features a high-contrast deep slate palette designed for long study sessions without eye strain.</p>
+                </div>
+
+                <!-- 2. Study Experience Toggles -->
+                <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-100 space-y-3">
+                    <label class="text-xs font-bold text-slate-800 flex items-center gap-1.5 mb-1">
+                        <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i>
+                        <span>Study Experience & Feedback</span>
+                    </label>
+
+                    <!-- Audio Chimes Toggle -->
+                    <div class="flex items-center justify-between py-1">
+                        <div class="pr-2">
+                            <span class="text-xs font-bold text-slate-700 block">Sound Effects (Chimes)</span>
+                            <span class="text-[10px] text-slate-400">Harmonic chimes when checking off completed chapters</span>
+                        </div>
+                        <button type="button" id="setting-toggle-sound" onclick="toggleUserSetting('sound')" class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-blue-600 transition-colors duration-200 ease-in-out focus:outline-none" role="switch" aria-checked="true">
+                            <span id="setting-knob-sound" class="translate-x-5 pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out"></span>
+                        </button>
+                    </div>
+
+                    <!-- Celebration Confetti Toggle -->
+                    <div class="flex items-center justify-between py-1 border-t border-slate-200/60">
+                        <div class="pr-2">
+                            <span class="text-xs font-bold text-slate-700 block">Milestone Celebration Confetti</span>
+                            <span class="text-[10px] text-slate-400">Particle bursts when completing targets and full days</span>
+                        </div>
+                        <button type="button" id="setting-toggle-confetti" onclick="toggleUserSetting('confetti')" class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-blue-600 transition-colors duration-200 ease-in-out focus:outline-none" role="switch" aria-checked="true">
+                            <span id="setting-knob-confetti" class="translate-x-5 pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out"></span>
+                        </button>
+                    </div>
+
+                    <!-- Auto Focus Next Topic Toggle -->
+                    <div class="flex items-center justify-between py-1 border-t border-slate-200/60">
+                        <div class="pr-2">
+                            <span class="text-xs font-bold text-slate-700 block">Focus Target Highlighter</span>
+                            <span class="text-[10px] text-slate-400">Soft animated glow guiding you to your next chapter</span>
+                        </div>
+                        <button type="button" id="setting-toggle-autofocus" onclick="toggleUserSetting('autofocus')" class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-blue-600 transition-colors duration-200 ease-in-out focus:outline-none" role="switch" aria-checked="true">
+                            <span id="setting-knob-autofocus" class="translate-x-5 pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out"></span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 3. Daily Study Intensity / Pace -->
+                <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                            <i class="fa-solid fa-gauge-high text-indigo-500"></i>
+                            <span>Daily Study Pace</span>
+                        </label>
+                        <span id="settings-current-pace-badge" class="text-[10px] bg-indigo-100 text-indigo-700 font-bold px-2 py-0.5 rounded-full">Standard</span>
+                    </div>
+                    <p class="text-[10px] text-slate-400 mb-2">Adjust your daily study workload intensity.</p>
+                    <div class="grid grid-cols-3 gap-1.5">
+                        <button type="button" id="pace-btn-light" onclick="selectSettingsStudyPace('light')" class="p-2 rounded-xl text-center border border-slate-200 bg-white transition">
+                            <span class="block text-xs font-bold text-slate-700">Relaxed</span>
+                            <span class="block text-[9px] text-slate-400">1-2 ch/day</span>
+                        </button>
+                        <button type="button" id="pace-btn-balanced" onclick="selectSettingsStudyPace('balanced')" class="p-2 rounded-xl text-center border border-slate-200 bg-white transition">
+                            <span class="block text-xs font-bold text-slate-700">Standard</span>
+                            <span class="block text-[9px] text-slate-400">2-3 ch/day</span>
+                        </button>
+                        <button type="button" id="pace-btn-intense" onclick="selectSettingsStudyPace('intense')" class="p-2 rounded-xl text-center border border-slate-200 bg-white transition">
+                            <span class="block text-xs font-bold text-slate-700">Intensive</span>
+                            <span class="block text-[9px] text-slate-400">3-4+ ch/day</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 4. Data Management: Backup & Restore -->
+                <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
+                    <label class="text-xs font-bold text-slate-800 flex items-center gap-1.5 mb-1.5">
+                        <i class="fa-solid fa-database text-emerald-600"></i>
+                        <span>Data Backup & Offline Sync</span>
+                    </label>
+                    <p class="text-[10px] text-slate-400 mb-3">Export a backup JSON file or restore your study timetable on any device.</p>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" onclick="exportStudyPlanJSON()" class="py-2 px-3 bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 transition flex items-center justify-center gap-1.5 shadow-xs">
+                            <i class="fa-solid fa-file-arrow-down text-emerald-600"></i>
+                            <span>Export Backup</span>
+                        </button>
+                        <label class="py-2 px-3 bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 transition flex items-center justify-center gap-1.5 shadow-xs cursor-pointer">
+                            <i class="fa-solid fa-file-arrow-up text-blue-600"></i>
+                            <span>Restore Backup</span>
+                            <input type="file" id="settings-import-input" accept=".json" class="hidden" onchange="importStudyPlanJSON(event)">
+                        </label>
+                    </div>
+
+                    <div class="mt-3 pt-3 border-t border-slate-200/60 flex items-center justify-between">
+                        <div>
+                            <span class="text-xs font-bold text-rose-600 block">Reset Plan</span>
+                            <span class="text-[10px] text-slate-400">Clear current timetable to start fresh</span>
+                        </div>
+                        <button type="button" onclick="closeSettingsModal(); resetApp();" class="py-1.5 px-3 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-xl border border-rose-200 transition">
+                            Reset
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+                <span class="text-[10px] text-slate-400 font-medium">Mission PlusTwo v5.2</span>
+                <button type="button" onclick="closeSettingsModal()" class="py-2 px-5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-500/25 transition">
+                    Done
+                </button>
+            </div>
         </div>
     </div>
 
@@ -1589,21 +2002,39 @@
             return polySynth;
         }
 
-        function playCelebrationSound() {
+        function getUserSetting(key, defaultValue = true) {
             try {
-                if (window.Tone) {
-                    if (Tone.context.state !== 'running') Tone.start();
-                    const s = getSynth();
-                    if (s) {
-                        // Harmonic chime: C5, E5, G5, B5, C6 in rapid succession
-                        const now = Tone.now();
-                        s.triggerAttackRelease("C5", "16n", now);
-                        s.triggerAttackRelease("E5", "16n", now + 0.06);
-                        s.triggerAttackRelease("G5", "16n", now + 0.12);
-                        s.triggerAttackRelease("C6", "8n", now + 0.18);
+                const val = localStorage.getItem('plustwo_' + key);
+                if (val === null) return defaultValue;
+                return val === 'true';
+            } catch(e) {
+                return defaultValue;
+            }
+        }
+
+        function setUserSetting(key, value) {
+            try {
+                localStorage.setItem('plustwo_' + key, String(value));
+            } catch(e) {}
+        }
+
+        function playCelebrationSound() {
+            if (getUserSetting('sound', true)) {
+                try {
+                    if (window.Tone) {
+                        if (Tone.context.state !== 'running') Tone.start();
+                        const s = getSynth();
+                        if (s) {
+                            // Harmonic chime: C5, E5, G5, B5, C6 in rapid succession
+                            const now = Tone.now();
+                            s.triggerAttackRelease("C5", "16n", now);
+                            s.triggerAttackRelease("E5", "16n", now + 0.06);
+                            s.triggerAttackRelease("G5", "16n", now + 0.12);
+                            s.triggerAttackRelease("C6", "8n", now + 0.18);
+                        }
                     }
-                }
-            } catch(e) { /* ignore sound error */ }
+                } catch(e) { /* ignore sound error */ }
+            }
 
             // Gentle haptic feedback
             if (navigator.vibrate) {
@@ -1611,25 +2042,29 @@
             }
 
             // Confetti burst
-            if (window.confetti) {
-                confetti({
-                    particleCount: 70,
-                    spread: 60,
-                    origin: { y: 0.78 },
-                    colors: ['#2563eb', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'],
-                    disableForReducedMotion: true
-                });
+            if (getUserSetting('confetti', true) && window.confetti) {
+                try {
+                    confetti({
+                        particleCount: 70,
+                        spread: 60,
+                        origin: { y: 0.78 },
+                        colors: ['#2563eb', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'],
+                        disableForReducedMotion: true
+                    });
+                } catch(e) {}
             }
         }
 
         function playUntickSound() {
-            try {
-                if (window.Tone) {
-                    if (Tone.context.state !== 'running') Tone.start();
-                    const s = getSynth();
-                    if (s) s.triggerAttackRelease("G4", "32n");
-                }
-            } catch(e) {}
+            if (getUserSetting('sound', true)) {
+                try {
+                    if (window.Tone) {
+                        if (Tone.context.state !== 'running') Tone.start();
+                        const s = getSynth();
+                        if (s) s.triggerAttackRelease("G4", "32n");
+                    }
+                } catch(e) {}
+            }
             if (navigator.vibrate) {
                 try { navigator.vibrate(15); } catch(e) {}
             }
@@ -2296,6 +2731,8 @@
         function highlightNextUnfinishedTask() {
             // Remove previous pulse
             document.querySelectorAll('.next-suggested-task').forEach(el => el.classList.remove('next-suggested-task'));
+
+            if (!getUserSetting('autofocus', true)) return;
 
             // Find first unchecked task in today's list
             const firstUnchecked = document.querySelector('.today-task-card:not(.task-done)');
@@ -3876,13 +4313,13 @@
 
         function getSubjectColorBadge(subject) {
             switch(subject) {
-                case 'Physics': return 'bg-indigo-50 text-indigo-700 border border-indigo-200/60';
-                case 'Chemistry': return 'bg-amber-50 text-amber-700 border border-amber-200/60';
-                case 'Mathematics': return 'bg-rose-50 text-rose-700 border border-rose-200/60';
-                case 'Computer Science': return 'bg-cyan-50 text-cyan-700 border border-cyan-200/60';
-                case 'Botany': return 'bg-emerald-50 text-emerald-700 border border-emerald-200/60';
-                case 'Zoology': return 'bg-teal-50 text-teal-700 border border-teal-200/60';
-                default: return 'bg-purple-50 text-purple-700 border border-purple-200/60';
+                case 'Physics': return 'bg-indigo-50 text-indigo-700 border border-indigo-200/60 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800/60';
+                case 'Chemistry': return 'bg-amber-50 text-amber-700 border border-amber-200/60 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800/60';
+                case 'Mathematics': return 'bg-rose-50 text-rose-700 border border-rose-200/60 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800/60';
+                case 'Computer Science': return 'bg-cyan-50 text-cyan-700 border border-cyan-200/60 dark:bg-cyan-950/60 dark:text-cyan-300 dark:border-cyan-800/60';
+                case 'Botany': return 'bg-emerald-50 text-emerald-700 border border-emerald-200/60 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800/60';
+                case 'Zoology': return 'bg-teal-50 text-teal-700 border border-teal-200/60 dark:bg-teal-950/60 dark:text-teal-300 dark:border-teal-800/60';
+                default: return 'bg-purple-50 text-purple-700 border border-purple-200/60 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800/60';
             }
         }
 
@@ -3906,7 +4343,228 @@
         }
 
         /* ==========================================================================
-           9. 1-CLICK PWA INSTALL PROMPT
+           10. SETTINGS, THEME ENGINE & CUSTOMIZATIONS
+           ========================================================================== */
+        function getThemePreference() {
+            try {
+                return localStorage.getItem('plustwo_theme') || 'system';
+            } catch(e) {
+                return 'system';
+            }
+        }
+
+        function isDarkModeActive() {
+            const pref = getThemePreference();
+            if (pref === 'dark') return true;
+            if (pref === 'light') return false;
+            return typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        }
+
+        function applyTheme(pref) {
+            if (!pref) pref = getThemePreference();
+            const isDark = (pref === 'dark') || (pref === 'system' && typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            if (typeof document !== 'undefined' && document.documentElement) {
+                if (isDark) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            }
+            updateThemeUI(pref);
+        }
+
+        function setThemePreference(pref) {
+            try {
+                localStorage.setItem('plustwo_theme', pref);
+            } catch(e) {}
+            applyTheme(pref);
+            const label = pref === 'dark' ? 'Dark mode enabled' : (pref === 'light' ? 'Light mode enabled' : 'System theme matched');
+            const icon = pref === 'dark' ? 'fa-moon text-indigo-400' : (pref === 'light' ? 'fa-sun text-amber-400' : 'fa-desktop text-blue-400');
+            showToastMessage(label, icon);
+        }
+
+        function updateThemeUI(pref) {
+            if (typeof document === 'undefined') return;
+            if (!pref) pref = getThemePreference();
+
+            const modes = ['light', 'dark', 'system'];
+            modes.forEach(m => {
+                const btn = document.getElementById(`theme-btn-${m}`);
+                if (btn) {
+                    if (m === pref) {
+                        btn.className = 'flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-black transition-all bg-blue-600 text-white shadow-xs';
+                    } else {
+                        btn.className = 'flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-semibold transition-all text-slate-600 hover:text-slate-900';
+                    }
+                }
+            });
+
+            // Update badge in profile dropdown
+            const dropdownBadge = document.getElementById('dropdown-theme-badge');
+            if (dropdownBadge) {
+                dropdownBadge.textContent = pref.toUpperCase();
+            }
+        }
+
+        function toggleUserSetting(key) {
+            const current = getUserSetting(key, true);
+            const next = !current;
+            setUserSetting(key, next);
+            updateSettingsUI();
+
+            const labels = {
+                sound: next ? "Audio chimes enabled" : "Audio chimes muted",
+                confetti: next ? "Celebration confetti enabled" : "Celebration confetti off",
+                autofocus: next ? "Focus highlighter enabled" : "Focus highlighter off"
+            };
+            const icons = {
+                sound: next ? "fa-volume-high text-blue-400" : "fa-volume-xmark text-slate-400",
+                confetti: next ? "fa-wand-magic-sparkles text-amber-400" : "fa-ban text-slate-400",
+                autofocus: next ? "fa-bullseye text-blue-400" : "fa-eye-slash text-slate-400"
+            };
+            showToastMessage(labels[key] || "Setting updated", icons[key] || "fa-check text-emerald-400");
+
+            if (key === 'autofocus') {
+                highlightNextUnfinishedTask();
+            }
+        }
+
+        function updateSettingsUI() {
+            if (typeof document === 'undefined') return;
+            const settings = ['sound', 'confetti', 'autofocus'];
+            settings.forEach(k => {
+                const isEnabled = getUserSetting(k, true);
+                const toggle = document.getElementById(`setting-toggle-${k}`);
+                const knob = document.getElementById(`setting-knob-${k}`);
+                if (toggle && knob) {
+                    if (isEnabled) {
+                        toggle.classList.remove('bg-slate-300');
+                        toggle.classList.add('bg-blue-600');
+                        toggle.setAttribute('aria-checked', 'true');
+                        knob.classList.remove('translate-x-0');
+                        knob.classList.add('translate-x-5');
+                    } else {
+                        toggle.classList.remove('bg-blue-600');
+                        toggle.classList.add('bg-slate-300');
+                        toggle.setAttribute('aria-checked', 'false');
+                        knob.classList.remove('translate-x-5');
+                        knob.classList.add('translate-x-0');
+                    }
+                }
+            });
+
+            // Update pace buttons
+            const currentPace = (appState && appState.studyIntensity) ? appState.studyIntensity : 'balanced';
+            const paces = ['light', 'balanced', 'intense'];
+            paces.forEach(p => {
+                const btn = document.getElementById(`pace-btn-${p}`);
+                if (btn) {
+                    if (p === currentPace) {
+                        btn.className = 'p-2 rounded-xl text-center border-2 border-blue-600 bg-blue-50/70 transition shadow-xs';
+                    } else {
+                        btn.className = 'p-2 rounded-xl text-center border border-slate-200 bg-white hover:border-slate-300 transition';
+                    }
+                }
+            });
+
+            const paceBadge = document.getElementById('settings-current-pace-badge');
+            if (paceBadge) {
+                const paceNames = { light: 'Relaxed', balanced: 'Standard', intense: 'Intensive' };
+                paceBadge.textContent = paceNames[currentPace] || 'Standard';
+            }
+
+            updateThemeUI(getThemePreference());
+        }
+
+        function selectSettingsStudyPace(pace) {
+            if (appState) {
+                appState.studyIntensity = pace;
+                saveAppState();
+            }
+            updateSettingsUI();
+            const names = { light: 'Relaxed (1-2 chapters/day)', balanced: 'Standard (2-3 chapters/day)', intense: 'Intensive (3-4+ chapters/day)' };
+            showToastMessage(`Pace set to: ${names[pace]}`, "fa-gauge-high text-indigo-400");
+        }
+
+        function exportStudyPlanJSON() {
+            if (!appState || !Array.isArray(appState.plan) || appState.plan.length === 0) {
+                showToastMessage("No study plan data to export yet!", "fa-circle-exclamation text-amber-400");
+                return;
+            }
+            try {
+                const exportData = {
+                    ...appState,
+                    exportedAt: new Date().toISOString(),
+                    appVersion: "5.2"
+                };
+                const jsonStr = JSON.stringify(exportData, null, 2);
+                const blob = new Blob([jsonStr], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                const dateStr = new Date().toISOString().split('T')[0];
+                a.href = url;
+                a.download = `mission-plustwo-backup-${dateStr}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToastMessage("Backup exported successfully!", "fa-file-circle-check text-emerald-400");
+            } catch(err) {
+                console.error("Export error:", err);
+                showToastMessage("Could not export backup.", "fa-triangle-exclamation text-rose-400");
+            }
+        }
+
+        function importStudyPlanJSON(event) {
+            const file = event.target?.files?.[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (!parsed || !Array.isArray(parsed.plan)) {
+                        alert("Invalid backup file format. Expected a Mission PlusTwo JSON plan backup.");
+                        return;
+                    }
+                    // Validate and migrate if needed
+                    let validPlan = parsed;
+                    if (!validPlan.engineVersion || validPlan.engineVersion < PLANNER_ENGINE_VERSION) {
+                        validPlan = migrateLegacyUserPlan(validPlan);
+                    }
+                    appState = validPlan;
+                    saveAppStateLocally();
+                    await saveAppState(); // syncs to cloud if logged in
+                    closeSettingsModal();
+                    renderApp();
+                    showToastMessage("Study plan restored successfully!", "fa-circle-check text-emerald-400");
+                } catch(err) {
+                    console.error("Import error:", err);
+                    alert("Could not read backup file. Please make sure it is a valid JSON file.");
+                } finally {
+                    event.target.value = '';
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function openSettingsModal() {
+            const modal = document.getElementById('settings-modal');
+            if (!modal) return;
+            updateSettingsUI();
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeSettingsModal() {
+            const modal = document.getElementById('settings-modal');
+            if (!modal) return;
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+        }
+
+        /* ==========================================================================
+           11. 1-CLICK PWA INSTALL PROMPT
            Handles 'beforeinstallprompt' with 1-click automatic trigger
            ========================================================================== */
         let deferredPWAInstallPrompt = null;
@@ -3946,6 +4604,18 @@
                     console.log('SW registration note:', err);
                 });
             });
+        }
+
+        // Initialize Theme & System Listener
+        applyTheme();
+        if (typeof window !== 'undefined' && window.matchMedia) {
+            try {
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+                    if (getThemePreference() === 'system') {
+                        applyTheme('system');
+                    }
+                });
+            } catch(e) {}
         }
 
         // Initialize App on DOM Load

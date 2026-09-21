@@ -1,5 +1,5 @@
-// Mission PlusTwo Service Worker v5.1 (Personalized study planning engine)
-const CACHE_NAME = 'plustwo-mission-v5.1';
+// Mission PlusTwo Service Worker v5.2 (Dark mode & customization engine)
+const CACHE_NAME = 'plustwo-mission-v5.2';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
