@@ -305,7 +305,7 @@ function _executeCorePlanAlgorithm(
       weeklyRhythm,
       restDayOfWeek,
       hasRestDays: planDays.some((d) => d.isRestDay),
-      focusSubjects: streamSubjects.filter((s) => (subjectWeights[s] || 1.0) >= 1.3),
+      focusSubjects: streamSubjects.filter((s) => (subjectWeights[s] || 1.0) >= 1.1),
       dailyHours,
     },
   };
@@ -339,7 +339,7 @@ function _executeCorePlanAlgorithm(
       }
 
       const partsCount = subTasks.length;
-      const isFocus = (subjectWeights[cfg.subject] || 1.0) >= 1.3;
+      const isFocus = (subjectWeights[cfg.subject] || 1.0) >= 1.1;
 
       subTasks.forEach((task, tIdx) => {
         let targetDayIndex;
@@ -476,7 +476,8 @@ function _executeCorePlanAlgorithm(
         const st = subjectState[s];
         const inProgBonus = st.partIndex > 0 ? 1.8 : 0.0;
         const recencyGap = st.lastScheduledDay === -1 ? 4 : dayIndex - st.lastScheduledDay;
-        const score = w * 2.2 + inProgBonus + recencyGap * 0.5;
+        // Balanced weighting: gentle priority nudge that preserves healthy subject interleaving
+        const score = w * 1.2 + inProgBonus + recencyGap * 0.8;
         if (score > bestScore) {
           bestScore = score;
           candidateSubject = s;
@@ -495,7 +496,7 @@ function _executeCorePlanAlgorithm(
         continue;
       }
 
-      const isFocus = (subjectWeights[candidateSubject] || 1.0) >= 1.3;
+      const isFocus = (subjectWeights[candidateSubject] || 1.0) >= 1.1;
 
       day.tasks.push({
         ...nextPart,
@@ -528,7 +529,7 @@ function _executeCorePlanAlgorithm(
   streamSubjects.forEach((s) => {
     const state = subjectState[s];
     const chapters = subjectChapterMap[s];
-    const isFocus = (subjectWeights[s] || 1.0) >= 1.3;
+    const isFocus = (subjectWeights[s] || 1.0) >= 1.1;
     while (state.chapterIndex < chapters.length) {
       const currentChapter = chapters[state.chapterIndex];
       while (state.partIndex < currentChapter.parts.length) {

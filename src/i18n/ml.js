@@ -97,10 +97,16 @@ export const ML_STRINGS = {
     skipFinishedTitle: 'പഠിച്ചു കഴിഞ്ഞ അധ്യായങ്ങൾ ഒഴിവാക്കുക',
     skipFinishedSub: 'സ്കൂളിലോ ട്യൂഷനിലോ പഠിച്ചു കഴിഞ്ഞവ ഇവിടെ ഒഴിവാക്കാം.',
     excludedBadge: 'ഒഴിവാക്കി',
-    selectAll: 'എല്ലാം തിരഞ്ഞെടുക്കുക',
-    clear: 'ഒഴിവാക്കുക',
     studyParts: 'പഠന ഭാഗങ്ങൾ',
-    generateBtn: 'പഠന പ്ലാൻ തയ്യാറാക്കുക'
+    generateBtn: 'പഠന പ്ലാൻ തയ്യാറാക്കുക',
+    nextBtn: 'അടുത്തത്',
+    backBtn: 'പുറകോട്ട്',
+    stepCount: 'ഘട്ടം',
+    step1Question: 'നിങ്ങളുടെ സയൻസ് സ്ട്രീം ഏതാണ്?',
+    step2Question: 'ഏത് പരീക്ഷയ്ക്കാണ് തയ്യാറെടുക്കുന്നത്?',
+    step3Question: 'പ്ലസ് വൺ (+1) ഇംപ്രൂവ്മെന്റ് പരീക്ഷ എഴുതുന്നുണ്ടോ?',
+    step4Question: 'എപ്പോഴത്തേക്ക് സിലബസ് തീർക്കണം?',
+    step5Question: 'പഠന രീതിയും മുൻഗണനകളും ക്രമീകരിക്കുക'
   },
   dashboard: {
     todayGoal: 'ഇന്നത്തെ പഠന ലക്ഷ്യം',
