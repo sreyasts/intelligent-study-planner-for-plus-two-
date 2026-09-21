@@ -132,8 +132,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
-    <!-- Sound & Visual Dependencies -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <!-- Sound & Visual Dependencies (Native WebAudio Synth + Particle Confetti) -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
     <!-- Firebase SDK (v10 Compat) for Auth & Cloud Firestore Sync -->
@@ -1195,10 +1194,14 @@
                 </button>
             </div>
 
-            <!-- Footer microcopy -->
-            <p class="mt-3 text-[11px] text-slate-400 dark:text-slate-400 flex items-center justify-center gap-1.5 font-medium">
-                <i class="fa-solid fa-lock text-[10px] text-emerald-500"></i>
-                <span>100% Free & Private • Syncs only your study progress</span>
+            <!-- Footer microcopy (DPDP Act 2023 Compliant) -->
+            <p class="mt-3 text-[11px] text-slate-500 dark:text-slate-400 text-center font-medium leading-tight">
+                <i class="fa-solid fa-shield-halved text-[10px] text-emerald-500 mr-1"></i>
+                <span>Your name & email are stored strictly to sync your study timetable across devices.</span>
+                <br>
+                <a href="pages/privacy.html" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 hover:underline font-semibold mt-0.5 inline-block">Privacy Policy (DPDP Compliant)</a>
+                <span class="mx-1">•</span>
+                <a href="pages/terms.html" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 hover:underline font-semibold mt-0.5 inline-block">Terms</a>
             </p>
         </div>
     </div>
@@ -1874,7 +1877,11 @@
                 } catch(err) {
                     console.error("Cloud save failed:", err);
                     if (err.message && err.message.includes("database (default) does not exist")) {
-                        alert("⚠️ Cloud Sync Notice: Firestore Database has not been created yet in your Firebase console! Go to Firebase Console -> Databases -> Firestore Database -> Create database.");
+                        showAppAlert({
+                            title: "Cloud Sync Setup Needed",
+                            message: "Cloud Firestore database is not yet enabled in the Firebase console. Please open Firebase Console ➔ Firestore Database ➔ 'Create database'.",
+                            icon: "fa-cloud text-amber-500"
+                        });
                     }
                 }
             }
@@ -1951,12 +1958,13 @@
                             // Different streams between cloud and local guest session (e.g. Bio vs CS)
                             const cloudStreamName = cloudData.stream === 'bio' ? 'Biology Science' : 'Computer Science';
                             const localStreamName = appState.stream === 'bio' ? 'Biology Science' : 'Computer Science';
-                            const restoreCloud = confirm(
-                                `We found a saved ${cloudStreamName} study plan in your Google Account.\n` +
-                                `Your current unsaved guest plan is for ${localStreamName}.\n\n` +
-                                `Click "OK" to load your saved ${cloudStreamName} plan from your account.\n` +
-                                `Click "Cancel" to keep your current ${localStreamName} plan and save it to your account.`
-                            );
+                            const restoreCloud = await showAppConfirm({
+                                title: "Cloud Backup Found",
+                                message: `We found a saved <strong>${cloudStreamName}</strong> study plan in your Google Account.<br><br>Your current unsaved guest plan is for <strong>${localStreamName}</strong>.<br><br>Do you want to load your saved ${cloudStreamName} plan, or keep your current ${localStreamName} plan?`,
+                                icon: "fa-cloud-arrow-down text-blue-500",
+                                confirmText: `Load Saved ${cloudStreamName}`,
+                                cancelText: `Keep ${localStreamName}`
+                            });
 
                             if (restoreCloud) {
                                 appState = cloudData;
@@ -2005,7 +2013,11 @@
             } catch(err) {
                 console.error("Cloud sync error:", err);
                 if (err.message && err.message.includes("database (default) does not exist")) {
-                    alert("⚠️ Cloud Sync Notice: Firestore Database has not been created yet in your Firebase console! Please go to Firebase Console -> Firestore Database -> Click 'Create database'.");
+                    showAppAlert({
+                        title: "Cloud Sync Setup Needed",
+                        message: "Cloud Firestore database is not yet enabled in your Firebase console. Please go to Firebase Console ➔ Firestore Database ➔ 'Create database'.",
+                        icon: "fa-cloud text-amber-500"
+                    });
                 }
             }
         }
@@ -2076,33 +2088,21 @@
                     }
                     renderApp();
 
-                    // If user already has a generated plan and hasn't seen the prompt yet,
-                    // schedule it after 8 seconds of engagement on their dashboard
-                    if (appState && !localStorage.getItem('has_seen_auth_modal')) {
-                        schedulePostPlanAuthModal(8000);
-                    }
                 }
                 isInitialAuthCheck = false;
             });
         }
 
-        /* Full-Screen Google Auth Modal Management (High-Conversion Post-Plan Trigger) */
-        let authModalTimer = null;
-
-        function schedulePostPlanAuthModal(delayMs = 8000) {
-            // Only trigger if user is not signed in, has a generated plan, and hasn't seen it yet
+        /* Milestone-Triggered Google Auth Modal (Zero Friction - Triggered only after first milestone) */
+        function checkAndTriggerMilestoneAuth() {
             if (currentUser) return;
-            if (localStorage.getItem('has_seen_auth_modal')) return;
+            if (localStorage.getItem('has_dismissed_milestone_auth')) return;
             if (!appState || !Array.isArray(appState.plan) || appState.plan.length === 0) return;
 
-            if (authModalTimer) clearTimeout(authModalTimer);
-
-            authModalTimer = setTimeout(() => {
-                if (!currentUser && appState && !localStorage.getItem('has_seen_auth_modal')) {
-                    localStorage.setItem('has_seen_auth_modal', 'true');
-                    openAuthModal();
-                }
-            }, delayMs);
+            const totalCompleted = appState.plan.reduce((sum, d) => sum + d.tasks.filter(t => t.completed).length, 0);
+            if (totalCompleted >= 1) {
+                openAuthModal();
+            }
         }
 
         function openAuthModal() {
@@ -2114,8 +2114,7 @@
         }
 
         function closeAuthModal() {
-            if (authModalTimer) clearTimeout(authModalTimer);
-            localStorage.setItem('has_seen_auth_modal', 'true');
+            localStorage.setItem('has_dismissed_milestone_auth', 'true');
             const modal = document.getElementById('auth-modal');
             if (modal) {
                 modal.classList.add('hidden');
@@ -2212,7 +2211,11 @@
             }
 
             if (!auth) {
-                alert("Authentication service is not available. Please check your internet connection.");
+                showAppAlert({
+                    title: "Service Unavailable",
+                    message: "Authentication service is not available. Please verify your internet connection.",
+                    icon: "fa-wifi text-rose-500"
+                });
                 return;
             }
 
@@ -2259,16 +2262,32 @@
                         await auth.signInWithRedirect(provider);
                         return;
                     } catch(e) {
-                        alert("Popup was blocked. Please allow popups or use Google Chrome.");
+                        showAppAlert({
+                            title: "Popup Blocked",
+                            message: "Your browser blocked the Google sign-in window. Please allow popups for this site or open in Chrome.",
+                            icon: "fa-shield-halved text-amber-500"
+                        });
                     }
                 } else if (err.code === 'auth/popup-closed-by-user') {
                     console.log("Sign-in popup closed by user.");
                 } else if (err.code === 'auth/unauthorized-domain') {
-                    alert("This domain is not authorized yet in Firebase Console. Please add 'sreyasts.github.io' to Authentication -> Settings -> Authorized Domains.");
+                    showAppAlert({
+                        title: "Authorized Domain Required",
+                        message: "This domain is not yet added to your Firebase authorized domains list. Please add 'sreyasts.github.io' under Authentication ➔ Settings ➔ Authorized Domains in your Firebase console.",
+                        icon: "fa-key text-rose-500"
+                    });
                 } else if (err.code === 'auth/network-request-failed') {
-                    alert("Network error. Please check your internet connection and try again.");
+                    showAppAlert({
+                        title: "Network Error",
+                        message: "Network connection lost. Please check your internet connection and try again.",
+                        icon: "fa-wifi text-rose-500"
+                    });
                 } else {
-                    alert("Sign-in error: " + (err.message || err));
+                    showAppAlert({
+                        title: "Sign-In Error",
+                        message: err.message || String(err),
+                        icon: "fa-circle-exclamation text-rose-500"
+                    });
                 }
             } finally {
                 if (modalBtn) {
@@ -2286,9 +2305,15 @@
 
         async function signOutUser() {
             if (!auth) return;
-            if (!confirm("Sign out of your Google account? Your study progress is safely saved in your account, and you will get a fresh start on this device.")) {
-                return;
-            }
+            const confirmed = await showAppConfirm({
+                title: "Sign Out?",
+                message: "Sign out of your Google account? Your study progress is safely saved in your cloud account, and you will return to guest mode on this device.",
+                icon: "fa-right-from-bracket text-rose-500",
+                confirmText: "Sign Out",
+                cancelText: "Stay Signed In",
+                isDestructive: true
+            });
+            if (!confirmed) return;
 
             // 1. Immediately unsubscribe real-time listener so no incoming events trigger during sign-out
             if (cloudSyncUnsubscribe) {
@@ -2437,21 +2462,131 @@
         }
 
         /* ==========================================================================
-           3. PREMIUM AUDIO SYNTHESIS & HAPTIC FEEDBACK
+           3. NATIVE WEBAUDIO SYNTHESIS & ACCESSIBLE DIALOG SYSTEM (v6.0)
+           Zero external audio dependencies (replaces Tone.js 349 KB with ~0.6 KB native WebAudio)
            ========================================================================== */
-        let polySynth = null;
-        function getSynth() {
-            if (!polySynth && window.Tone) {
-                try {
-                    polySynth = new Tone.PolySynth(Tone.Synth, {
-                        oscillator: { type: "triangle8" },
-                        envelope: { attack: 0.005, decay: 0.15, sustain: 0.05, release: 0.8 }
-                    }).toDestination();
-                    Tone.Destination.volume.value = -8;
-                } catch(e) { console.warn("Audio init warning:", e); }
-            }
-            return polySynth;
+        let audioCtx = null;
+        function getAudioContext() {
+            if (typeof window === 'undefined') return null;
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (!AudioCtx) return null;
+            if (!audioCtx) audioCtx = new AudioCtx();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            return audioCtx;
         }
+
+        let activeModalContainer = null;
+        function ensureModalContainer() {
+            if (typeof document === 'undefined') return null;
+            if (!activeModalContainer) {
+                activeModalContainer = document.getElementById('accessible-dialog-root');
+                if (!activeModalContainer) {
+                    activeModalContainer = document.createElement('div');
+                    activeModalContainer.id = 'accessible-dialog-root';
+                    activeModalContainer.className = 'relative z-50';
+                    document.body.appendChild(activeModalContainer);
+                }
+            }
+            return activeModalContainer;
+        }
+
+        function showAppAlert({ title, message, icon = 'fa-circle-info text-blue-500', confirmText = 'OK' }) {
+            return new Promise((resolve) => {
+                const root = ensureModalContainer();
+                if (!root) { resolve(); return; }
+
+                const modalId = 'dialog-' + Date.now();
+                const modalEl = document.createElement('div');
+                modalEl.id = modalId;
+                modalEl.className = 'fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in';
+                modalEl.setAttribute('role', 'dialog');
+                modalEl.setAttribute('aria-modal', 'true');
+
+                modalEl.innerHTML = `
+                    <div class="bg-white dark:bg-[#0e1422] rounded-3xl p-6 max-w-sm w-full border border-slate-200 dark:border-slate-800 shadow-2xl text-center transform transition-all">
+                        <div class="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xl mx-auto mb-3">
+                            <i class="fa-solid ${icon}"></i>
+                        </div>
+                        <h3 class="text-base font-extrabold text-slate-900 dark:text-white mb-2">${title}</h3>
+                        <div class="text-xs text-slate-600 dark:text-slate-300 mb-5 leading-relaxed">${message}</div>
+                        <button type="button" id="${modalId}-confirm" class="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md transition active:scale-95">
+                            ${confirmText}
+                        </button>
+                    </div>
+                `;
+
+                root.appendChild(modalEl);
+                const confirmBtn = document.getElementById(`${modalId}-confirm`);
+                const cleanup = () => {
+                    modalEl.remove();
+                    document.removeEventListener('keydown', keyHandler);
+                    resolve();
+                };
+                const keyHandler = (e) => {
+                    if (e.key === 'Escape' || e.key === 'Enter') cleanup();
+                };
+                confirmBtn?.addEventListener('click', cleanup);
+                document.addEventListener('keydown', keyHandler);
+                confirmBtn?.focus();
+            });
+        }
+
+        function showAppConfirm({ title, message, icon = 'fa-triangle-exclamation text-amber-500', confirmText = 'Confirm', cancelText = 'Cancel', isDestructive = false }) {
+            return new Promise((resolve) => {
+                const root = ensureModalContainer();
+                if (!root) { resolve(false); return; }
+
+                const modalId = 'dialog-' + Date.now();
+                const modalEl = document.createElement('div');
+                modalEl.id = modalId;
+                modalEl.className = 'fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in';
+                modalEl.setAttribute('role', 'alertdialog');
+                modalEl.setAttribute('aria-modal', 'true');
+
+                const confirmBtnStyle = isDestructive
+                    ? 'bg-rose-600 hover:bg-rose-700 text-white'
+                    : 'bg-blue-600 hover:bg-blue-700 text-white';
+
+                modalEl.innerHTML = `
+                    <div class="bg-white dark:bg-[#0e1422] rounded-3xl p-6 max-w-sm w-full border border-slate-200 dark:border-slate-800 shadow-2xl text-center transform transition-all">
+                        <div class="w-12 h-12 rounded-2xl ${isDestructive ? 'bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400' : 'bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400'} flex items-center justify-center text-xl mx-auto mb-3">
+                            <i class="fa-solid ${icon}"></i>
+                        </div>
+                        <h3 class="text-base font-extrabold text-slate-900 dark:text-white mb-2">${title}</h3>
+                        <p class="text-xs text-slate-600 dark:text-slate-300 mb-5 leading-relaxed">${message}</p>
+                        <div class="flex items-center gap-2">
+                            <button type="button" id="${modalId}-cancel" class="flex-1 py-2.5 px-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-xs rounded-xl transition active:scale-95">
+                                ${cancelText}
+                            </button>
+                            <button type="button" id="${modalId}-confirm" class="flex-1 py-2.5 px-4 ${confirmBtnStyle} font-bold text-xs rounded-xl shadow-md transition active:scale-95">
+                                ${confirmText}
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                root.appendChild(modalEl);
+                const confirmBtn = document.getElementById(`${modalId}-confirm`);
+                const cancelBtn = document.getElementById(`${modalId}-cancel`);
+                const cleanup = (res) => {
+                    modalEl.remove();
+                    document.removeEventListener('keydown', keyHandler);
+                    resolve(res);
+                };
+                const keyHandler = (e) => {
+                    if (e.key === 'Escape') cleanup(false);
+                };
+                confirmBtn?.addEventListener('click', () => cleanup(true));
+                cancelBtn?.addEventListener('click', () => cleanup(false));
+                document.addEventListener('keydown', keyHandler);
+                cancelBtn?.focus();
+            });
+        }
+
+        // Universal non-blocking alert wrapper
+        window.alert = function(msg) {
+            showAppAlert({ title: "Notice", message: String(msg) });
+        };
 
         function getUserSetting(key, defaultValue = true) {
             try {
@@ -2472,19 +2607,25 @@
         function playCelebrationSound() {
             if (getUserSetting('sound', true)) {
                 try {
-                    if (window.Tone) {
-                        if (Tone.context.state !== 'running') Tone.start();
-                        const s = getSynth();
-                        if (s) {
-                            // Harmonic chime: C5, E5, G5, B5, C6 in rapid succession
-                            const now = Tone.now();
-                            s.triggerAttackRelease("C5", "16n", now);
-                            s.triggerAttackRelease("E5", "16n", now + 0.06);
-                            s.triggerAttackRelease("G5", "16n", now + 0.12);
-                            s.triggerAttackRelease("C6", "8n", now + 0.18);
-                        }
+                    const ctx = getAudioContext();
+                    if (ctx) {
+                        const now = ctx.currentTime;
+                        const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6 flourish
+                        notes.forEach((freq, idx) => {
+                            const osc = ctx.createOscillator();
+                            const gain = ctx.createGain();
+                            osc.type = 'triangle';
+                            osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+                            gain.gain.setValueAtTime(0.001, now + idx * 0.08);
+                            gain.gain.exponentialRampToValueAtTime(0.12, now + idx * 0.08 + 0.02);
+                            gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.08 + 0.35);
+                            osc.connect(gain);
+                            gain.connect(ctx.destination);
+                            osc.start(now + idx * 0.08);
+                            osc.stop(now + idx * 0.08 + 0.38);
+                        });
                     }
-                } catch(e) { /* ignore sound error */ }
+                } catch(e) { /* audio fallback */ }
             }
 
             // Gentle haptic feedback
@@ -2509,10 +2650,20 @@
         function playUntickSound() {
             if (getUserSetting('sound', true)) {
                 try {
-                    if (window.Tone) {
-                        if (Tone.context.state !== 'running') Tone.start();
-                        const s = getSynth();
-                        if (s) s.triggerAttackRelease("G4", "32n");
+                    const ctx = getAudioContext();
+                    if (ctx) {
+                        const now = ctx.currentTime;
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(392.00, now);
+                        gain.gain.setValueAtTime(0.001, now);
+                        gain.gain.exponentialRampToValueAtTime(0.08, now + 0.01);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.08);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(now);
+                        osc.stop(now + 0.09);
                     }
                 } catch(e) {}
             }
@@ -2689,7 +2840,11 @@
         ) {
             const totalDaysCount = calculateDaysBetween(startDateStr, deadlineStr) + 1;
             if (totalDaysCount <= 1) {
-                alert("Please select a target deadline date in the future.");
+                showAppAlert({
+                    title: "Future Deadline Required",
+                    message: "Please select a target deadline date in the future.",
+                    icon: "fa-calendar-xmark text-amber-500"
+                });
                 return null;
             }
 
@@ -3171,6 +3326,18 @@
                 } else {
                     showToastMessage("Target checked off! Keep the streak alive!");
                 }
+
+                // Milestone Auth Trigger: Gently prompt to backup upon first completed task
+                if (!currentUser && !localStorage.getItem('has_dismissed_milestone_auth')) {
+                    const allCompletedCount = appState.plan.reduce((sum, d) => sum + d.tasks.filter(t => t.completed).length, 0);
+                    if (allCompletedCount === 1) {
+                        setTimeout(() => {
+                            if (!currentUser && !localStorage.getItem('has_dismissed_milestone_auth')) {
+                                openAuthModal();
+                            }
+                        }, 1200);
+                    }
+                }
             } else {
                 playUntickSound();
             }
@@ -3289,9 +3456,15 @@
         }
 
         async function resetApp() {
-            if (!confirm('Are you sure you want to reset your study plan and start fresh? All progress will be cleared.')) {
-                return;
-            }
+            const confirmed = await showAppConfirm({
+                title: "Reset Study Plan?",
+                message: "Are you sure you want to reset your study plan and start fresh? All checkmarks and completed targets on this device will be cleared.",
+                icon: "fa-triangle-exclamation text-rose-500",
+                confirmText: "Reset Everything",
+                cancelText: "Keep My Plan",
+                isDestructive: true
+            });
+            if (!confirmed) return;
 
             try {
                 // 1. If signed in, delete the cloud document from Firestore so it doesn't restore!
@@ -3818,18 +3991,26 @@
         }
 
         function handleInitialSetup() {
-            const deadlineInput = document.getElementById('deadline-date').value;
-            const targetTerm = parseInt(document.getElementById('target-term').value || "2");
+            const deadlineInput = document.getElementById('deadline-date')?.value;
+            const targetTerm = parseInt(document.getElementById('target-term')?.value || "2");
             const studyIntensity = document.getElementById('study-intensity')?.value || 'balanced';
 
             if (!deadlineInput) {
-                alert("Please select a target deadline date.");
+                showAppAlert({
+                    title: "Deadline Required",
+                    message: "Please choose your target examination deadline date.",
+                    icon: "fa-calendar-days text-blue-500"
+                });
                 return;
             }
 
             const days = calculateDaysBetween(TODAY_STR, deadlineInput);
             if (days <= 0) {
-                alert("Please select a future target deadline date.");
+                showAppAlert({
+                    title: "Future Date Required",
+                    message: "Please select a target deadline date in the future.",
+                    icon: "fa-calendar-xmark text-amber-500"
+                });
                 return;
             }
 
@@ -3854,9 +4035,13 @@
                     const subId = sub.replace(/\s+/g, '-').toLowerCase();
                     const cb = document.getElementById(`imp-${subId}`);
                     if (cb && cb.checked) {
-                        const examDate = document.getElementById(`input-date-${subId}`).value;
+                        const examDate = document.getElementById(`input-date-${subId}`)?.value;
                         if (!examDate) {
-                            alert(`Please set an exam date for ${sub} improvement.`);
+                            showAppAlert({
+                                title: "Exam Date Missing",
+                                message: `Please choose an exam date for ${sub} improvement.`,
+                                icon: "fa-calendar-day text-amber-500"
+                            });
                             hasError = true;
                             return;
                         }
@@ -3870,7 +4055,11 @@
             }
 
             if (tasksToPlan.length === 0) {
-                alert("All chapters in the selected term/improvement were marked finished! Please select a higher term or uncheck some chapters.");
+                showAppAlert({
+                    title: "All Chapters Excluded",
+                    message: "All chapters in the selected term/improvement were marked finished! Please select a higher term or uncheck some chapters.",
+                    icon: "fa-circle-info text-blue-500"
+                });
                 return;
             }
 
@@ -3900,7 +4089,7 @@
                 };
                 saveAppState();
                 goToDashboard();
-                schedulePostPlanAuthModal(8000);
+                showToastMessage("🎉 Your personalized study plan is ready! Let's conquer Day 1!", "fa-rocket text-blue-400");
             }
         }
 
@@ -5166,7 +5355,11 @@
                 try {
                     const parsed = JSON.parse(e.target.result);
                     if (!parsed || !Array.isArray(parsed.plan)) {
-                        alert("Invalid backup file format. Expected a Mission PlusTwo JSON plan backup.");
+                        showAppAlert({
+                            title: "Invalid File Format",
+                            message: "The selected file is not a recognized Mission PlusTwo JSON backup.",
+                            icon: "fa-file-circle-xmark text-rose-500"
+                        });
                         return;
                     }
                     // Validate and migrate if needed
@@ -5182,7 +5375,11 @@
                     showToastMessage("Study plan restored successfully!", "fa-circle-check text-emerald-400");
                 } catch(err) {
                     console.error("Import error:", err);
-                    alert("Could not read backup file. Please make sure it is a valid JSON file.");
+                    showAppAlert({
+                        title: "File Read Error",
+                        message: "Could not read or parse the backup file. Please make sure it is a valid JSON file.",
+                        icon: "fa-triangle-exclamation text-rose-500"
+                    });
                 } finally {
                     event.target.value = '';
                 }
@@ -5233,7 +5430,11 @@
                 });
             } else {
                 // If browser already installed or iOS Safari
-                alert("To install on your phone or desktop: \n• On Chrome/Edge: Tap the (⋮) menu ➔ 'Install App'\n• On iPhone/Safari: Tap Share (📤) ➔ 'Add to Home Screen'");
+                showAppAlert({
+                    title: "Install Mission PlusTwo App",
+                    message: "• <strong>On Android / Chrome:</strong> Tap menu (⋮) ➔ 'Install App'<br>• <strong>On iPhone / Safari:</strong> Tap Share (📤) ➔ 'Add to Home Screen'<br>• <strong>On Brave / Edge:</strong> Click the install icon in the URL address bar.",
+                    icon: "fa-download text-emerald-500"
+                });
             }
         }
 

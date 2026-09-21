@@ -1,20 +1,21 @@
 <div align="center">
 
-<img src="icon.png" alt="Mission PlusTwo Logo" width="120" style="border-radius: 24px; box-shadow: 0 10px 25px rgba(37,99,235,0.25);" />
+<img src="icon-512.png" alt="Mission PlusTwo Logo" width="120" style="border-radius: 28px; box-shadow: 0 10px 25px rgba(37,99,235,0.25);" />
 
-# 🎓 Plus Two Study Planner (Mission PlusTwo)
-### 🚀 The Intelligent Daily Study Planner & Timetable Generator for Kerala Higher Secondary (+2) & +1 Improvement Students
+# 🎓 Mission PlusTwo (v6.0)
+### 🚀 The Intelligent Daily Study Planner for Kerala Higher Secondary (+2) & +1 Improvement Students
 
 [![🚀 Open Web App](https://img.shields.io/badge/🚀_LAUNCH_WEB_APP-CLICK_HERE_TO_OPEN-2563eb?style=for-the-badge&logo=googlechrome&logoColor=white)](https://sreyasts.github.io/intelligent-study-planner-for-plus-two-/)
-[![GitHub Stars](https://img.shields.io/github/stars/sreyasts/intelligent-study-planner-for-plus-two-?style=for-the-badge&logo=github&color=f59e0b)](https://github.com/sreyasts/intelligent-study-planner-for-plus-two-/stargazers)
-[![Syllabus](https://img.shields.io/badge/Curriculum-Kerala_DHSE_Rationalized-10b981?style=for-the-badge&logo=bookstack&logoColor=white)](https://sreyasts.github.io/intelligent-study-planner-for-plus-two-/)
-[![PWA Ready](https://img.shields.io/badge/PWA-Installable_Mobile_&_PC-8b5cf6?style=for-the-badge&logo=pwa&logoColor=white)](https://sreyasts.github.io/intelligent-study-planner-for-plus-two-/)
-[![Cloud Sync](https://img.shields.io/badge/Cloud_Sync-Firebase_Firestore-ea580c?style=for-the-badge&logo=firebase&logoColor=white)](https://sreyasts.github.io/intelligent-study-planner-for-plus-two-/)
+[![CI & Build](https://img.shields.io/github/actions/workflow/status/sreyasts/intelligent-study-planner-for-plus-two-/ci.yml?branch=main&style=for-the-badge&logo=githubactions&logoColor=white&label=CI%20Status)](https://github.com/sreyasts/intelligent-study-planner-for-plus-two-/actions)
+[![Test Suite](https://img.shields.io/badge/Tests-402%20Passed-10b981?style=for-the-badge&logo=vitest&logoColor=white)](https://github.com/sreyasts/intelligent-study-planner-for-plus-two-)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
+[![PWA Ready](https://img.shields.io/badge/PWA-WebAPK_Compliant-8b5cf6?style=for-the-badge&logo=pwa&logoColor=white)](https://sreyasts.github.io/intelligent-study-planner-for-plus-two-/)
+[![Privacy: DPDP](https://img.shields.io/badge/Privacy-DPDP_Act_2023-emerald?style=for-the-badge&logo=privacysandbox&logoColor=white)](pages/privacy.html)
 
 <br/>
 
-## 🌐 👉 [**CLICK HERE TO OPEN THE FREE WEB APP**](https://sreyasts.github.io/intelligent-study-planner-for-plus-two-/) 👈
-*No sign-up or app store downloads required — runs instantly in any browser on your Phone, Tablet, or PC!*
+## 🌐 👉 [**CLICK HERE TO LAUNCH MISSION PLUSTWO**](https://sreyasts.github.io/intelligent-study-planner-for-plus-two-/) 👈
+*100% Free & Open Source • Runs in any browser on Phone, Tablet, or PC • No downloads required*
 
 ---
 
@@ -22,84 +23,100 @@
 
 ## 📖 Why Mission PlusTwo?
 
-Most students download static PDF timetables from Telegram or HSSLive, try to follow them for 3 days, fall behind, and give up. 
+Most students download static PDF timetables from Telegram or HSSLive, try to follow them for 3 days, miss a day, fall behind, and give up. 
 
-**Mission PlusTwo** is an adaptive, dynamic daily timetable that works around **your** actual learning pace. It turns the massive Kerala DHSE Higher Secondary syllabus into realistic, day-by-day study targets with guaranteed mock revision buffers.
+**Mission PlusTwo** is an adaptive, dynamic daily timetable generator designed specifically for Kerala State Board (DHSE) Higher Secondary students. It calculates your exact deadline, balances subjects across school days and weekends, and guarantees dedicated revision buffers for mock exams and PYQ practice.
 
 ---
 
-## ⚡ Supercharged Features
+## ✨ Key Features in v6.0
 
 | Feature | Description |
 | :--- | :--- |
-| 🎯 **100% Rationalized DHSE Scheme** | Exact official rationalized chapters for **Physics** (14 ch), **Chemistry** (9 ch), **Mathematics** (13 ch), and **Computer Science** (10 ch). |
-| 🗓️ **Adaptive Pacing & Revision Buffer** | Enter your target exam date (Nov 30, Dec 20, Feb 28). The planner distributes chapters and **strictly reserves final days for mock PYQs and revision**. |
-| 📙 **Plus One (+1) Improvement Integration** | Appearing for +1 Improvement papers? Select your specific subjects and dates — portions are woven seamlessly between +2 chapters. |
-| ✂️ **Exclude Already Mastered Chapters** | Finished certain chapters in school or tuition? Tick them off in +2 Regular or +1 Improvement to focus only on what you still need to learn! |
-| ☁️ **Google Account Cloud Sync** | Sign in with your Google account on your phone, then open your laptop or tablet — your daily tick marks and progress sync bidirectionally in real-time. |
-| 🔄 **1-Click Intelligent Rebalancing** | Fell behind or took a break? Click **Adjust Plan**, pick where you left off, and the algorithm redistributes remaining chapters evenly without stress. |
-| 📱 **Installable PWA (Offline Support)** | Tap "Install App" on Android/Chrome or "Add to Home Screen" on iPhone to use it like a native offline mobile app. |
-| 🎵 **Dopamine Streak & Audio Chimes** | Every chapter checked off triggers satisfying **Tone.js chimes** and **confetti fireworks** to keep your study streak alive. |
+| 💻 **Computer Science & 🌿 Biology Streams** | Full dual-stream support: Physics, Chemistry, Maths + Computer Science (with Advances in Computing & ICT) or Botany & Zoology. |
+| ⚡ **1-Tap Instant Generation** | Zero-friction onboarding: pick your stream, click generate, and start your Day 1 schedule immediately. |
+| 📙 **Plus One (+1) Improvement Module** | Weaves +1 improvement chapters seamlessly before exam dates based strictly on the 2025–26 SCERT syllabus. |
+| 🛡️ **Guaranteed Revision Buffers** | Automatically reserves 1 to 10 final days prior to your target deadline strictly for mock question papers and formula recall. |
+| 🔄 **Intelligent Rebalancing** | Missed a few days? Select where you left off, and the algorithm redistributes remaining chapters evenly without starting over. |
+| ☁️ **Google Account Cloud Sync** | Offline-first with Cloud Firestore persistence. Sync your checkmarks seamlessly between phone and laptop. |
+| 🎵 **Ultra-Lightweight Audio Synth** | 0.6 KB native WebAudio harmonic chimes (no heavy external audio libraries) with haptic feedback and celebration confetti. |
+| 📱 **WebAPK & Maskable PWA** | Compliant PWA with dedicated maskable safe-zone icons, installing as a native standalone app without browser badges. |
+| 🌓 **OLED Dark & High-Contrast Light Mode** | Crisp, eye-strain-free reading experience calibrated for long late-night or morning study sessions. |
+| 🔒 **Privacy & DPDP Compliance** | Transparent, plain-English privacy policy compliant with India's Digital Personal Data Protection Act 2023. |
 
 ---
 
-## 📊 Traditional PDF Timetable vs. Mission PlusTwo
+## 🏛️ Project Architecture
 
-| Problem with Static PDF Schedules | The Mission PlusTwo Solution |
-| :--- | :--- |
-| ❌ If you miss a single day, the whole schedule collapses | ✅ **Dynamic Rebalance button** recalculates remaining syllabus evenly |
-| ❌ Forces you to study chapters you already know | ✅ **Chapter Excluder** lets you skip mastered topics in +2 & +1 |
-| ❌ Zero revision time before exams | ✅ **Built-in Buffer Algorithm** reserves up to 10 full days for PYQs |
-| ❌ Hard to track progress across phone and PC | ✅ **Google Cloud Sync** keeps tick marks identical across all devices |
-
----
-
-## 📚 Exact Kerala DHSE Syllabus Covered
-
-<details>
-<summary><strong>📘 Plus Two (+2) Rationalized Syllabus (Click to expand)</strong></summary>
-
-- **Physics (14 Chapters)**: Electric Charges & Fields, Electrostatic Potential & Capacitance, Current Electricity, Moving Charges & Magnetism, Magnetism & Matter, Electromagnetic Induction, Alternating Current, Electromagnetic Waves, Ray Optics, Wave Optics, Dual Nature of Radiation & Matter, Atoms, Nuclei, Semiconductor Electronics.
-- **Chemistry (9 Chapters)**: Solutions, Electrochemistry, Chemical Kinetics, d- and f-Block Elements, Coordination Compounds, Haloalkanes & Haloarenes, Alcohols, Phenols & Ethers, Aldehydes, Ketones & Carboxylic Acids, Biomolecules.
-- **Mathematics (13 Chapters)**: Relations & Functions, Inverse Trigonometric Functions, Matrices, Determinants, Continuity & Differentiability, Application of Derivatives, Integrals, Application of Integrals, Differential Equations, Vector Algebra, Three Dimensional Geometry, Linear Programming, Probability.
-- **Computer Science (10 Chapters)**: Structures & Pointers, OOP Concepts, Data Structures & Operations, Web Technology, Web Designing using HTML, Client-Side JavaScript, Web Hosting, Database Management Systems, Structured Query Language (SQL), Trends & Issues in Computing.
-</details>
-
-<details>
-<summary><strong>📙 Plus One (+1) Improvement Syllabus (Click to expand)</strong></summary>
-
-- **Physics (14 Chapters)**: Units & Measurements, Motion in a Straight Line, Motion in a Plane, Laws of Motion, Work Energy & Power, System of Particles & Rotational Motion, Gravitation, Mechanical Properties of Solids, Mechanical Properties of Fluids, Thermal Properties of Matter, Thermodynamics, Kinetic Theory, Oscillations, Waves.
-- **Chemistry (9 Chapters)**: Some Basic Concepts of Chemistry, Structure of Atom, Classification of Elements & Periodicity, Chemical Bonding & Molecular Structure, Thermodynamics, Equilibrium, Redox Reactions, Organic Chemistry: Basic Principles, Hydrocarbons.
-- **Mathematics (14 Chapters)**: Sets, Relations & Functions, Trigonometric Functions, Complex Numbers & Quadratic Equations, Linear Inequalities, Permutations & Combinations, Binomial Theorem, Sequences & Series, Straight Lines, Conic Sections, 3D Geometry, Limits & Derivatives, Statistics, Probability.
-- **Computer Science (10 Chapters)**: Discipline of Computing, Data Representation, Computer System Components, Programming Principles, Intro to C++, Data Types & Operators, Control Statements, Arrays, Functions, Computer Networks.
-</details>
-
----
-
-## 📢 Share with Classmates & Study Groups
-
-Help your school and tuition friends ace their higher secondary exams:
-
-- 👉 [**Share on WhatsApp**](https://api.whatsapp.com/send?text=Mission%20PlusTwo%3A%20Free%20intelligent%20daily%20study%20planner%20for%20Kerala%20DHSE%20Plus%20Two%20%28%2B2%29%20%26%20%2B1%20Improvement%20students%20with%20built-in%20revision%20buffer.%20Set%20your%20target%20date%20and%20generate%20your%20daily%20study%20plan%3A%0Ahttps%3A%2F%2Fsreyasts.github.io%2Fintelligent-study-planner-for-plus-two-%2F)
-- 👉 [**Share on Telegram**](https://t.me/share/url?url=https%3A%2F%2Fsreyasts.github.io%2Fintelligent-study-planner-for-plus-two-%2F&text=%F0%9F%8E%93%20Mission%20PlusTwo%20%E2%80%94%20Free%20intelligent%20daily%20study%20planner%20for%20Kerala%20DHSE%20Plus%20Two%20%28%2B2%29%20%26%20%2B1%20Improvement%20students%20with%20built-in%20revision%20buffer!)
-
----
-
-## 🛠️ Tech Stack
-
-- **Frontend**: Vanilla HTML5, Modern ES6+ JavaScript, Tailwind CSS
-- **Audio & Haptics**: Tone.js, Canvas Confetti, Web Vibration API
-- **Cloud & Sync**: Firebase Authentication (Google OAuth), Cloud Firestore (Offline Persistence)
-- **Deployment**: GitHub Pages, Progressive Web App (Service Worker v2.2)
+```
+├── .github/
+│   ├── workflows/ci.yml           # Automated GitHub Actions test & build verification
+│   └── ISSUE_TEMPLATE/            # Bug report and syllabus update templates
+├── docs/
+│   ├── distribution-growth-kit.md # WhatsApp, Telegram, and teacher outreach scripts
+│   ├── how-to-update-syllabus.md  # Community guide for updating syllabus data
+│   └── syllabus-discrepancy-report.md # Canonical audit against SCERT Scheme of Work
+├── pages/
+│   ├── plus-one-improvement-guide.html # SEO guide for +1 improvement students
+│   ├── privacy.html               # DPDP Act 2023 plain-English privacy policy
+│   ├── syllabus-plus-two.html     # Canonical Plus Two syllabus reference
+│   └── terms.html                 # Terms of service
+├── scripts/
+│   ├── check-dhse-datesheet.js    # Automated DHSE portal examination scraper
+│   ├── generate-pwa-icons.js      # Sharp-based PWA icon generator
+│   └── rollback-to-v5.ps1         # Emergency rollback safety script
+├── src/
+│   ├── analytics/tracker.js       # Cookieless, DPDP-compliant event tracking
+│   ├── audio/chime.js             # 0.6 KB WebAudio harmonic synth
+│   ├── data/
+│   │   ├── chapter-resources.js   # Verified textbook, PYQ, and KITE Victers links
+│   │   ├── syllabus-plus-one.js   # 2025-26 +1 Improvement syllabus
+│   │   ├── syllabus-plus-two.js   # 2026-27 +2 Canonical syllabus
+│   │   └── syllabus-schema.json   # JSON Schema validation
+│   ├── engine/
+│   │   ├── migration.js           # Idempotent state upgrade engine
+│   │   └── planner.js             # Deterministic study planner engine
+│   ├── ui/
+│   │   ├── dialogs.js             # Accessible in-app modal alerts & confirms
+│   │   └── icons.js               # Lightweight inline SVGs
+│   └── main.js                    # Unified ESM entrypoint
+├── tests/
+│   ├── engine.test.js             # Vitest unit test suite
+│   └── engine_test.cjs            # 402-check invariant test runner
+├── index.html                     # Main Single Page Application
+├── manifest.json                  # PWA WebAPK manifest
+├── sw.js                          # Offline Service Worker (Cache-first/Network-first)
+└── vite.config.js                 # Production Vite build configuration
+```
 
 ---
 
-## 🌟 Support & Contribute
+## 🧪 Testing & Verification
 
-If this study planner helped you organize your exam preparation:
-1. **Star this repository** ⭐️ (top right corner) to help other Kerala students discover it!
-2. Open an [Issue](https://github.com/sreyasts/intelligent-study-planner-for-plus-two-/issues) or submit a Pull Request if you have suggestions or feature requests.
+Every build runs automated unit tests and an exhaustive invariant test suite:
 
-<div align="center">
-  <sub>Made with ❤️ for Kerala Higher Secondary Students</sub>
-</div>
+```bash
+# Run Vitest test suite
+npm test
+
+# Run 402-invariant regression test suite
+npm run test:legacy
+
+# Build production bundle
+npm run build
+```
+
+---
+
+## 🤝 Contributing
+
+Contributions from students, teachers, and developers are welcome!
+- See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
+- See [docs/how-to-update-syllabus.md](docs/how-to-update-syllabus.md) if DHSE announces curriculum revisions.
+- Read our [SECURITY.md](SECURITY.md) for vulnerability reporting.
+
+---
+
+## 📄 License
+
+Mission PlusTwo is open source under the [MIT License](LICENSE).

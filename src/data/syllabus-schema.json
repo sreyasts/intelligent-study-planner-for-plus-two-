@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "KeralaDHSESyllabusChapter",
+  "type": "object",
+  "required": ["num", "name", "effort", "parts"],
+  "properties": {
+    "num": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 20,
+      "description": "Official 1-indexed chapter number in the SCERT textbook"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 2,
+      "description": "Official chapter title matching the Kerala DHSE textbook"
+    },
+    "term": {
+      "type": "integer",
+      "enum": [1, 2, 3],
+      "description": "Official DHSE academic term (Term 1: Onam, Term 2: Christmas, Term 3: Model & Board)"
+    },
+    "effort": {
+      "type": "string",
+      "enum": ["LOW", "MEDIUM", "HIGH", "VERY_HIGH"],
+      "description": "Cognitive difficulty and relative weight of the chapter"
+    },
+    "parts": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "required": ["title", "minutes"],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 5,
+            "description": "Specific subtopics and concept scope covered in this study part"
+          },
+          "minutes": {
+            "type": "integer",
+            "minimum": 30,
+            "maximum": 120,
+            "description": "Evidence-based estimated active study minutes for this part"
+          }
+        }
+      }
+    }
+  }
+}

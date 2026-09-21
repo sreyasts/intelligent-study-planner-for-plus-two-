@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy | Mission PlusTwo</title>
+    <meta name="description" content="Plain-English Privacy Policy for Mission PlusTwo. Learn how we protect Kerala student data under India's DPDP Act.">
+    <link rel="icon" type="image/png" href="../icon-192.png">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+            background-color: #f8fafc;
+            color: #0f172a;
+            line-height: 1.65;
+            padding: 24px 16px;
+        }
+        .container {
+            max-width: 760px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 24px;
+            border: 1px solid #e2e8f0;
+            padding: 32px 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+        }
+        h1 { font-size: 26px; font-weight: 800; margin-bottom: 8px; color: #0f172a; }
+        h2 { font-size: 18px; font-weight: 700; margin-top: 24px; margin-bottom: 8px; color: #1e293b; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px; }
+        p, li { font-size: 14px; color: #334155; margin-bottom: 12px; }
+        ul { padding-left: 20px; }
+        .highlight-box {
+            background-color: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 16px;
+            padding: 16px;
+            margin: 18px 0;
+            font-size: 13px;
+            color: #1e40af;
+        }
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 13px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="../index.html" class="back-link">← Back to Mission PlusTwo Study Planner</a>
+        
+        <h1>Privacy Policy</h1>
+        <p><strong>Effective Date:</strong> September 21, 2026</p>
+        <p><strong>Applicability:</strong> Mission PlusTwo (web application for Kerala Higher Secondary Class 11 and 12 students)</p>
+
+        <div class="highlight-box">
+            <strong>Key Summary for Students & Parents:</strong><br>
+            • Mission PlusTwo is completely free and open-source.<br>
+            • You can use 100% of the planner without signing in (all data stays solely on your phone or laptop).<br>
+            • If you choose to sign in with Google, we store your study checklist and your Google display name/email solely to sync progress across your devices.<br>
+            • We do NOT run ads, sell personal data, or track your behavior across the web.
+        </div>
+
+        <h2>1. Who We Are</h2>
+        <p>Mission PlusTwo is an open-source, non-profit community project built for Kerala Higher Secondary (+2) and Plus One (+1) Improvement students preparing for the Directorate of General Education (DHSE) exams.</p>
+
+        <h2>2. Data We Collect and Why</h2>
+        <p>We believe in strict data minimization:</p>
+        <ul>
+            <li><strong>Guest Mode (Default):</strong> When you use Mission PlusTwo without signing in, your syllabus selections, completed chapters, and study timetable are stored entirely in your device's browser <code>localStorage</code>. No personal information is transmitted to our servers.</li>
+            <li><strong>Google Sign-In (Optional Sync):</strong> If you tap "Connect Google Account" to sync your checklist between your smartphone and computer, we receive and store:
+                <ul>
+                    <li>Your Google Display Name (to greet you in the navigation bar).</li>
+                    <li>Your Google Email Address (to identify your study plan document in Cloud Firestore).</li>
+                    <li>Your Study Plan JSON data (target exam date, completed chapter IDs, subject priorities).</li>
+                </ul>
+            </li>
+            <li><strong>Anonymous Analytics:</strong> We record aggregate, cookieless metrics (e.g. how many times a plan is generated or shared) without recording IP addresses, cookies, or unique identifiers.</li>
+        </ul>
+
+        <h2>3. Compliance with India's Digital Personal Data Protection (DPDP) Act, 2023</h2>
+        <p>We recognize that many Plus One and Plus Two students in Kerala are between 15 and 18 years old. Under Section 9 of the India DPDP Act 2023:</p>
+        <ul>
+            <li>We do NOT track or profile children's browsing behavior.</li>
+            <li>We do NOT serve behavioral advertisements or sponsored commercial content.</li>
+            <li>We do NOT process any data likely to cause harm to a student.</li>
+            <li>Students may delete their cloud account and all study data at any time directly through the "Reset Plan" button in Settings, which wipes the Firestore document instantly.</li>
+        </ul>
+
+        <h2>4. Data Storage & Security</h2>
+        <p>Cloud data is hosted securely using Google Cloud Firebase (Firestore) in compliant data center regions. Access is governed by strict security rules ensuring that only your authenticated Google account can read or write your study document.</p>
+
+        <h2>5. Your Rights</h2>
+        <p>You have the right to inspect, export, or delete your study data at any time:</p>
+        <ul>
+            <li><strong>Export:</strong> Tap <em>Settings → Export Plan</em> to download a local JSON backup.</li>
+            <li><strong>Delete:</strong> Tap <em>Reset Plan</em> to permanently delete both your local browser storage and cloud document.</li>
+        </ul>
+
+        <h2>6. Contact & Open Source Verification</h2>
+        <p>Our code and security rules are completely open-source and transparent for community inspection at: <a href="https://github.com/sreyasts/intelligent-study-planner-for-plus-two-" target="_blank" rel="noopener noreferrer">github.com/sreyasts/intelligent-study-planner-for-plus-two-</a>. For privacy questions, please open an issue on GitHub.</p>
+    </div>
+</body>
+</html>

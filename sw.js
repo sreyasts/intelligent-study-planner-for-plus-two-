@@ -1,10 +1,16 @@
-// Mission PlusTwo Service Worker v5.7 (High-contrast light & dark mode theme engine)
-const CACHE_NAME = 'plustwo-mission-v5.7';
+// Mission PlusTwo Service Worker v6.0 (High-performance PWA & Offline Engine)
+const CACHE_NAME = 'plustwo-mission-v6.0';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './manifest.json',
-  './icon.png'
+  './icon.png',
+  './icon-192.png',
+  './icon-512.png',
+  './icon-maskable-192.png',
+  './icon-maskable-512.png',
+  './favicon-32.png',
+  './apple-touch-icon.png'
 ];
 
 self.addEventListener('install', (event) => {
