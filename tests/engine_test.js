@@ -91,7 +91,7 @@ function assert(condition, message) {
 }
 
 console.log('\n--- 1. CANONICAL SYLLABUS AUDIT (HSSLIVE SCERT SCHEME OF WORK) ---');
-assert(PLANNER_ENGINE_VERSION === 4, 'PLANNER_ENGINE_VERSION is 4');
+assert(PLANNER_ENGINE_VERSION === 5, 'PLANNER_ENGINE_VERSION is 5');
 
 // Chemistry Class 12: 10 chapters (Alcohols & Aldehydes in Term 2, Amines & Biomolecules in Term 3)
 const chem12 = PLUS_TWO_SYLLABUS.filter(t => t.subject === 'Chemistry');
@@ -132,12 +132,12 @@ const zoo12Chapters = [...new Set(zoo12.map(t => t.chapterName))];
 assert(zoo12Chapters.length === 8, `Class 12 Zoology has 8 chapters (found ${zoo12Chapters.length})`);
 assert(zoo12Chapters.some(c => c.includes('Biodiversity and Conservation')), 'Class 12 Zoology includes Biodiversity and Conservation');
 
-// Plus One Computer Science: 13 chapters (Python Curriculum 2026-27)
+// Plus One Computer Science: 10 chapters (2025-26 C++ Curriculum for Improvement Exam)
 const cs11 = PLUS_ONE_SYLLABUS.filter(t => t.subject === 'Computer Science');
 const cs11Chapters = [...new Set(cs11.map(t => t.chapterName))];
-assert(cs11Chapters.length === 13, `Class 11 CS has 13 chapters (found ${cs11Chapters.length})`);
-assert(cs11Chapters.some(c => c.includes('Getting Started with Python')), 'Class 11 CS includes Getting Started with Python');
-assert(cs11Chapters.some(c => c.includes('Computers and Society')), 'Class 11 CS includes Computers and Society');
+assert(cs11Chapters.length === 10, `Class 11 CS has 10 chapters for 2025-26 Improvement (found ${cs11Chapters.length})`);
+assert(cs11Chapters.some(c => c.includes('Introduction to C++ Programming')), 'Class 11 CS includes Introduction to C++ Programming');
+assert(cs11Chapters.some(c => c.includes('Computer Networks')), 'Class 11 CS includes Computer Networks');
 
 // Plus One Physics: 14 chapters
 const phys11 = PLUS_ONE_SYLLABUS.filter(t => t.subject === 'Physics');
@@ -350,7 +350,7 @@ const legacyState = {
 };
 
 const migrated = migrateLegacyUserPlan(legacyState);
-assert(migrated.engineVersion === 4, 'Migrated state has engineVersion 4');
+assert(migrated.engineVersion === 5, 'Migrated state has engineVersion 5');
 assert(migrated.plan.length > 0, 'Migrated state has new generated study plan');
 assert(migrated.diagnostics !== null, 'Migrated state has diagnostics');
 

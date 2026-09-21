@@ -348,116 +348,71 @@
         <!-- Injected dynamically by JS -->
     </main>
 
-    <!-- Search Engine Indexed Educational Content & FAQ (Crawlable by Googlebot & Search Generative AI) -->
-    <section class="max-w-5xl mx-auto px-4 sm:px-6 py-8 mb-14 text-slate-700">
-        <div class="bg-white rounded-3xl p-6 sm:p-9 border border-slate-200/80 shadow-sm">
-            <h1 class="text-xl sm:text-2xl font-black text-slate-900 mb-3 flex items-center gap-2.5">
-                <i class="fa-solid fa-graduation-cap text-blue-600"></i>
-                <span>Plus Two Study Planner: Kerala DHSE Class 12 & +1 Improvement Daily Timetable</span>
-            </h1>
-            <p class="text-xs sm:text-sm text-slate-600 leading-relaxed mb-6">
-                Welcome to <strong>Mission PlusTwo</strong>, the dedicated, free online <strong>Plus Two Study Planner</strong> engineered specifically for Kerala Higher Secondary (DHSE) students. Whether you are aiming for full A+ in your Term 1 & 2 Half-Yearly examinations, March Public Board Exams, or balancing <strong>Plus One (+1) Improvement</strong> backlogs, this planner builds an adaptive, day-by-day study timetable calibrated to your target date.
-            </p>
+    <!-- Search Engine Indexed Syllabus & FAQ Guide (Collapsible for a Clean Minimal UX) -->
+    <section class="max-w-4xl mx-auto px-4 sm:px-6 my-8 text-slate-500 text-xs no-print">
+        <details class="group bg-white rounded-2xl border border-slate-200/80 shadow-sm p-4 cursor-pointer">
+            <summary class="font-bold text-slate-700 flex items-center justify-between select-none">
+                <span class="flex items-center gap-2">
+                    <i class="fa-solid fa-graduation-cap text-blue-600"></i>
+                    <span>About Mission PlusTwo & Kerala DHSE Study Guide (FAQ)</span>
+                </span>
+                <i class="fa-solid fa-chevron-down text-slate-400 group-open:rotate-180 transition text-xs"></i>
+            </summary>
+            
+            <div class="mt-4 pt-4 border-t border-slate-100 text-slate-600 space-y-4 text-left">
+                <p class="leading-relaxed">
+                    <strong>Mission PlusTwo</strong> is a free, intelligent daily study planner engineered specifically for Kerala Higher Secondary (DHSE) students covering Class 12 and Plus One (+1) Improvement exams. It dynamically distributes syllabus chapters based on your deadline with built-in revision buffers.
+                </p>
 
-            <!-- Daily Routine Breakdown (Mirrors Google AI Overview search queries) -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200/70">
-                    <h3 class="text-xs sm:text-sm font-extrabold text-slate-800 mb-2 flex items-center gap-2">
-                        <i class="fa-solid fa-sun text-amber-500"></i> Daily Study Routine (School Days)
-                    </h3>
-                    <ul class="text-xs space-y-1.5 text-slate-600">
-                        <li><strong>4:30 AM – 6:00 AM (Morning Focus):</strong> Core theory, definitions, and heavy derivations.</li>
-                        <li><strong>8:00 AM – 4:30 PM (School Classes):</strong> Pay full attention in class; review formula sheets during breaks.</li>
-                        <li><strong>5:30 PM – 7:30 PM (Evening Practice):</strong> Numerical problems, chemical equations, and code snippets.</li>
-                        <li><strong>8:00 PM – 9:30 PM (Night Revision):</strong> Consolidate today's tasks and check them off in Mission PlusTwo.</li>
-                    </ul>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+                    <div class="bg-slate-50 rounded-xl p-3 border border-slate-100">
+                        <h4 class="font-bold text-slate-800 mb-1 flex items-center gap-1.5">
+                            <i class="fa-solid fa-sun text-amber-500"></i> Suggested Study Routine
+                        </h4>
+                        <ul class="space-y-1 text-[11px] text-slate-500">
+                            <li>• <strong>Morning (4:30 - 6:00 AM):</strong> Hardest derivations and core theory.</li>
+                            <li>• <strong>Evening (5:30 - 7:30 PM):</strong> Numericals, reactions, and code practice.</li>
+                            <li>• <strong>Night (8:30 - 9:30 PM):</strong> Check off daily targets in Mission PlusTwo.</li>
+                        </ul>
+                    </div>
+                    <div class="bg-slate-50 rounded-xl p-3 border border-slate-100">
+                        <h4 class="font-bold text-slate-800 mb-1 flex items-center gap-1.5">
+                            <i class="fa-solid fa-calendar-check text-blue-500"></i> Built-in Revision Buffer
+                        </h4>
+                        <ul class="space-y-1 text-[11px] text-slate-500">
+                            <li>• Final 5–10 days automatically reserved for full mock exams.</li>
+                            <li>• Dynamic rebalancing if you fall behind or miss days.</li>
+                            <li>• Multi-device cloud sync with your Google account.</li>
+                        </ul>
+                    </div>
                 </div>
-                <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200/70">
-                    <h3 class="text-xs sm:text-sm font-extrabold text-slate-800 mb-2 flex items-center gap-2">
-                        <i class="fa-solid fa-calendar-week text-indigo-500"></i> Weekly Subject Interleaving Strategy
-                    </h3>
-                    <ul class="text-xs space-y-1.5 text-slate-600">
-                        <li><strong>Balanced Rotation:</strong> Interleaves Physics, Chemistry, Maths & CS to prevent burnout.</li>
-                        <li><strong>Chapter Partitions:</strong> Large chapters are split into Part 1 & Part 2 for manageable pacing.</li>
-                        <li><strong>Plus One Improvement:</strong> Spreads +1 chapters smoothly before their October examination dates.</li>
-                        <li><strong>Guaranteed Mock Buffer:</strong> Automatically reserves final 5 to 10 days for full PYQ test papers.</li>
-                    </ul>
+
+                <div class="pt-2">
+                    <h4 class="font-bold text-slate-800 mb-2">Frequently Asked Questions</h4>
+                    <div class="space-y-2 text-[11px]">
+                        <p><strong>Q: What if I fall behind?</strong><br>Click <em>Adjust Plan</em> to redistribute remaining portions evenly without starting over.</p>
+                        <p><strong>Q: Does it save across devices?</strong><br>Yes. Connect with Google and your checklist syncs between mobile and laptop.</p>
+                    </div>
                 </div>
             </div>
-
-            <!-- FAQ Accordion -->
-            <h2 class="text-base sm:text-lg font-bold text-slate-900 mb-3 flex items-center gap-2">
-                <i class="fa-solid fa-circle-question text-blue-600"></i>
-                <span>Frequently Asked Questions (FAQ)</span>
-            </h2>
-            <div class="space-y-2.5 text-xs">
-                <details class="group bg-slate-50 rounded-xl p-3.5 border border-slate-200/70 cursor-pointer">
-                    <summary class="font-bold text-slate-800 flex items-center justify-between">
-                        <span>What makes this the best Plus Two study planner for Kerala syllabus?</span>
-                        <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 group-open:rotate-180 transition"></i>
-                    </summary>
-                    <p class="text-slate-600 mt-2 leading-relaxed">
-                        Unlike fixed PDF schedules from HSSLive or Telegram, Mission PlusTwo dynamically generates a personalized timetable based on your exam deadline (Nov 30, Dec 20, or Feb 28). If you miss days or fall behind, you can click <strong>Adjust Plan</strong> to recalculate your remaining syllabus evenly without having to start over.
-                    </p>
-                </details>
-                <details class="group bg-slate-50 rounded-xl p-3.5 border border-slate-200/70 cursor-pointer">
-                    <summary class="font-bold text-slate-800 flex items-center justify-between">
-                        <span>How does the planner handle Plus One Improvement papers?</span>
-                        <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 group-open:rotate-180 transition"></i>
-                    </summary>
-                    <p class="text-slate-600 mt-2 leading-relaxed">
-                        In Step 4 of the setup, you can select which +1 Improvement papers you are writing (Physics, Chemistry, Maths, CS) along with exam dates. The planner weaves those +1 portions evenly before exam day. You can also exclude chapters you already know by clicking the Plus One tab in Step 3!
-                    </p>
-                </details>
-                <details class="group bg-slate-50 rounded-xl p-3.5 border border-slate-200/70 cursor-pointer">
-                    <summary class="font-bold text-slate-800 flex items-center justify-between">
-                        <span>Will I lose my progress if I switch between my phone and PC?</span>
-                        <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 group-open:rotate-180 transition"></i>
-                    </summary>
-                    <p class="text-slate-600 mt-2 leading-relaxed">
-                        No! With Google Sign-In, all your chapter checkmarks, streak counts, and custom deadlines sync to Google Cloud Firestore in real time. You can check off a chapter on your phone during class and open your laptop at home to see the exact same progress.
-                    </p>
-                </details>
-            </div>
-        </div>
+        </details>
     </section>
 
-    <!-- Dedicated Open-Source GitHub Conversion Footer -->
-    <footer class="bg-white border-t border-slate-200 py-10 px-4 sm:px-6 mb-16 sm:mb-6">
-        <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-            <div class="flex items-center gap-3.5 text-center md:text-left">
-                <div class="w-11 h-11 rounded-2xl bg-slate-900 text-white flex items-center justify-center shrink-0 shadow-md">
-                    <svg class="w-5 h-5 fill-white" viewBox="0 0 24 24" aria-hidden="true">
-                        <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
-                    </svg>
-                </div>
-                <div>
-                    <h3 class="font-bold text-slate-900 text-sm flex items-center justify-center md:justify-start gap-2">
-                        <span>Mission PlusTwo is Free & Open Source</span>
-                        <span class="text-[10px] bg-slate-100 text-slate-600 font-bold px-2 py-0.5 rounded-md border border-slate-200">MIT</span>
-                    </h3>
-                    <p class="text-xs text-slate-500 mt-0.5">Built with ❤️ for Kerala Higher Secondary (+2) students. Star the repository to support new features!</p>
-                </div>
+    <!-- Minimal Clean Footer -->
+    <footer class="border-t border-slate-200 py-6 px-4 sm:px-6 mb-16 sm:mb-0 text-center text-xs text-slate-400 no-print">
+        <div class="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div class="flex items-center gap-2 text-slate-600 justify-center sm:justify-start">
+                <span class="font-bold">Mission PlusTwo</span>
+                <span>•</span>
+                <span>Free & Open Source for Kerala Higher Secondary</span>
             </div>
-
-            <!-- Conversion Action Buttons -->
-            <div class="flex flex-wrap items-center justify-center gap-2.5">
-                <a href="https://github.com/sreyasts/intelligent-study-planner-for-plus-two-" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-md transition-all hover:shadow-lg hover:-translate-y-0.5 active:scale-95">
-                    <svg class="w-4 h-4 fill-white shrink-0" viewBox="0 0 24 24" aria-hidden="true">
-                        <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
-                    </svg>
-                    <span>Star on GitHub</span>
-                    <i class="fa-solid fa-star text-amber-400 text-xs"></i>
+            <div class="flex items-center gap-4 justify-center sm:justify-end text-slate-500">
+                <a href="https://github.com/sreyasts/intelligent-study-planner-for-plus-two-" target="_blank" rel="noopener noreferrer" class="font-medium hover:text-slate-900 inline-flex items-center gap-1 transition">
+                    <i class="fa-brands fa-github text-sm"></i>
+                    <span>GitHub ★</span>
                 </a>
-
-                <a href="https://github.com/sreyasts/intelligent-study-planner-for-plus-two-/issues" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold py-2.5 px-3.5 rounded-xl border border-slate-200 transition active:scale-95" title="Report a problem or suggest a syllabus update">
-                    <i class="fa-solid fa-bug text-slate-500 text-xs"></i>
-                    <span>Report Issue</span>
-                </a>
-
-                <a href="https://github.com/sreyasts/intelligent-study-planner-for-plus-two-/fork" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold py-2.5 px-3.5 rounded-xl border border-slate-200 transition active:scale-95" title="Fork repository on GitHub">
-                    <i class="fa-solid fa-code-fork text-slate-500 text-xs"></i>
-                    <span>Fork Repo</span>
+                <a href="https://github.com/sreyasts/intelligent-study-planner-for-plus-two-/issues" target="_blank" rel="noopener noreferrer" class="font-medium hover:text-slate-900 transition">
+                    Report Issue
                 </a>
             </div>
         </div>
@@ -609,14 +564,14 @@
     <!-- Application JavaScript Logic -->
     <script>
         /* ==========================================================================
-           1. CANONICAL KERALA DHSE SCHEME OF WORK & SYLLABUS DATA (v4.0)
+           1. CANONICAL KERALA DHSE SCHEME OF WORK & SYLLABUS DATA (v5.0)
            Audited against official Kerala DHSE/SCERT Scheme of Work (HSSLive):
-           - Plus Two: Physics (14 ch), Chemistry (10 ch), Maths (13 ch), CS (12 ch with Advances in Computing & ICT), Botany (5 ch), Zoology (8 ch with Biodiversity)
-           - Plus One: Physics (14 ch), Chemistry (9 ch), Maths (14 ch), CS (13 ch - Python Curriculum 2026-27), Botany (9 ch), Zoology (10 ch)
+           - Plus Two (2026-27): Physics (14 ch), Chemistry (10 ch), Maths (13 ch), CS (12 ch with Advances in Computing & ICT), Botany (5 ch), Zoology (8 ch with Biodiversity)
+           - Plus One Improvement (2025-26 Curriculum): Physics (14 ch), Chemistry (9 ch), Maths (14 ch), CS (10 ch - 2025-26 C++ Curriculum), Botany (9 ch), Zoology (10 ch)
            ========================================================================== */
 
-        const PLANNER_ENGINE_VERSION = 4;
-        const PLAN_MIGRATION_VERSION = 4;
+        const PLANNER_ENGINE_VERSION = 5;
+        const PLAN_MIGRATION_VERSION = 5;
 
         const createCanonicalTasks = (subject, grade, chapters) => {
             let list = [];
@@ -632,13 +587,13 @@
                     
                     let topicTitle = '';
                     if (totalParts === 1) {
-                        topicTitle = 'Complete Chapter Concepts, Derivations & Key Problem Solving';
+                        topicTitle = 'Full Chapter Concepts & Key Problems';
                     } else if (p === 1) {
-                        topicTitle = `Part 1 of ${totalParts}: Foundational Concepts, Core Theory & First Principles`;
+                        topicTitle = `Part 1 of ${totalParts}: Core Concepts & Theory`;
                     } else if (p === totalParts) {
-                        topicTitle = `Part ${p} of ${totalParts}: Advanced Applications, Exercise Problems & Board PYQs`;
+                        topicTitle = `Part ${p} of ${totalParts}: Exercise Problems & PYQs`;
                     } else {
-                        topicTitle = `Part ${p} of ${totalParts}: In-Depth Mechanisms, Formulae & Problem Practice`;
+                        topicTitle = `Part ${p} of ${totalParts}: Mechanisms & Practice`;
                     }
 
                     let taskType = (p === totalParts || p > 1) ? 'PRACTICE' : 'LEARN';
@@ -809,21 +764,18 @@
                 { name: 'Probability', parts: 2, effort: 'MEDIUM' }
             ]),
 
-            // Computer Science: 13 Chapters (Official Python Curriculum 2026-27 Scheme of Work)
+            // Computer Science: 10 Chapters (Official 2025-26 Curriculum for Plus One Improvement Exam)
             ...createCanonicalTasks('Computer Science', '+1', [
-                { name: 'Introduction to Computing', parts: 1, effort: 'LOW' },
-                { name: 'Data Representation and Boolean Algebra', parts: 2, effort: 'MEDIUM' },
-                { name: 'Computer System Organisation', parts: 2, effort: 'LOW' },
-                { name: 'Getting Started with Python', parts: 2, effort: 'MEDIUM' },
-                { name: 'Python Fundamentals', parts: 2, effort: 'MEDIUM' },
-                { name: 'Control Statements', parts: 3, effort: 'HIGH' },
+                { name: 'The Discipline of Computing', parts: 1, effort: 'LOW' },
+                { name: 'Data Representation and Boolean Logic', parts: 2, effort: 'MEDIUM' },
+                { name: 'Components of the Computer System', parts: 2, effort: 'LOW' },
+                { name: 'Principles of Programming & Problem Solving', parts: 2, effort: 'HIGH' },
+                { name: 'Introduction to C++ Programming', parts: 2, effort: 'MEDIUM' },
+                { name: 'Data Types and Operators', parts: 2, effort: 'MEDIUM' },
+                { name: 'Control Statements', parts: 2, effort: 'HIGH' },
+                { name: 'Arrays', parts: 2, effort: 'HIGH' },
                 { name: 'Functions', parts: 2, effort: 'HIGH' },
-                { name: 'Strings', parts: 2, effort: 'MEDIUM' },
-                { name: 'Lists', parts: 2, effort: 'MEDIUM' },
-                { name: 'Tuples', parts: 1, effort: 'LOW' },
-                { name: 'Dictionary and Set', parts: 2, effort: 'MEDIUM' },
-                { name: 'Sorting and Searching', parts: 2, effort: 'HIGH' },
-                { name: 'Computers and Society', parts: 1, effort: 'LOW' }
+                { name: 'Computer Networks', parts: 2, effort: 'MEDIUM' }
             ]),
 
             // Botany: 9 Chapters
@@ -2887,160 +2839,110 @@
                     <div class="max-w-2xl mx-auto bg-white rounded-3xl p-5 sm:p-8 shadow-xl border border-slate-100 animate-fade-in-up">
                         <!-- Header -->
                         <div class="text-center mb-6">
-                            <div class="w-13 h-13 sm:w-14 sm:h-14 bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 rounded-2xl flex items-center justify-center text-white text-2xl mx-auto mb-3 shadow-lg shadow-blue-500/25">
+                            <div class="w-12 h-12 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center text-white text-xl mx-auto mb-2.5 shadow-md shadow-blue-500/20">
                                 <i class="fa-solid fa-graduation-cap"></i>
                             </div>
-                            <h2 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Mission Control Setup</h2>
-                            <p class="text-xs sm:text-sm text-slate-500 mt-1 max-w-md mx-auto">
-                                Generate your day-by-day Kerala DHSE study schedule with built-in revision buffer and multi-device sync.
+                            <h2 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Create Your Study Plan</h2>
+                            <p class="text-xs sm:text-sm text-slate-500 mt-1 max-w-sm mx-auto">
+                                A day-by-day timetable tailored to your Kerala DHSE exam syllabus.
                             </p>
-                            <div class="mt-2.5 flex items-center justify-center">
-                                <a href="https://github.com/sreyasts/intelligent-study-planner-for-plus-two-" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-200 px-2.5 py-1 rounded-full transition active:scale-95">
-                                    <svg class="w-3 h-3 fill-current" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
-                                    <span>Free & Open Source</span>
-                                    <span class="text-amber-500 font-bold">★ Star on GitHub</span>
-                                </a>
-                            </div>
                         </div>
 
-                        <!-- Google Sign-in / Cloud Status Card -->
-                        <div class="bg-gradient-to-r from-blue-50 via-indigo-50/50 to-blue-50 border border-blue-200/80 rounded-2xl p-4 mb-6 shadow-sm">
-                            <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
-                                <div class="flex items-center gap-3 text-center sm:text-left">
-                                    <div class="w-10 h-10 rounded-xl bg-white text-blue-600 flex items-center justify-center text-lg shadow-sm shrink-0">
-                                        <i class="fa-solid fa-cloud-arrow-up"></i>
-                                    </div>
-                                    <div>
-                                        <h4 class="text-xs sm:text-sm font-bold text-slate-800">
-                                            ${currentUser ? 'Google Account Connected' : 'Sync Between Phone & Laptop'}
-                                        </h4>
-                                        <p class="text-[11px] text-slate-500">
-                                            ${currentUser ? `Signed in as <strong class="text-slate-700">${currentUser.displayName || currentUser.email}</strong> • Auto-saving to cloud` : 'Sign in so your tick marks & progress are saved on every device.'}
-                                        </p>
-                                    </div>
-                                </div>
-                                ${!currentUser ? `
-                                    <button onclick="openAuthModal()" class="w-full sm:w-auto bg-white hover:bg-slate-50 text-slate-800 border-2 border-slate-200 hover:border-blue-400 font-extrabold text-xs py-2.5 px-4 rounded-xl shadow-sm transition flex items-center justify-center gap-2 active:scale-95 shrink-0">
-                                        <svg class="w-4 h-4" viewBox="0 0 24 24">
-                                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-                                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-                                        </svg>
-                                        <span>Sign in with Google</span>
-                                    </button>
-                                ` : `
-                                    <button onclick="signOutUser()" class="text-xs font-semibold text-slate-500 hover:text-slate-800 underline transition shrink-0">
-                                        Switch Account
-                                    </button>
-                                `}
-                            </div>
-                        </div>
-
-                        <div class="space-y-6">
-                            <!-- Step 1: Stream Selection (Biology Science vs Computer Science) -->
+                        <div class="space-y-5">
+                            <!-- Step 1: Stream Selection -->
                             <div>
-                                <div class="flex items-center justify-between mb-2.5">
-                                    <label class="text-xs font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-2">
-                                        <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[11px] font-black">1</span>
-                                        <span>Choose Your Academic Stream</span>
-                                    </label>
-                                    <span class="text-[11px] text-slate-400 font-medium">Select your group</span>
-                                </div>
+                                <label class="text-xs font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-2 mb-2.5">
+                                    <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[11px] font-black">1</span>
+                                    <span>Select Stream</span>
+                                </label>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    <!-- Option 1: Biology Science (Bio-Maths / General Science) -->
-                                    <div id="stream-card-bio" onclick="setStreamSelection('bio')" class="cursor-pointer p-4 rounded-2xl border-2 ${selectedStream === 'bio' ? 'border-emerald-600 bg-emerald-50/60 ring-2 ring-emerald-500/20 shadow-sm' : 'border-slate-200 bg-white hover:border-slate-300'} transition text-left flex flex-col justify-between relative">
+                                    <!-- Option 1: Biology Science -->
+                                    <div id="stream-card-bio" onclick="setStreamSelection('bio')" class="cursor-pointer p-3.5 sm:p-4 rounded-2xl border-2 ${selectedStream === 'bio' ? 'border-emerald-600 bg-emerald-50/60 ring-2 ring-emerald-500/20 shadow-sm' : 'border-slate-200 bg-white hover:border-slate-300'} transition text-left flex flex-col justify-between">
                                         <div class="flex items-start justify-between">
                                             <div class="flex items-center gap-2.5">
-                                                <div class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-base font-bold">
+                                                <div class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-sm font-bold">
                                                     <i class="fa-solid fa-seedling"></i>
                                                 </div>
                                                 <div>
-                                                    <h4 class="font-extrabold text-slate-900 text-sm">Biology Science</h4>
-                                                    <span class="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">Bio-Maths / General Science</span>
+                                                    <h4 class="font-bold text-slate-900 text-sm">Biology Science</h4>
+                                                    <span class="text-[10px] font-semibold text-emerald-700">Bio-Maths / General</span>
                                                 </div>
                                             </div>
                                             <span class="w-5 h-5 rounded-full ${selectedStream === 'bio' ? 'bg-emerald-600 text-white' : 'border border-slate-300'} flex items-center justify-center text-[10px] stream-check">
                                                 ${selectedStream === 'bio' ? '<i class="fa-solid fa-check"></i>' : ''}
                                             </span>
                                         </div>
-                                        <p class="text-[11px] text-slate-600 mt-2.5 pt-2 border-t border-slate-100 font-medium">
-                                            Physics • Chemistry • Mathematics • <strong>Botany & Zoology</strong>
+                                        <p class="text-[11px] text-slate-500 mt-2 pt-2 border-t border-slate-100 font-medium">
+                                            Physics • Chemistry • Maths • <strong>Botany & Zoology</strong>
                                         </p>
                                     </div>
 
                                     <!-- Option 2: Computer Science -->
-                                    <div id="stream-card-cs" onclick="setStreamSelection('cs')" class="cursor-pointer p-4 rounded-2xl border-2 ${selectedStream === 'cs' ? 'border-blue-600 bg-blue-50/60 ring-2 ring-blue-500/20 shadow-sm' : 'border-slate-200 bg-white hover:border-slate-300'} transition text-left flex flex-col justify-between relative">
+                                    <div id="stream-card-cs" onclick="setStreamSelection('cs')" class="cursor-pointer p-3.5 sm:p-4 rounded-2xl border-2 ${selectedStream === 'cs' ? 'border-blue-600 bg-blue-50/60 ring-2 ring-blue-500/20 shadow-sm' : 'border-slate-200 bg-white hover:border-slate-300'} transition text-left flex flex-col justify-between">
                                         <div class="flex items-start justify-between">
                                             <div class="flex items-center gap-2.5">
-                                                <div class="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center text-base font-bold">
+                                                <div class="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center text-sm font-bold">
                                                     <i class="fa-solid fa-laptop-code"></i>
                                                 </div>
                                                 <div>
-                                                    <h4 class="font-extrabold text-slate-900 text-sm">Computer Science</h4>
-                                                    <span class="text-[10px] font-bold text-blue-700 uppercase tracking-wider">Physics • Chem • Maths • CS</span>
+                                                    <h4 class="font-bold text-slate-900 text-sm">Computer Science</h4>
+                                                    <span class="text-[10px] font-semibold text-blue-700">Physics • Chem • Maths • CS</span>
                                                 </div>
                                             </div>
                                             <span class="w-5 h-5 rounded-full ${selectedStream === 'cs' ? 'bg-blue-600 text-white' : 'border border-slate-300'} flex items-center justify-center text-[10px] stream-check">
                                                 ${selectedStream === 'cs' ? '<i class="fa-solid fa-check"></i>' : ''}
                                             </span>
                                         </div>
-                                        <p class="text-[11px] text-slate-600 mt-2.5 pt-2 border-t border-slate-100 font-medium">
-                                            Physics • Chemistry • Mathematics • <strong>Computer Science</strong>
+                                        <p class="text-[11px] text-slate-500 mt-2 pt-2 border-t border-slate-100 font-medium">
+                                            Physics • Chemistry • Maths • <strong>Computer Science</strong>
                                         </p>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Step 2: Target Scope Milestone -->
+                            <!-- Step 2: Target Syllabus Scope -->
                             <div>
-                                <div class="flex items-center justify-between mb-2.5">
-                                    <label class="text-xs font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-2">
-                                        <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[11px] font-black">2</span>
-                                        <span>Choose Your Target Syllabus</span>
-                                    </label>
-                                    <span class="text-[11px] text-slate-400 font-medium">Click a goal to select</span>
-                                </div>
+                                <label class="text-xs font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-2 mb-2.5">
+                                    <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[11px] font-black">2</span>
+                                    <span>Target Syllabus</span>
+                                </label>
                                 <input type="hidden" id="target-term" value="2">
-                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                                     <!-- Card 1: Term 1 -->
-                                    <div id="term-card-1" onclick="setTermSelection(1)" class="cursor-pointer p-3.5 sm:p-4 rounded-2xl border-2 border-slate-200 bg-white hover:border-slate-300 transition text-left flex flex-col justify-between">
+                                    <div id="term-card-1" onclick="setTermSelection(1)" class="cursor-pointer p-3 sm:p-3.5 rounded-2xl border-2 border-slate-200 bg-white hover:border-slate-300 transition text-left flex flex-col justify-between">
                                         <div>
-                                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">First Terminal</span>
-                                            <h4 class="font-extrabold text-slate-900 text-sm">Term 1 Only</h4>
-                                            <p id="term-desc-1" class="text-[11px] text-slate-500 mt-1">${selectedStream === 'bio' ? 'Onam Exams (~18 chapters). Rapid short-term focus.' : 'Onam Exams (~17 chapters). Rapid short-term focus.'}</p>
+                                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">First Terminal</span>
+                                            <h4 class="font-bold text-slate-900 text-sm">Term 1 Only</h4>
+                                            <p id="term-desc-1" class="text-[11px] text-slate-500 mt-0.5">${selectedStream === 'bio' ? 'Onam exams portion (~18 chapters)' : 'Onam exams portion (~17 chapters)'}</p>
                                         </div>
-                                        <div class="mt-3 flex items-center justify-between">
-                                            <span class="text-[10px] font-semibold text-slate-400">Unit 1 portions</span>
+                                        <div class="mt-2.5 flex items-center justify-end">
                                             <span class="w-4 h-4 rounded-full border border-slate-300 flex items-center justify-center check-indicator"></span>
                                         </div>
                                     </div>
 
                                     <!-- Card 2: Term 1 & 2 (Recommended) -->
-                                    <div id="term-card-2" onclick="setTermSelection(2)" class="cursor-pointer p-3.5 sm:p-4 rounded-2xl border-2 border-blue-600 bg-blue-50/60 ring-2 ring-blue-500/20 transition text-left flex flex-col justify-between relative shadow-sm">
+                                    <div id="term-card-2" onclick="setTermSelection(2)" class="cursor-pointer p-3 sm:p-3.5 rounded-2xl border-2 border-blue-600 bg-blue-50/60 ring-2 ring-blue-500/20 transition text-left flex flex-col justify-between relative shadow-sm">
                                         <div class="absolute -top-2.5 right-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-sm uppercase tracking-wider">
-                                            ★ Recommended
+                                            ★ Popular
                                         </div>
                                         <div>
-                                            <span class="text-[10px] font-bold text-blue-600 uppercase tracking-wider block mb-1">Half-Yearly Target</span>
-                                            <h4 class="font-extrabold text-slate-900 text-sm">Term 1 & Term 2</h4>
-                                            <p id="term-desc-2" class="text-[11px] text-slate-600 mt-1">${selectedStream === 'bio' ? 'Complete pre-Christmas portion (~35 chaps) before model exams.' : 'Complete pre-Christmas portion (~31 chaps) before model exams.'}</p>
+                                            <span class="text-[10px] font-bold text-blue-600 uppercase tracking-wider block mb-0.5">Half-Yearly</span>
+                                            <h4 class="font-bold text-slate-900 text-sm">Term 1 & Term 2</h4>
+                                            <p id="term-desc-2" class="text-[11px] text-slate-600 mt-0.5">${selectedStream === 'bio' ? 'Christmas exam portion (~35 chapters)' : 'Christmas exam portion (~31 chapters)'}</p>
                                         </div>
-                                        <div class="mt-3 flex items-center justify-between">
-                                            <span class="text-[10px] font-bold text-blue-600">By Nov/Dec 2026</span>
+                                        <div class="mt-2.5 flex items-center justify-end">
                                             <span class="w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center text-[9px] check-indicator"><i class="fa-solid fa-check"></i></span>
                                         </div>
                                     </div>
 
                                     <!-- Card 3: Full Syllabus -->
-                                    <div id="term-card-3" onclick="setTermSelection(3)" class="cursor-pointer p-3.5 sm:p-4 rounded-2xl border-2 border-slate-200 bg-white hover:border-slate-300 transition text-left flex flex-col justify-between">
+                                    <div id="term-card-3" onclick="setTermSelection(3)" class="cursor-pointer p-3 sm:p-3.5 rounded-2xl border-2 border-slate-200 bg-white hover:border-slate-300 transition text-left flex flex-col justify-between">
                                         <div>
-                                            <span class="text-[10px] font-bold text-purple-600 uppercase tracking-wider block mb-1">Board Ready</span>
-                                            <h4 class="font-extrabold text-slate-900 text-sm">Full Syllabus</h4>
-                                            <p id="term-desc-3" class="text-[11px] text-slate-500 mt-1">${selectedStream === 'bio' ? 'All 49 rationalized chapters (Term 1 + 2 + 3) for Public Exams.' : 'All 46 rationalized chapters (Term 1 + 2 + 3) for Public Exams.'}</p>
+                                            <span class="text-[10px] font-bold text-purple-600 uppercase tracking-wider block mb-0.5">Board Ready</span>
+                                            <h4 class="font-bold text-slate-900 text-sm">Full Syllabus</h4>
+                                            <p id="term-desc-3" class="text-[11px] text-slate-500 mt-0.5">${selectedStream === 'bio' ? 'All 49 chapters for March Public Exams' : 'All 46 chapters for March Public Exams'}</p>
                                         </div>
-                                        <div class="mt-3 flex items-center justify-between">
-                                            <span class="text-[10px] font-semibold text-slate-400">March Public Exam</span>
+                                        <div class="mt-2.5 flex items-center justify-end">
                                             <span class="w-4 h-4 rounded-full border border-slate-300 flex items-center justify-center check-indicator"></span>
                                         </div>
                                     </div>
@@ -3049,16 +2951,13 @@
 
                             <!-- Step 3: Target Completion Deadline -->
                             <div>
-                                <div class="flex items-center justify-between mb-2">
-                                    <label class="text-xs font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-2">
-                                        <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[11px] font-black">3</span>
-                                        <span>Target Completion Deadline</span>
-                                    </label>
-                                    <span class="text-[11px] text-slate-400 font-medium">Quick presets:</span>
-                                </div>
+                                <label class="text-xs font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-2 mb-2">
+                                    <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[11px] font-black">3</span>
+                                    <span>Target Deadline</span>
+                                </label>
 
                                 <!-- Preset Buttons -->
-                                <div class="flex flex-wrap gap-2 mb-2.5">
+                                <div class="flex flex-wrap gap-2 mb-2">
                                     <button type="button" onclick="setDeadlinePreset('${getPresetDate(11, 30)}')" class="py-1.5 px-3 rounded-xl bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 text-xs font-semibold border border-slate-200 transition flex items-center gap-1.5">
                                         <i class="fa-regular fa-calendar-check text-[11px] text-blue-600"></i>
                                         <span>Nov 30 (Term 2 Target)</span>
@@ -3073,104 +2972,108 @@
                                     </button>
                                 </div>
 
-                                <input type="date" id="deadline-date" value="${getLocalDateStr(defaultTarget)}" onchange="updateDeadlinePreview()" oninput="updateDeadlinePreview()" class="w-full border-2 border-slate-200 rounded-2xl p-3.5 text-sm font-bold text-slate-800 bg-slate-50 focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-50 outline-none transition">
+                                <input type="date" id="deadline-date" value="${getLocalDateStr(defaultTarget)}" onchange="updateDeadlinePreview()" oninput="updateDeadlinePreview()" class="w-full border-2 border-slate-200 rounded-2xl p-3 text-sm font-bold text-slate-800 bg-slate-50 focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-50 outline-none transition">
 
                                 <!-- Live Calculation Feedback Box -->
-                                <div id="deadline-calc-label" class="mt-2.5 p-3 rounded-2xl bg-blue-50/70 border border-blue-100 text-xs text-slate-600"></div>
+                                <div id="deadline-calc-label" class="mt-2 p-2.5 rounded-xl bg-blue-50/70 border border-blue-100 text-xs text-slate-600"></div>
+                            </div>
 
-                                <!-- Daily Study Pace / Capacity Selector -->
-                                <div class="mt-3 pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                                    <div>
-                                        <label for="study-intensity" class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                                            <i class="fa-solid fa-gauge-high text-blue-600"></i>
-                                            <span>Daily Study Intensity</span>
+                            <!-- Optional Advanced Options Collapsible Accordion -->
+                            <details class="group border border-slate-200 rounded-2xl bg-slate-50/50 overflow-hidden">
+                                <summary class="p-3.5 sm:p-4 flex items-center justify-between cursor-pointer font-bold text-xs sm:text-sm text-slate-700 hover:bg-slate-100/60 transition list-none select-none">
+                                    <div class="flex items-center gap-2.5">
+                                        <i class="fa-solid fa-sliders text-blue-600"></i>
+                                        <span>More Options (Skip chapters, +1 improvement, study pace)</span>
+                                    </div>
+                                    <i class="fa-solid fa-chevron-down text-slate-400 text-xs transition duration-200 group-open:rotate-180"></i>
+                                </summary>
+
+                                <div class="p-4 pt-2 border-t border-slate-200/80 space-y-4 bg-white">
+                                    <!-- Daily Study Pace / Capacity Selector -->
+                                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-slate-50 rounded-xl border border-slate-200/70">
+                                        <div>
+                                            <label for="study-intensity" class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                                                <i class="fa-solid fa-gauge-high text-blue-600"></i>
+                                                <span>Daily Study Intensity</span>
+                                            </label>
+                                            <p class="text-[11px] text-slate-500">Adapts daily task pacing to your capacity</p>
+                                        </div>
+                                        <select id="study-intensity" class="text-xs font-bold bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-blue-600 transition cursor-pointer">
+                                            <option value="balanced" selected>Standard (2-3 parts/day)</option>
+                                            <option value="intense">Intensive (3-4+ parts/day)</option>
+                                            <option value="light">Relaxed (1-2 parts/day)</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Exclude Finished Chapters (+2 & +1 Improvement) -->
+                                    <div class="border border-slate-200 rounded-xl overflow-hidden bg-slate-50/40">
+                                        <button type="button" onclick="const w = document.getElementById('setup-chaps-wrapper'); w.classList.toggle('hidden'); const chv = document.getElementById('chaps-chevron'); chv.classList.toggle('rotate-180');" class="w-full p-3.5 flex items-center justify-between text-left hover:bg-slate-100/60 transition">
+                                            <div class="flex items-center gap-2.5">
+                                                <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold shrink-0">
+                                                    <i class="fa-solid fa-check-double"></i>
+                                                </div>
+                                                <div>
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="text-xs font-bold text-slate-800">Skip Already Finished Chapters</span>
+                                                        <span id="completed-chaps-badge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">0 excluded</span>
+                                                    </div>
+                                                    <span class="text-[11px] text-slate-500 block">Mark chapters completed in school or tuition to omit them from the plan.</span>
+                                                </div>
+                                            </div>
+                                            <i id="chaps-chevron" class="fa-solid fa-chevron-down text-slate-400 text-xs transition duration-200 shrink-0"></i>
+                                        </button>
+
+                                        <div id="setup-chaps-wrapper" class="hidden p-3.5 bg-white border-t border-slate-200">
+                                            <!-- Grade Tabs Switcher (+2 vs +1) -->
+                                            <div class="flex bg-slate-200/80 p-1 rounded-xl mb-3 gap-1">
+                                                <button type="button" id="grade-tab-p2" onclick="switchSetupGrade('+2')" class="flex-1 py-1.5 px-3 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-sm transition flex items-center justify-center gap-1.5">
+                                                    <i class="fa-solid fa-book-bookmark text-[11px]"></i>
+                                                    <span>📘 Plus Two (+2)</span>
+                                                </button>
+                                                <button type="button" id="grade-tab-p1" onclick="switchSetupGrade('+1')" class="flex-1 py-1.5 px-3 text-xs font-bold rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition flex items-center justify-center gap-1.5">
+                                                    <i class="fa-solid fa-star text-[11px]"></i>
+                                                    <span>📙 +1 Improvement</span>
+                                                </button>
+                                            </div>
+
+                                            <!-- Subject Tabs Switcher (Strictly Stream Isolated) -->
+                                            <div id="setup-subject-tabs-container" class="flex flex-wrap gap-1.5 mb-3">
+                                                ${renderSetupSubjectTabs()}
+                                            </div>
+
+                                            <!-- Active Chapter List Container -->
+                                            <div id="setup-subject-chapters-list" class="bg-slate-50/50 p-2.5 rounded-xl border border-slate-200/80">
+                                                ${renderSetupSubjectChapters(activeSetupSubjectTab, activeSetupGradeTab)}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Plus One Improvement Section -->
+                                    <div class="border border-slate-200 rounded-xl overflow-hidden bg-slate-50/40">
+                                        <label class="p-3.5 flex items-center justify-between cursor-pointer hover:bg-slate-100/60 transition">
+                                            <div class="flex items-center gap-2.5">
+                                                <input type="checkbox" id="has-improvement" onchange="document.getElementById('improvement-options').classList.toggle('hidden', !this.checked)" class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                                                <div>
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="text-xs font-bold text-slate-800">Add Plus One Improvement Papers</span>
+                                                        <span class="text-[9px] font-bold uppercase tracking-wider text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">Optional</span>
+                                                    </div>
+                                                    <span class="text-[11px] text-slate-500 block">Weaves +1 papers into your timetable before their exam dates.</span>
+                                                </div>
+                                            </div>
                                         </label>
-                                        <p class="text-[11px] text-slate-500">Adapts daily task pacing to your study capacity</p>
-                                    </div>
-                                    <select id="study-intensity" class="text-xs font-bold bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-blue-600 focus:bg-white transition cursor-pointer">
-                                        <option value="balanced" selected>Standard (2-3 parts/day)</option>
-                                        <option value="intense">Intensive (3-4+ parts/day)</option>
-                                        <option value="light">Relaxed (1-2 parts/day)</option>
-                                    </select>
-                                </div>
-                            </div>
 
-                            <!-- Step 4: Exclude Finished Chapters (+2 & +1 Improvement) -->
-                            <div class="border-2 border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm transition">
-                                <button type="button" onclick="const w = document.getElementById('setup-chaps-wrapper'); w.classList.toggle('hidden'); const chv = document.getElementById('chaps-chevron'); chv.classList.toggle('rotate-180');" class="w-full p-4 flex items-center justify-between text-left hover:bg-slate-50 transition">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-sm font-bold shrink-0">
-                                            <i class="fa-solid fa-check-double"></i>
-                                        </div>
-                                        <div>
-                                            <div class="flex items-center gap-2">
-                                                <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[11px] font-black">4</span>
-                                                <span class="text-xs sm:text-sm font-extrabold text-slate-800">Exclude Already Finished Chapters</span>
-                                                <span id="completed-chaps-badge" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">0 excluded</span>
+                                        <div id="improvement-options" class="hidden p-3.5 bg-white border-t border-slate-200 space-y-3">
+                                            <div id="improvement-subject-items-container" class="space-y-2">
+                                                ${renderImprovementSubjectItems()}
                                             </div>
-                                            <span class="text-[11px] text-slate-500 mt-0.5 block">Learned chapters in school or tuition? Mark them in <strong>+2 Regular</strong> or <strong>+1 Improvement</strong> to skip them.</span>
                                         </div>
-                                    </div>
-                                    <i id="chaps-chevron" class="fa-solid fa-chevron-down text-slate-400 text-xs transition duration-200 shrink-0"></i>
-                                </button>
-
-                                <div id="setup-chaps-wrapper" class="hidden p-4 bg-slate-50/50 border-t border-slate-200">
-                                    <!-- Grade Tabs Switcher (+2 vs +1) -->
-                                    <div class="flex bg-slate-200/80 p-1 rounded-2xl mb-3 gap-1">
-                                        <button type="button" id="grade-tab-p2" onclick="switchSetupGrade('+2')" class="flex-1 py-2 px-3 text-xs font-bold rounded-xl bg-blue-600 text-white shadow-sm transition flex items-center justify-center gap-1.5">
-                                            <i class="fa-solid fa-book-bookmark"></i>
-                                            <span>📘 Plus Two (+2 Regular)</span>
-                                        </button>
-                                        <button type="button" id="grade-tab-p1" onclick="switchSetupGrade('+1')" class="flex-1 py-2 px-3 text-xs font-bold rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition flex items-center justify-center gap-1.5">
-                                            <i class="fa-solid fa-star"></i>
-                                            <span>📙 Plus One Improvement (+1)</span>
-                                        </button>
-                                    </div>
-
-                                    <!-- Subject Tabs Switcher (Strictly Stream Isolated) -->
-                                    <div id="setup-subject-tabs-container" class="flex flex-wrap gap-1.5 mb-3">
-                                        ${renderSetupSubjectTabs()}
-                                    </div>
-
-                                    <!-- Active Chapter List Container -->
-                                    <div id="setup-subject-chapters-list" class="bg-white p-3 rounded-2xl border border-slate-200/80">
-                                        ${renderSetupSubjectChapters(activeSetupSubjectTab, activeSetupGradeTab)}
                                     </div>
                                 </div>
-                            </div>
-
-                            <!-- Step 5: Plus One Improvement Section -->
-                            <div class="border-2 border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm">
-                                <label class="p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition">
-                                    <div class="flex items-center gap-3">
-                                        <input type="checkbox" id="has-improvement" onchange="document.getElementById('improvement-options').classList.toggle('hidden', !this.checked)" class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
-                                        <div>
-                                            <div class="flex items-center gap-2">
-                                                <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[11px] font-black">5</span>
-                                                <span class="text-xs sm:text-sm font-extrabold text-slate-800">Add Plus One Improvement Papers</span>
-                                                <span class="text-[10px] font-bold uppercase tracking-wider text-amber-700 bg-amber-100 px-2 py-0.5 rounded-md">Optional</span>
-                                            </div>
-                                            <span class="text-[11px] text-slate-500 mt-0.5 block">Re-appearing for +1 exams? Weaves +1 syllabus evenly before each paper's exam date.</span>
-                                        </div>
-                                    </div>
-                                </label>
-
-                                <div id="improvement-options" class="hidden p-4 bg-slate-50/50 border-t border-slate-200 space-y-3">
-                                    <div class="text-[11px] font-semibold text-amber-900 bg-amber-50 p-3 rounded-xl border border-amber-200/80 flex items-start gap-2">
-                                        <i class="fa-solid fa-circle-info text-amber-600 mt-0.5 text-xs"></i>
-                                        <div>
-                                            <strong>Oct 2026 Examination Schedule:</strong> Select the papers you are appearing for.
-                                            <br><span class="text-amber-700">Tip: If you only need to revise specific chapters, go to <strong>Step 4</strong> above, select the <strong>Plus One Improvement</strong> tab, and mark the chapters you already know!</span>
-                                        </div>
-                                    </div>
-                                    <div id="improvement-subject-items-container" class="space-y-2">
-                                        ${renderImprovementSubjectItems()}
-                                    </div>
-                                </div>
-                            </div>
+                            </details>
 
                             <!-- Submit Button -->
-                            <button onclick="handleInitialSetup()" class="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-800 text-white font-black py-4 px-6 rounded-2xl shadow-xl shadow-blue-500/25 transform active:scale-[0.98] transition flex items-center justify-center gap-2 text-sm sm:text-base">
+                            <button onclick="handleInitialSetup()" class="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-800 text-white font-black py-3.5 sm:py-4 px-6 rounded-2xl shadow-xl shadow-blue-500/25 transform active:scale-[0.98] transition flex items-center justify-center gap-2 text-sm sm:text-base">
                                 <span>Generate My Study Plan</span>
                                 <i class="fa-solid fa-arrow-right"></i>
                             </button>
@@ -3307,97 +3210,60 @@
                 }
 
                 container.innerHTML = `
-                    <!-- Google Account Backup Callout Banner for Existing Users -->
-                    ${!currentUser ? `
-                        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/80 rounded-2xl p-4 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm no-print">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-xl bg-white text-blue-600 border border-blue-100 flex items-center justify-center text-lg shadow-sm shrink-0">
-                                    <i class="fa-solid fa-cloud-arrow-up"></i>
-                                </div>
-                                <div>
-                                    <h4 class="text-xs sm:text-sm font-bold text-slate-800">Save Progress Across Devices</h4>
-                                    <p class="text-[11px] text-slate-500">Sign in with Google so you can switch between phone and PC, or restore progress if you lose browser files.</p>
-                                </div>
+                    <!-- Unified Minimal Progress Card -->
+                    <div class="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/90 shadow-sm mb-5">
+                        <div class="flex items-center justify-between mb-2.5">
+                            <div class="flex items-baseline gap-2">
+                                <span class="text-xl sm:text-2xl font-black text-slate-900">${overallStats.percentage}%</span>
+                                <span class="text-xs text-slate-400 font-medium">${overallStats.completedCount} of ${overallStats.totalCount} chapters finished</span>
                             </div>
-                            <button onclick="openAuthModal()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-md shadow-blue-500/20 transition flex items-center justify-center gap-2 shrink-0 active:scale-95">
-                                <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24">
-                                    <path fill="#ffffff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                                    <path fill="#ffffff" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                                    <path fill="#ffffff" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-                                    <path fill="#ffffff" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-                                </svg>
-                                <span>Sign in with Google</span>
-                            </button>
-                        </div>
-                    ` : `
-                        <div class="bg-emerald-50/70 border border-emerald-200/80 rounded-2xl px-4 py-2.5 mb-6 flex items-center justify-between text-xs text-emerald-800 shadow-sm no-print">
-                            <span class="flex items-center gap-2">
-                                <i class="fa-solid fa-cloud-check text-emerald-600"></i>
-                                <span>Cloud Sync Active for <strong>${currentUser.displayName || currentUser.email}</strong> • Progress automatically synced</span>
+                            <span class="inline-flex items-center gap-1.5 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200/70 px-2.5 py-1 rounded-xl">
+                                <i class="fa-solid fa-fire text-amber-500"></i>
+                                <span>${getActiveStreak()} Day Streak</span>
                             </span>
-                            <span class="text-[10px] bg-emerald-100/80 text-emerald-700 px-2 py-0.5 rounded-md font-bold">Auto-saved</span>
                         </div>
-                    `}
 
-                    <!-- Stream Badge Indicator -->
-                    <div class="flex items-center justify-between gap-2 mb-3 no-print">
-                        ${(function() {
-                            const userStream = appState?.stream || (appState?.plan?.some(d => d.tasks.some(t => t.subject === 'Botany' || t.subject === 'Zoology')) ? 'bio' : 'cs');
-                            return userStream === 'bio' ? `
-                                <div class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1 rounded-xl text-xs font-bold shadow-sm">
-                                    <i class="fa-solid fa-seedling text-emerald-600"></i>
-                                    <span>Biology Science Stream (Botany & Zoology)</span>
-                                </div>
-                            ` : `
-                                <div class="inline-flex items-center gap-1.5 bg-blue-50 text-blue-800 border border-blue-200 px-3 py-1 rounded-xl text-xs font-bold shadow-sm">
-                                    <i class="fa-solid fa-laptop-code text-blue-600"></i>
-                                    <span>Computer Science Stream</span>
-                                </div>
-                            `;
-                        })()}
-                    </div>
+                        <!-- Progress Bar -->
+                        <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden mb-3.5">
+                            <div class="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 h-2.5 rounded-full transition-all duration-500" style="width: ${overallStats.percentage}%"></div>
+                        </div>
 
-                    <!-- Quick Stats Header (5-Card Grid including Daily Streak Flame) -->
-                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5 sm:gap-3 mb-6">
-                        <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
-                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Overall Done</span>
-                            <span class="text-xl sm:text-2xl font-extrabold text-blue-600">${overallStats.percentage}%</span>
-                        </div>
-                        <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
-                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Chapters Done</span>
-                            <span class="text-xl sm:text-2xl font-extrabold text-slate-800">${overallStats.completedCount} / ${overallStats.totalCount}</span>
-                        </div>
-                        <div class="bg-white p-3.5 rounded-2xl border border-amber-200 bg-amber-50/40 shadow-sm flex flex-col justify-between">
-                            <span class="text-[10px] font-bold uppercase tracking-wider text-amber-700 block flex items-center gap-1">
-                                <i class="fa-solid fa-fire text-amber-500 animate-pulse"></i> Daily Streak
+                        <!-- Key Milestone Badges -->
+                        <div class="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500 pt-3 border-t border-slate-100">
+                            <div class="flex items-center gap-4">
+                                <span class="flex items-center gap-1.5">
+                                    <i class="fa-regular fa-calendar-check text-blue-600"></i>
+                                    <span>Target: <strong class="text-slate-700">${new Date(appState.deadlineDate).toLocaleDateString('en-US', {month: 'short', day: 'numeric'})}</strong></span>
+                                </span>
+                                <span class="flex items-center gap-1.5">
+                                    <i class="fa-solid fa-shield-halved text-purple-600"></i>
+                                    <span>Revision Buffer: <strong class="text-slate-700">${appState.revisionDaysCount || 0}d</strong></span>
+                                </span>
+                            </div>
+                            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                                ${(function() {
+                                    const userStream = appState?.stream || (appState?.plan?.some(d => d.tasks.some(t => t.subject === 'Botany' || t.subject === 'Zoology')) ? 'bio' : 'cs');
+                                    return userStream === 'bio' ? '🌿 Biology Science' : '💻 Computer Science';
+                                })()}
                             </span>
-                            <span class="text-xl sm:text-2xl font-extrabold text-amber-600">${getActiveStreak()} <span class="text-xs font-semibold text-amber-700">Days</span></span>
-                        </div>
-                        <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
-                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Deadline</span>
-                            <span class="text-xs sm:text-sm font-bold text-slate-800 mt-1 block">${new Date(appState.deadlineDate).toLocaleDateString('en-US', {month: 'short', day: 'numeric'})}</span>
-                        </div>
-                        <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
-                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Mock Buffer</span>
-                            <span class="text-xl sm:text-2xl font-extrabold text-purple-600">${appState.revisionDaysCount || 0}d</span>
                         </div>
                     </div>
 
                     <!-- Quick Action Bar -->
-                    <div class="flex flex-wrap items-center justify-between gap-2.5 mb-4 no-print">
+                    <div class="flex items-center justify-between gap-2 mb-4 no-print">
                         <div class="flex items-center gap-2">
                             <button onclick="printSchedule()" class="flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-bold text-xs py-2 px-3 sm:px-3.5 rounded-xl shadow-sm transition active:scale-95" title="Print full schedule or save as PDF">
                                 <i class="fa-solid fa-print text-blue-600"></i>
-                                <span>Print / Save PDF</span>
+                                <span>Print / PDF</span>
                             </button>
                             <button onclick="openRegenerateModal()" class="flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-semibold text-xs py-2 px-3 rounded-xl shadow-sm transition active:scale-95" title="Recalculate schedule if you missed days">
                                 <i class="fa-solid fa-wrench text-slate-500"></i>
                                 <span>Adjust Plan</span>
                             </button>
                         </div>
-                        <button onclick="shareApp()" class="flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-semibold text-xs py-2 px-3 sm:px-3.5 rounded-xl shadow-sm transition active:scale-95" title="Share with Classmates">
+                        <button onclick="shareApp()" class="flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-semibold text-xs py-2 px-3 rounded-xl shadow-sm transition active:scale-95">
                             <i class="fa-solid fa-arrow-up-from-bracket text-slate-500"></i>
-                            <span>Share Plan</span>
+                            <span>Share</span>
                         </button>
                     </div>
 
@@ -3406,52 +3272,15 @@
                         ${todayTasksHTML}
                     </div>
 
-                    <!-- Community & Classmates Share Card (Clean, Premium, Minimalist) -->
-                    <div class="bg-white rounded-2xl p-4 sm:p-5 mb-6 border border-slate-200/90 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
-                        <div class="flex items-center gap-3 text-center sm:text-left">
-                            <div class="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center shrink-0 shadow-sm">
-                                <i class="fa-solid fa-graduation-cap text-base"></i>
-                            </div>
-                            <div>
-                                <h4 class="text-xs sm:text-sm font-bold text-slate-900 flex items-center justify-center sm:justify-start gap-2">
-                                    <span>Share with Classmates & Study Groups</span>
-                                    <span class="text-[10px] bg-blue-50 text-blue-700 font-bold px-2 py-0.5 rounded-full border border-blue-200/60">Free Tool</span>
-                                </h4>
-                                <p class="text-[11px] text-slate-500 mt-0.5">Help friends stay on track for Higher Secondary & Improvement exams.</p>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-2 w-full sm:w-auto shrink-0 flex-wrap sm:flex-nowrap">
-                            <button onclick="shareOnWhatsApp()" class="flex-1 sm:flex-initial bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2 px-3.5 rounded-xl shadow-sm transition flex items-center justify-center gap-1.5 active:scale-95" title="Share on WhatsApp">
-                                <i class="fa-brands fa-whatsapp text-sm"></i>
-                                <span>WhatsApp</span>
-                            </button>
-                            <button onclick="shareOnTelegram()" class="flex-1 sm:flex-initial bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs py-2 px-3.5 rounded-xl shadow-sm transition flex items-center justify-center gap-1.5 active:scale-95" title="Share on Telegram">
-                                <i class="fa-brands fa-telegram text-sm"></i>
-                                <span>Telegram</span>
-                            </button>
-                            <a href="https://github.com/sreyasts/intelligent-study-planner-for-plus-two-" target="_blank" rel="noopener noreferrer" class="flex-1 sm:flex-initial bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs py-2 px-3 rounded-xl border border-slate-200 transition flex items-center justify-center gap-1.5 active:scale-95" title="Star on GitHub">
-                                <svg class="w-3.5 h-3.5 fill-slate-700" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
-                                <span>GitHub</span>
-                                <i class="fa-solid fa-star text-amber-500 text-[10px]"></i>
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- Bottom Controls: Subtle Adjust & Reset (As Requested by User) -->
-                    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 border-t border-slate-200 text-xs text-slate-500">
-                        <div class="flex items-center gap-2">
-                            <button onclick="openRegenerateModal()" class="py-2 px-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition flex items-center gap-1.5 shadow-sm">
-                                <i class="fa-solid fa-wrench text-slate-500"></i>
-                                <span>Adjust / Rebalance Schedule</span>
-                            </button>
-                            <span class="text-[11px] text-slate-400 hidden md:inline">Fell behind? Recalculate remaining portions.</span>
-                        </div>
-
-                        <div>
-                            <button onclick="resetApp()" class="text-slate-400 hover:text-red-600 transition underline">
-                                Reset Plan & Start Fresh
-                            </button>
-                        </div>
+                    <!-- Clean Bottom Controls -->
+                    <div class="flex items-center justify-between pt-4 border-t border-slate-200 text-xs text-slate-400 no-print">
+                        <button onclick="openRegenerateModal()" class="text-slate-500 hover:text-slate-800 font-medium transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-rotate text-xs"></i>
+                            <span>Fell behind? Recalculate remaining portions</span>
+                        </button>
+                        <button onclick="resetApp()" class="text-slate-400 hover:text-red-600 transition underline">
+                            Reset Plan
+                        </button>
                     </div>
                 `;
 
