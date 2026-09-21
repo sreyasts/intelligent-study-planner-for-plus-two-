@@ -1,6 +1,10 @@
-const fs = require('fs');
-const path = require('path');
-const vm = require('vm');
+import fs from 'fs';
+import path from 'path';
+import vm from 'vm';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const htmlPath = path.join(__dirname, '..', 'index.html');
 const html = fs.readFileSync(htmlPath, 'utf8');
@@ -63,9 +67,16 @@ const context = {
   setInterval: setInterval,
   clearInterval: clearInterval,
   navigator: { onLine: true, serviceWorker: { register: () => Promise.resolve() } },
+  CustomEvent: class CustomEvent {
+    constructor(type, options) {
+      this.type = type;
+      this.detail = options?.detail;
+    }
+  },
   window: {
     addEventListener: () => {},
     removeEventListener: () => {},
+    dispatchEvent: () => true,
     matchMedia: (query) => ({
       matches: query.includes('dark') ? true : false,
       addEventListener: () => {}
@@ -181,4 +192,35 @@ if (!html.includes('id="auth-avatar-btn"')) {
   throw new Error('Unified auth avatar button not found in HTML!');
 }
 
-console.log('ALL SETTINGS, THEME & PROFILE TESTS PASSED PERFECTLY!');
+// Verify language switcher moved from header to settings modal
+console.log('Testing language switcher placement invariant...');
+if (html.includes('id="lang-switch-btn"')) {
+  throw new Error('Header language switcher button (lang-switch-btn) still present in HTML!');
+}
+if (!html.includes('id="lang-btn-en"') || !html.includes('id="lang-btn-ml"')) {
+  throw new Error('Language selector buttons (lang-btn-en / lang-btn-ml) missing in settings modal!');
+}
+if (!html.includes('id="settings-lang-badge"')) {
+  throw new Error('settings-lang-badge missing in settings modal!');
+}
+
+// Test language switching in VM context
+console.log('Testing setAppLanguage in VM context...');
+context.setAppLanguage('ml');
+if (context.getAppLanguage() !== 'ml') {
+  throw new Error('Language preference was not saved to ml!');
+}
+if (context.document.documentElement.lang !== 'ml') {
+  throw new Error('document.documentElement.lang was not set to ml!');
+}
+
+context.setAppLanguage('en');
+if (context.getAppLanguage() !== 'en') {
+  throw new Error('Language preference was not saved to en!');
+}
+if (context.document.documentElement.lang !== 'en') {
+  throw new Error('document.documentElement.lang was not set to en!');
+}
+
+console.log('ALL SETTINGS, THEME, LANGUAGE & PROFILE TESTS PASSED PERFECTLY!');
+process.exit(0);

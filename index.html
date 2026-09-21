@@ -1011,12 +1011,6 @@
                     </div>
                 </div>
 
-                <!-- In-App Language Switcher Button (Very Small Pill) -->
-                <button id="lang-switch-btn" onclick="toggleLanguagePreference()" class="flex items-center gap-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700/80 text-[11px] font-bold py-1 px-2 rounded-lg shadow-2xs transition active:scale-95 shrink-0" title="Switch Language / ഭാഷ മാറ്റുക">
-                    <span id="lang-btn-flag" class="text-[10px] font-black text-blue-600 dark:text-blue-400">EN</span>
-                    <span id="lang-btn-label" class="text-[10px] text-slate-500 dark:text-slate-400">| മ</span>
-                </button>
-
                 <!-- Share with Classmates Button -->
                 <button onclick="shareApp()" class="flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200/80 text-xs font-bold py-1.5 px-2.5 sm:px-3 rounded-xl shadow-sm transition active:scale-95 shrink-0" title="Share with Classmates on WhatsApp & Telegram">
                     <i class="fa-solid fa-share-nodes text-emerald-600"></i>
@@ -1260,7 +1254,31 @@
                     <p class="text-[10px] text-slate-400 dark:text-slate-400 mt-2">Dark mode features a high-contrast deep slate palette designed for long study sessions without eye strain.</p>
                 </div>
 
-                <!-- 2. Study Experience Toggles -->
+                <!-- 2. Language Selection -->
+                <div class="bg-slate-50 dark:bg-[#141d30] p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800/80">
+                    <div class="flex items-center justify-between mb-2.5">
+                        <label class="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                            <i class="fa-solid fa-language text-blue-600 dark:text-blue-400"></i>
+                            <span>Language / ഭാഷ</span>
+                        </label>
+                        <span id="settings-lang-badge" class="text-[10px] bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 font-bold px-2 py-0.5 rounded-full uppercase">English</span>
+                    </div>
+
+                    <!-- 2-Way Segmented Language Switcher -->
+                    <div class="grid grid-cols-2 gap-1.5 p-1 bg-white dark:bg-[#0e1422] rounded-xl border border-slate-200 dark:border-slate-700/80">
+                        <button type="button" id="lang-btn-en" onclick="setAppLanguage('en')" class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-bold transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
+                            <i class="fa-solid fa-globe text-blue-500 text-xs"></i>
+                            <span>English</span>
+                        </button>
+                        <button type="button" id="lang-btn-ml" onclick="setAppLanguage('ml')" class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-bold transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
+                            <i class="fa-solid fa-book-open text-emerald-500 text-xs"></i>
+                            <span>മലയാളം</span>
+                        </button>
+                    </div>
+                    <p class="text-[10px] text-slate-400 dark:text-slate-400 mt-2">Auto-detects browser translation. Switch navigation, study actions, and guidance between English and Malayalam.</p>
+                </div>
+
+                <!-- 3. Study Experience Toggles -->
                 <div class="bg-slate-50 dark:bg-[#141d30] p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800/80 space-y-3">
                     <label class="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 mb-1">
                         <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i>
@@ -5357,7 +5375,33 @@
             if (!lang) lang = getAppLanguage();
             const isML = lang === 'ml';
 
-            // 1. Update In-App Switcher Button UI
+            // 1. Update Settings Modal Language Buttons & Badge
+            const btnEn = document.getElementById('lang-btn-en');
+            const btnMl = document.getElementById('lang-btn-ml');
+            const langBadge = document.getElementById('settings-lang-badge');
+
+            if (btnEn) {
+                if (!isML) {
+                    btnEn.className = 'flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-black transition-all bg-blue-600 text-white shadow-xs';
+                } else {
+                    btnEn.className = 'flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-semibold transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white';
+                }
+            }
+            if (btnMl) {
+                if (isML) {
+                    btnMl.className = 'flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-black transition-all bg-blue-600 text-white shadow-xs';
+                } else {
+                    btnMl.className = 'flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-semibold transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white';
+                }
+            }
+            if (langBadge) {
+                langBadge.textContent = isML ? 'മലയാളം' : 'English';
+                langBadge.className = isML
+                    ? 'text-[10px] bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 font-bold px-2 py-0.5 rounded-full'
+                    : 'text-[10px] bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 font-bold px-2 py-0.5 rounded-full uppercase';
+            }
+
+            // 2. Safe check for any legacy button
             const flag = document.getElementById('lang-btn-flag');
             const lbl = document.getElementById('lang-btn-label');
             const switchBtn = document.getElementById('lang-switch-btn');
@@ -5377,7 +5421,7 @@
                 switchBtn.setAttribute('aria-label', isML ? 'Switch to English' : 'Switch to Malayalam');
             }
 
-            // 2. Update Desktop Navigation Labels
+            // 3. Update Desktop Navigation Labels
             const navToday = document.getElementById('nav-text-today');
             const navPlan = document.getElementById('nav-text-plan');
             const navSyllabus = document.getElementById('nav-text-syllabus');
@@ -5385,7 +5429,7 @@
             if (navPlan) navPlan.textContent = isML ? ML_I18N.nav.plan : 'Full Plan';
             if (navSyllabus) navSyllabus.textContent = isML ? ML_I18N.nav.syllabus : 'Syllabus';
 
-            // 3. Update Mobile Navigation Labels
+            // 4. Update Mobile Navigation Labels
             const mobToday = document.getElementById('mob-text-today');
             const mobPlan = document.getElementById('mob-text-plan');
             const mobSyllabus = document.getElementById('mob-text-syllabus');
@@ -5580,6 +5624,7 @@
             }
 
             updateThemeUI(getThemePreference());
+            applyAppLanguage(getAppLanguage());
         }
 
         function selectSettingsStudyPace(pace) {
