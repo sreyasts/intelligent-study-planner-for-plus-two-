@@ -5,16 +5,16 @@
 # 🎓 Mission PlusTwo (v6.0)
 ### 🚀 The Intelligent Daily Study Planner for Kerala Higher Secondary (+2) & +1 Improvement Students
 
-[![🚀 Open Web App](https://img.shields.io/badge/🚀_LAUNCH_WEB_APP-CLICK_HERE_TO_OPEN-2563eb?style=for-the-badge&logo=googlechrome&logoColor=white)](https://sreyasts.github.io/intelligent-study-planner-for-plus-two-/)
+[![🚀 Open Web App](https://img.shields.io/badge/🚀_LAUNCH_WEB_APP-CLICK_HERE_TO_OPEN-2563eb?style=for-the-badge&logo=googlechrome&logoColor=white)](https://mission-plustwo.web.app/)
 [![CI & Build](https://img.shields.io/github/actions/workflow/status/sreyasts/intelligent-study-planner-for-plus-two-/ci.yml?branch=main&style=for-the-badge&logo=githubactions&logoColor=white&label=CI%20Status)](https://github.com/sreyasts/intelligent-study-planner-for-plus-two-/actions)
 [![Test Suite](https://img.shields.io/badge/Tests-402%20Passed-10b981?style=for-the-badge&logo=vitest&logoColor=white)](https://github.com/sreyasts/intelligent-study-planner-for-plus-two-)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
-[![PWA Ready](https://img.shields.io/badge/PWA-WebAPK_Compliant-8b5cf6?style=for-the-badge&logo=pwa&logoColor=white)](https://sreyasts.github.io/intelligent-study-planner-for-plus-two-/)
+[![PWA Ready](https://img.shields.io/badge/PWA-WebAPK_Compliant-8b5cf6?style=for-the-badge&logo=pwa&logoColor=white)](https://mission-plustwo.web.app/)
 [![Privacy: DPDP](https://img.shields.io/badge/Privacy-DPDP_Act_2023-emerald?style=for-the-badge&logo=privacysandbox&logoColor=white)](pages/privacy.html)
 
 <br/>
 
-## 🌐 👉 [**CLICK HERE TO LAUNCH MISSION PLUSTWO**](https://sreyasts.github.io/intelligent-study-planner-for-plus-two-/) 👈
+## 🌐 👉 [**CLICK HERE TO LAUNCH MISSION PLUSTWO**](https://mission-plustwo.web.app/) 👈
 *100% Free & Open Source • Runs in any browser on Phone, Tablet, or PC • No downloads required*
 
 ---

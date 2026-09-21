@@ -742,7 +742,7 @@ function loadInitialState() {
         function shareTodayCompletion(dayNumber) {
             const shareTitle = `Mission PlusTwo — Day ${dayNumber} Cleared!`;
             const shareText = `🏆 Day ${dayNumber} study targets 100% completed on Mission PlusTwo! Free adaptive daily study planner for Kerala DHSE Plus Two & Plus One Improvement — with guaranteed mock revision buffer. Try it:`;
-            const shareUrl = 'https://sreyasts.github.io/intelligent-study-planner-for-plus-two-/';
+            const shareUrl = 'https://mission-plustwo.web.app/';
 
             if (navigator.share) {
                 navigator.share({
@@ -955,7 +955,7 @@ function showToastMessage(text, icon = 'checkCircle') {
         function shareApp() {
             const shareTitle = 'Mission PlusTwo — Kerala DHSE Study Planner';
             const shareText = 'Mission PlusTwo: Free intelligent daily study planner for Kerala DHSE Plus Two (+2) & Plus One Improvement students with built-in revision buffer. Plan your syllabus here:';
-            const shareUrl = 'https://sreyasts.github.io/intelligent-study-planner-for-plus-two-/';
+            const shareUrl = 'https://mission-plustwo.web.app/';
 
             if (navigator.share) {
                 navigator.share({
@@ -972,14 +972,14 @@ function showToastMessage(text, icon = 'checkCircle') {
 
         function shareOnWhatsApp() {
             const shareText = 'Mission PlusTwo: Free intelligent daily study planner for Kerala DHSE Plus Two (+2) & Plus One Improvement students with built-in revision buffer. Set your target date and generate your personalized daily study plan:';
-            const shareUrl = 'https://sreyasts.github.io/intelligent-study-planner-for-plus-two-/';
+            const shareUrl = 'https://mission-plustwo.web.app/';
             const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + '\n' + shareUrl)}`;
             window.open(whatsappUrl, '_blank');
         }
 
         function shareOnTelegram() {
             const shareText = '🎓 Mission PlusTwo — Free intelligent daily study planner for Kerala DHSE Plus Two (+2) & Plus One Improvement students. Generate your personalized study timetable with built-in revision buffer:';
-            const shareUrl = 'https://sreyasts.github.io/intelligent-study-planner-for-plus-two-/';
+            const shareUrl = 'https://mission-plustwo.web.app/';
             const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
             window.open(telegramUrl, '_blank');
         }
@@ -1867,9 +1867,10 @@ function showToastMessage(text, icon = 'checkCircle') {
         function renderApp() {
             const container = document.getElementById('app-container');
             if (!container) return;
+            const isML = getAppLanguage() === 'ml';
             const dateDisplay = document.getElementById('date-display');
             if (dateDisplay) {
-                dateDisplay.innerText = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+                dateDisplay.innerText = new Date().toLocaleDateString(isML ? 'ml-IN' : 'en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
             }
 
             // View 0: Initial Setup View
@@ -1888,9 +1889,9 @@ function showToastMessage(text, icon = 'checkCircle') {
                             <div class="w-12 h-12 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center text-white text-xl mx-auto mb-2.5 shadow-md shadow-blue-500/20">
                                 <i class="fa-solid fa-graduation-cap"></i>
                             </div>
-                            <h2 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">Create Your Study Plan</h2>
+                            <h2 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">${isML ? ML_I18N.setup.title : 'Create Your Study Plan'}</h2>
                             <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-300 mt-1 max-w-sm mx-auto">
-                                A day-by-day timetable tailored to your Kerala DHSE exam syllabus.
+                                ${isML ? ML_I18N.setup.subtitle : 'A day-by-day timetable tailored to your Kerala DHSE exam syllabus.'}
                             </p>
                         </div>
 
@@ -1899,13 +1900,13 @@ function showToastMessage(text, icon = 'checkCircle') {
                             <div>
                                 <label class="text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-200 flex items-center gap-2 mb-2.5">
                                     <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-black">1</span>
-                                    <span>Select Stream</span>
+                                    <span>${isML ? ML_I18N.setup.streamLabel : 'Select Stream'}</span>
                                 </label>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <!-- Option 1: Computer Science (Preset) -->
                                     <div id="stream-card-cs" onclick="setStreamSelection('cs')" class="cursor-pointer p-3.5 sm:p-4 rounded-2xl border-2 ${selectedStream === 'cs' ? 'border-blue-600 dark:border-blue-500 bg-blue-50/60 dark:bg-blue-950/40 ring-2 ring-blue-500/20 shadow-sm' : 'border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#0e1526] hover:border-slate-300 dark:hover:border-slate-600'} transition text-left flex flex-col justify-between relative">
                                         <div class="absolute -top-2.5 right-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-black px-2 py-0.5 rounded-full shadow-sm uppercase tracking-wider">
-                                            Preset
+                                            ${isML ? ML_I18N.setup.preset : 'Preset'}
                                         </div>
                                         <div class="flex items-start justify-between">
                                             <div class="flex items-center gap-2.5">
@@ -1913,8 +1914,8 @@ function showToastMessage(text, icon = 'checkCircle') {
                                                     <i class="fa-solid fa-laptop-code"></i>
                                                 </div>
                                                 <div>
-                                                    <h4 class="font-bold text-slate-900 dark:text-white text-sm">Computer Science</h4>
-                                                    <span class="text-xs font-semibold text-blue-700 dark:text-blue-300">Physics • Chem • Maths • CS</span>
+                                                    <h4 class="font-bold text-slate-900 dark:text-white text-sm">${isML ? ML_I18N.setup.csTitle : 'Computer Science'}</h4>
+                                                    <span class="text-xs font-semibold text-blue-700 dark:text-blue-300">${isML ? ML_I18N.setup.csSub : 'Physics • Chem • Maths • CS'}</span>
                                                 </div>
                                             </div>
                                             <span class="w-5 h-5 rounded-full ${selectedStream === 'cs' ? 'bg-blue-600 dark:bg-blue-500 text-white' : 'border border-slate-300 dark:border-slate-600'} flex items-center justify-center text-xs stream-check">
@@ -1934,8 +1935,8 @@ function showToastMessage(text, icon = 'checkCircle') {
                                                     <i class="fa-solid fa-seedling"></i>
                                                 </div>
                                                 <div>
-                                                    <h4 class="font-bold text-slate-900 dark:text-white text-sm">Biology Science</h4>
-                                                    <span class="text-xs font-semibold text-emerald-700 dark:text-emerald-300">Bio-Maths / General</span>
+                                                    <h4 class="font-bold text-slate-900 dark:text-white text-sm">${isML ? ML_I18N.setup.bioTitle : 'Biology Science'}</h4>
+                                                    <span class="text-xs font-semibold text-emerald-700 dark:text-emerald-300">${isML ? ML_I18N.setup.bioSub : 'Bio-Maths / General'}</span>
                                                 </div>
                                             </div>
                                             <span class="w-5 h-5 rounded-full ${selectedStream === 'bio' ? 'bg-emerald-600 dark:bg-emerald-500 text-white' : 'border border-slate-300 dark:border-slate-600'} flex items-center justify-center text-xs stream-check">
@@ -1953,16 +1954,16 @@ function showToastMessage(text, icon = 'checkCircle') {
                             <div>
                                 <label class="text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-200 flex items-center gap-2 mb-2.5">
                                     <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-black">2</span>
-                                    <span>Target Syllabus</span>
+                                    <span>${isML ? ML_I18N.setup.termLabel : 'Target Syllabus'}</span>
                                 </label>
                                 <input type="hidden" id="target-term" value="2">
                                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                                     <!-- Card 1: Term 1 -->
                                     <div id="term-card-1" onclick="setTermSelection(1)" class="cursor-pointer p-3 sm:p-3.5 rounded-2xl border-2 border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#0e1526] hover:border-slate-300 dark:hover:border-slate-600 transition text-left flex flex-col justify-between">
                                         <div>
-                                            <span class="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block mb-0.5">First Terminal</span>
-                                            <h4 class="font-bold text-slate-900 dark:text-white text-sm">Term 1 Only</h4>
-                                            <p id="term-desc-1" class="text-xs text-slate-500 dark:text-slate-300 mt-0.5">${selectedStream === 'bio' ? 'Onam exams portion (~18 chapters)' : 'Onam exams portion (~17 chapters)'}</p>
+                                            <span class="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block mb-0.5">${isML ? ML_I18N.setup.term1Badge : 'First Terminal'}</span>
+                                            <h4 class="font-bold text-slate-900 dark:text-white text-sm">${isML ? ML_I18N.setup.term1Title : 'Term 1 Only'}</h4>
+                                            <p id="term-desc-1" class="text-xs text-slate-500 dark:text-slate-300 mt-0.5">${isML ? (selectedStream === 'bio' ? ML_I18N.setup.term1DescBio : ML_I18N.setup.term1DescCs) : (selectedStream === 'bio' ? 'Onam exams portion (~18 chapters)' : 'Onam exams portion (~17 chapters)')}</p>
                                         </div>
                                         <div class="mt-2.5 flex items-center justify-end">
                                             <span class="w-4 h-4 rounded-full border border-slate-300 dark:border-slate-600 flex items-center justify-center check-indicator"></span>
@@ -1972,12 +1973,12 @@ function showToastMessage(text, icon = 'checkCircle') {
                                     <!-- Card 2: Term 1 & 2 (Recommended) -->
                                     <div id="term-card-2" onclick="setTermSelection(2)" class="cursor-pointer p-3 sm:p-3.5 rounded-2xl border-2 border-blue-600 dark:border-blue-500 bg-blue-50/60 dark:bg-blue-950/40 ring-2 ring-blue-500/20 transition text-left flex flex-col justify-between relative shadow-sm">
                                         <div class="absolute -top-2.5 right-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-black px-2 py-0.5 rounded-full shadow-sm uppercase tracking-wider">
-                                            ★ Popular
+                                            ${isML ? ML_I18N.setup.term2Popular : '★ Popular'}
                                         </div>
                                         <div>
-                                            <span class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider block mb-0.5">Half-Yearly</span>
-                                            <h4 class="font-bold text-slate-900 dark:text-white text-sm">Term 1 & Term 2</h4>
-                                            <p id="term-desc-2" class="text-xs text-slate-600 dark:text-slate-200 mt-0.5">${selectedStream === 'bio' ? 'Christmas exam portion (~35 chapters)' : 'Christmas exam portion (~31 chapters)'}</p>
+                                            <span class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider block mb-0.5">${isML ? ML_I18N.setup.term2Badge : 'Half-Yearly'}</span>
+                                            <h4 class="font-bold text-slate-900 dark:text-white text-sm">${isML ? ML_I18N.setup.term2Title : 'Term 1 & Term 2'}</h4>
+                                            <p id="term-desc-2" class="text-xs text-slate-600 dark:text-slate-200 mt-0.5">${isML ? (selectedStream === 'bio' ? ML_I18N.setup.term2DescBio : ML_I18N.setup.term2DescCs) : (selectedStream === 'bio' ? 'Christmas exam portion (~35 chapters)' : 'Christmas exam portion (~31 chapters)')}</p>
                                         </div>
                                         <div class="mt-2.5 flex items-center justify-end">
                                             <span class="w-4 h-4 rounded-full bg-blue-600 dark:bg-blue-500 text-white flex items-center justify-center text-xs check-indicator"><i class="fa-solid fa-check"></i></span>
@@ -1987,9 +1988,9 @@ function showToastMessage(text, icon = 'checkCircle') {
                                     <!-- Card 3: Full Syllabus -->
                                     <div id="term-card-3" onclick="setTermSelection(3)" class="cursor-pointer p-3 sm:p-3.5 rounded-2xl border-2 border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#0e1526] hover:border-slate-300 dark:hover:border-slate-600 transition text-left flex flex-col justify-between">
                                         <div>
-                                            <span class="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider block mb-0.5">Board Ready</span>
-                                            <h4 class="font-bold text-slate-900 dark:text-white text-sm">Full Syllabus</h4>
-                                            <p id="term-desc-3" class="text-xs text-slate-500 dark:text-slate-300 mt-0.5">${selectedStream === 'bio' ? 'All 49 chapters for March Public Exams' : 'All 46 chapters for March Public Exams'}</p>
+                                            <span class="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider block mb-0.5">${isML ? ML_I18N.setup.term3Badge : 'Board Ready'}</span>
+                                            <h4 class="font-bold text-slate-900 dark:text-white text-sm">${isML ? ML_I18N.setup.term3Title : 'Full Syllabus'}</h4>
+                                            <p id="term-desc-3" class="text-xs text-slate-500 dark:text-slate-300 mt-0.5">${isML ? (selectedStream === 'bio' ? ML_I18N.setup.term3DescBio : ML_I18N.setup.term3DescCs) : (selectedStream === 'bio' ? 'All 49 chapters for March Public Exams' : 'All 46 chapters for March Public Exams')}</p>
                                         </div>
                                         <div class="mt-2.5 flex items-center justify-end">
                                             <span class="w-4 h-4 rounded-full border border-slate-300 dark:border-slate-600 flex items-center justify-center check-indicator"></span>
@@ -2003,14 +2004,14 @@ function showToastMessage(text, icon = 'checkCircle') {
                                 <div class="flex items-center justify-between mb-2.5">
                                     <label class="text-xs font-extrabold uppercase tracking-wider text-slate-800 dark:text-slate-100 flex items-center gap-2">
                                         <span class="w-5 h-5 rounded-full bg-amber-600 text-white flex items-center justify-center text-xs font-black">3</span>
-                                        <span>Plus One (+1) Improvement Papers</span>
+                                        <span>${isML ? ML_I18N.setup.impLabel : 'Plus One (+1) Improvement Papers'}</span>
                                     </label>
                                     <span class="text-xs font-extrabold uppercase tracking-wider text-amber-800 dark:text-amber-300 bg-amber-200/80 dark:bg-amber-950/60 px-2 py-0.5 rounded-full flex items-center gap-1 border border-amber-300/40 dark:border-amber-700/50">
-                                        <i class="fa-solid fa-bolt text-amber-600 dark:text-amber-400"></i> Important Option
+                                        <i class="fa-solid fa-bolt text-amber-600 dark:text-amber-400"></i> ${isML ? ML_I18N.setup.impImportant : 'Important Option'}
                                     </span>
                                 </div>
                                 <p class="text-xs text-slate-600 dark:text-slate-200 mb-3">
-                                    Are you writing the DHSE <strong class="text-slate-900 dark:text-white">Plus One (+1) Improvement / Supplementary Exam</strong> this year?
+                                    ${isML ? ML_I18N.setup.impQuestion : 'Are you writing the DHSE <strong class="text-slate-900 dark:text-white">Plus One (+1) Improvement / Supplementary Exam</strong> this year?'}
                                 </p>
 
                                 <!-- Hidden form checkbox kept in sync for handleInitialSetup() compatibility -->
@@ -2025,8 +2026,8 @@ function showToastMessage(text, icon = 'checkCircle') {
                                                 <i class="fa-solid fa-graduation-cap"></i>
                                             </div>
                                             <div>
-                                                <h4 class="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">No, Plus Two (+2) Only</h4>
-                                                <p class="text-xs text-slate-500 dark:text-slate-300">I am only preparing for 12th standard</p>
+                                                <h4 class="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">${isML ? ML_I18N.setup.impNo : 'No, Plus Two (+2) Only'}</h4>
+                                                <p class="text-xs text-slate-500 dark:text-slate-300">${isML ? ML_I18N.setup.impNoDesc : 'I am only preparing for 12th standard'}</p>
                                             </div>
                                         </div>
                                         <span class="w-5 h-5 rounded-full bg-slate-700 dark:bg-slate-500 flex items-center justify-center text-xs choice-check">
@@ -2041,8 +2042,8 @@ function showToastMessage(text, icon = 'checkCircle') {
                                                 <i class="fa-solid fa-file-pen"></i>
                                             </div>
                                             <div>
-                                                <h4 class="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">Yes, I Have +1 Papers!</h4>
-                                                <p class="text-xs text-amber-700 dark:text-amber-300 font-semibold">Weave +1 chapters before exam dates</p>
+                                                <h4 class="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">${isML ? ML_I18N.setup.impYes : 'Yes, I Have +1 Papers!'}</h4>
+                                                <p class="text-xs text-amber-700 dark:text-amber-300 font-semibold">${isML ? ML_I18N.setup.impYesDesc : 'Weave +1 chapters before exam dates'}</p>
                                             </div>
                                         </div>
                                         <span class="w-5 h-5 rounded-full border border-slate-300 dark:border-slate-600 flex items-center justify-center text-xs choice-check">
@@ -2055,16 +2056,16 @@ function showToastMessage(text, icon = 'checkCircle') {
                                     <div class="flex items-center justify-between border-b border-amber-100 dark:border-amber-900/40 pb-2">
                                         <span class="text-xs font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
                                             <i class="fa-solid fa-list-check text-amber-600 dark:text-amber-400"></i>
-                                            <span>Select Your +1 Improvement Subjects & Exam Dates</span>
+                                            <span>${isML ? ML_I18N.setup.impSubHeading : 'Select Your +1 Improvement Subjects & Exam Dates'}</span>
                                         </span>
-                                        <span class="text-xs font-semibold text-slate-400 dark:text-slate-400">Strictly 2025–26 syllabus</span>
+                                        <span class="text-xs font-semibold text-slate-400 dark:text-slate-400">${isML ? ML_I18N.setup.strictSyllabus : 'Strictly 2025–26 syllabus'}</span>
                                     </div>
                                     <div id="improvement-subject-items-container" class="space-y-2">
                                         ${renderImprovementSubjectItems()}
                                     </div>
                                     <p class="text-xs text-slate-500 dark:text-slate-300 pt-1">
                                         <i class="fa-solid fa-circle-info text-blue-500 dark:text-blue-400 mr-1"></i>
-                                        The planner will automatically prioritize these +1 chapters and finish them well in advance of each subject's exam date!
+                                        ${isML ? ML_I18N.setup.impSubHint : 'The planner will automatically prioritize these +1 chapters and finish them well in advance of each subject\'s exam date!'}
                                     </p>
                                 </div>
                             </div>
@@ -2073,22 +2074,22 @@ function showToastMessage(text, icon = 'checkCircle') {
                             <div>
                                 <label class="text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-200 flex items-center gap-2 mb-2">
                                     <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-black">4</span>
-                                    <span>Target Deadline</span>
+                                    <span>${isML ? ML_I18N.setup.deadlineLabel : 'Target Deadline'}</span>
                                 </label>
 
                                 <!-- Preset Buttons -->
                                 <div class="flex flex-wrap gap-2 mb-2">
                                     <button type="button" onclick="setDeadlinePreset('${getPresetDate(11, 30)}')" class="py-1.5 px-3 rounded-xl bg-slate-100 dark:bg-[#162137] hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-700 dark:hover:text-blue-300 text-slate-700 dark:text-slate-200 text-xs font-semibold border border-slate-200 dark:border-slate-700/80 transition flex items-center gap-1.5">
                                         <i class="fa-regular fa-calendar-check text-xs text-blue-600 dark:text-blue-400"></i>
-                                        <span>Nov 30 (Term 2 Target)</span>
+                                        <span>${isML ? ML_I18N.setup.presetNov : 'Nov 30 (Term 2 Target)'}</span>
                                     </button>
                                     <button type="button" onclick="setDeadlinePreset('${getPresetDate(12, 20)}')" class="py-1.5 px-3 rounded-xl bg-slate-100 dark:bg-[#162137] hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-700 dark:hover:text-blue-300 text-slate-700 dark:text-slate-200 text-xs font-semibold border border-slate-200 dark:border-slate-700/80 transition flex items-center gap-1.5">
                                         <i class="fa-regular fa-calendar-check text-xs text-blue-600 dark:text-blue-400"></i>
-                                        <span>Dec 20 (Christmas Break)</span>
+                                        <span>${isML ? ML_I18N.setup.presetDec : 'Dec 20 (Christmas Break)'}</span>
                                     </button>
                                     <button type="button" onclick="setDeadlinePreset('${getPresetDate(2, 28, true)}')" class="py-1.5 px-3 rounded-xl bg-slate-100 dark:bg-[#162137] hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-700 dark:hover:text-blue-300 text-slate-700 dark:text-slate-200 text-xs font-semibold border border-slate-200 dark:border-slate-700/80 transition flex items-center gap-1.5">
                                         <i class="fa-regular fa-calendar-check text-xs text-blue-600 dark:text-blue-400"></i>
-                                        <span>Feb 28 (Public Exam Ready)</span>
+                                        <span>${isML ? ML_I18N.setup.presetFeb : 'Feb 28 (Public Exam Ready)'}</span>
                                     </button>
                                 </div>
 
@@ -2103,10 +2104,10 @@ function showToastMessage(text, icon = 'checkCircle') {
                                 <div class="flex items-center justify-between">
                                     <label class="text-xs font-extrabold uppercase tracking-wider text-slate-800 dark:text-slate-100 flex items-center gap-2">
                                         <span class="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-black">5</span>
-                                        <span>Personalize Your Study Routine</span>
+                                        <span>${isML ? ML_I18N.setup.personalizeLabel : 'Personalize Your Study Routine'}</span>
                                     </label>
                                     <span class="text-xs font-extrabold uppercase tracking-wider text-indigo-700 dark:text-indigo-300 bg-indigo-100/80 dark:bg-indigo-950/60 px-2 py-0.5 rounded-full border border-indigo-200/40 dark:border-indigo-700/50">
-                                        ✨ Tailored Pacing
+                                        ${isML ? ML_I18N.setup.tailoredPacing : '✨ Tailored Pacing'}
                                     </span>
                                 </div>
 
@@ -2115,9 +2116,9 @@ function showToastMessage(text, icon = 'checkCircle') {
                                     <div class="flex items-center justify-between mb-1.5">
                                         <span class="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
                                             <i class="fa-solid fa-bullseye text-indigo-600 dark:text-indigo-400"></i>
-                                            <span>Subject Confidence & Priority</span>
+                                            <span>${isML ? ML_I18N.setup.confidenceTitle : 'Subject Confidence & Priority'}</span>
                                         </span>
-                                        <span class="text-xs text-slate-400 dark:text-slate-400">Mark weak subjects to get higher frequency</span>
+                                        <span class="text-xs text-slate-400 dark:text-slate-400">${isML ? ML_I18N.setup.confidenceSub : 'Mark weak subjects to get higher frequency'}</span>
                                     </div>
                                     <div id="personalization-subjects-container" class="space-y-1.5">
                                         ${renderPersonalizationSubjectRows()}
@@ -2128,17 +2129,17 @@ function showToastMessage(text, icon = 'checkCircle') {
                                 <div>
                                     <span class="text-xs font-bold text-slate-700 dark:text-slate-200 block mb-1.5 flex items-center gap-1.5">
                                         <i class="fa-regular fa-calendar-days text-indigo-600 dark:text-indigo-400"></i>
-                                        <span>Weekly Study Rhythm & Rest Day</span>
+                                        <span>${isML ? ML_I18N.setup.rhythmTitle : 'Weekly Study Rhythm & Rest Day'}</span>
                                     </span>
                                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                         <!-- Card A: Daily Balanced -->
                                         <div id="rhythm-card-balanced" onclick="setWeeklyRhythmSelection('balanced')" class="cursor-pointer p-3 rounded-2xl border-2 border-blue-600 dark:border-blue-500 bg-blue-50/70 dark:bg-blue-950/40 ring-2 ring-blue-500/20 transition text-left flex flex-col justify-between relative shadow-xs">
                                             <div>
                                                 <div class="flex items-center justify-between mb-0.5">
-                                                    <span class="font-bold text-slate-900 dark:text-white text-xs">Daily Balanced</span>
-                                                    <span class="text-xs font-extrabold text-blue-600 dark:text-blue-300 bg-blue-100 dark:bg-blue-950/60 px-1.5 rounded">Standard</span>
+                                                    <span class="font-bold text-slate-900 dark:text-white text-xs">${isML ? ML_I18N.setup.rhythmBalancedTitle : 'Daily Balanced'}</span>
+                                                    <span class="text-xs font-extrabold text-blue-600 dark:text-blue-300 bg-blue-100 dark:bg-blue-950/60 px-1.5 rounded">${isML ? ML_I18N.setup.rhythmBalancedSub : 'Standard'}</span>
                                                 </div>
-                                                <p class="text-xs text-slate-500 dark:text-slate-300">Even portions every day across the week.</p>
+                                                <p class="text-xs text-slate-500 dark:text-slate-300">${isML ? ML_I18N.setup.rhythmBalancedDesc : 'Even portions every day across the week.'}</p>
                                             </div>
                                         </div>
 
@@ -2146,10 +2147,10 @@ function showToastMessage(text, icon = 'checkCircle') {
                                         <div id="rhythm-card-weekend" onclick="setWeeklyRhythmSelection('weekend_booster')" class="cursor-pointer p-3 rounded-2xl border-2 border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#0e1526] hover:border-slate-300 dark:hover:border-slate-600 transition text-left flex flex-col justify-between">
                                             <div>
                                                 <div class="flex items-center justify-between mb-0.5">
-                                                    <span class="font-bold text-slate-900 dark:text-white text-xs">Weekend Booster</span>
-                                                    <span class="text-xs font-bold text-purple-600 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/60 px-1.5 rounded">School</span>
+                                                    <span class="font-bold text-slate-900 dark:text-white text-xs">${isML ? ML_I18N.setup.rhythmWeekendTitle : 'Weekend Booster'}</span>
+                                                    <span class="text-xs font-bold text-purple-600 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/60 px-1.5 rounded">${isML ? ML_I18N.setup.rhythmWeekendSub : 'School'}</span>
                                                 </div>
-                                                <p class="text-xs text-slate-500 dark:text-slate-300">Light weekdays (school), power study on Sat/Sun.</p>
+                                                <p class="text-xs text-slate-500 dark:text-slate-300">${isML ? ML_I18N.setup.rhythmWeekendDesc : 'Light weekdays (school), power study on Sat/Sun.'}</p>
                                             </div>
                                         </div>
 
@@ -2157,10 +2158,10 @@ function showToastMessage(text, icon = 'checkCircle') {
                                         <div id="rhythm-card-sunday" onclick="setWeeklyRhythmSelection('rest_day', 0)" class="cursor-pointer p-3 rounded-2xl border-2 border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#0e1526] hover:border-slate-300 dark:hover:border-slate-600 transition text-left flex flex-col justify-between">
                                             <div>
                                                 <div class="flex items-center justify-between mb-0.5">
-                                                    <span class="font-bold text-slate-900 dark:text-white text-xs">Sunday Rest Day</span>
-                                                    <span class="text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 rounded">Recharge</span>
+                                                    <span class="font-bold text-slate-900 dark:text-white text-xs">${isML ? ML_I18N.setup.rhythmSundayTitle : 'Sunday Rest Day'}</span>
+                                                    <span class="text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 rounded">${isML ? ML_I18N.setup.rhythmSundaySub : 'Recharge'}</span>
                                                 </div>
-                                                <p class="text-xs text-slate-500 dark:text-slate-300">Zero new chapters on Sunday (free recharge/recall).</p>
+                                                <p class="text-xs text-slate-500 dark:text-slate-300">${isML ? ML_I18N.setup.rhythmSundayDesc : 'Zero new chapters on Sunday (free recharge/recall).'}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -2171,22 +2172,22 @@ function showToastMessage(text, icon = 'checkCircle') {
                                     <div class="flex items-center justify-between mb-1.5">
                                         <span class="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
                                             <i class="fa-solid fa-clock text-indigo-600 dark:text-indigo-400"></i>
-                                            <span>Daily Self-Study Time Budget</span>
+                                            <span>${isML ? ML_I18N.setup.hoursTitle : 'Daily Self-Study Time Budget'}</span>
                                         </span>
-                                        <span class="text-xs text-slate-400 dark:text-slate-400">Maps to chapter effort scores</span>
+                                        <span class="text-xs text-slate-400 dark:text-slate-400">${isML ? ML_I18N.setup.hoursSub : 'Maps to chapter effort scores'}</span>
                                     </div>
                                     <div class="flex gap-2">
                                         <button type="button" id="hours-chip-2" onclick="setDailyHoursSelection(2)" class="flex-1 py-2 px-3 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-[#141d30] text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#1a253c] transition flex flex-col items-center">
-                                            <span class="font-black text-slate-800 dark:text-white">2 Hours/day</span>
-                                            <span class="text-xs text-slate-400 dark:text-slate-400">Paced (~1-2 parts)</span>
+                                            <span class="font-black text-slate-800 dark:text-white">${isML ? ML_I18N.setup.hours2 : '2 Hours/day'}</span>
+                                            <span class="text-xs text-slate-400 dark:text-slate-400">${isML ? ML_I18N.setup.hours2Sub : 'Paced (~1-2 parts)'}</span>
                                         </button>
                                         <button type="button" id="hours-chip-3_5" onclick="setDailyHoursSelection(3.5)" class="flex-1 py-2 px-3 text-xs font-black rounded-xl bg-blue-600 dark:bg-blue-500 text-white shadow-sm transition flex flex-col items-center">
-                                            <span class="font-black">3–4 Hours/day</span>
-                                            <span class="text-xs text-blue-100">Optimal (~2-3 parts)</span>
+                                            <span class="font-black">${isML ? ML_I18N.setup.hours3_5 : '3–4 Hours/day'}</span>
+                                            <span class="text-xs text-blue-100">${isML ? ML_I18N.setup.hours3_5Sub : 'Optimal (~2-3 parts)'}</span>
                                         </button>
                                         <button type="button" id="hours-chip-5" onclick="setDailyHoursSelection(5)" class="flex-1 py-2 px-3 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-[#141d30] text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#1a253c] transition flex flex-col items-center">
-                                            <span class="font-black text-slate-800 dark:text-white">5+ Hours/day</span>
-                                            <span class="text-xs text-slate-400 dark:text-slate-400">Intensive (~3-4 parts)</span>
+                                            <span class="font-black text-slate-800 dark:text-white">${isML ? ML_I18N.setup.hours5 : '5+ Hours/day'}</span>
+                                            <span class="text-xs text-slate-400 dark:text-slate-400">${isML ? ML_I18N.setup.hours5Sub : 'Intensive (~3-4 parts)'}</span>
                                         </button>
                                     </div>
                                 </div>
@@ -2197,7 +2198,7 @@ function showToastMessage(text, icon = 'checkCircle') {
                                 <summary class="p-3.5 sm:p-4 flex items-center justify-between cursor-pointer font-bold text-xs sm:text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100/60 dark:hover:bg-[#162137] transition list-none select-none">
                                     <div class="flex items-center gap-2.5">
                                         <i class="fa-solid fa-sliders text-blue-600 dark:text-blue-400"></i>
-                                        <span>More Options (Skip finished chapters, daily pace)</span>
+                                        <span>${isML ? ML_I18N.setup.moreOptions : 'More Options (Skip finished chapters, daily pace)'}</span>
                                     </div>
                                     <i class="fa-solid fa-chevron-down text-slate-400 dark:text-slate-400 text-xs transition duration-200 group-open:rotate-180"></i>
                                 </summary>
@@ -2208,14 +2209,14 @@ function showToastMessage(text, icon = 'checkCircle') {
                                         <div>
                                             <label for="study-intensity" class="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
                                                 <i class="fa-solid fa-gauge-high text-blue-600 dark:text-blue-400"></i>
-                                                <span>Daily Study Intensity</span>
+                                                <span>${isML ? ML_I18N.setup.intensityLabel : 'Daily Study Intensity'}</span>
                                             </label>
-                                            <p class="text-xs text-slate-500 dark:text-slate-300">Adapts daily task pacing to your capacity</p>
+                                            <p class="text-xs text-slate-500 dark:text-slate-300">${isML ? ML_I18N.setup.intensitySub : 'Adapts daily task pacing to your capacity'}</p>
                                         </div>
                                         <select id="study-intensity" class="text-xs font-bold bg-white dark:bg-[#101726] border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-800 dark:text-white outline-none focus:border-blue-600 transition cursor-pointer">
-                                            <option value="balanced" selected>Standard (2-3 parts/day)</option>
-                                            <option value="intense">Intensive (3-4+ parts/day)</option>
-                                            <option value="light">Relaxed (1-2 parts/day)</option>
+                                            <option value="balanced" selected>${isML ? ML_I18N.setup.intensityBalanced : 'Standard (2-3 parts/day)'}</option>
+                                            <option value="intense">${isML ? ML_I18N.setup.intensityIntense : 'Intensive (3-4+ parts/day)'}</option>
+                                            <option value="light">${isML ? ML_I18N.setup.intensityLight : 'Relaxed (1-2 parts/day)'}</option>
                                         </select>
                                     </div>
 
@@ -2228,10 +2229,10 @@ function showToastMessage(text, icon = 'checkCircle') {
                                                 </div>
                                                 <div>
                                                     <div class="flex items-center gap-2">
-                                                        <span class="text-xs font-bold text-slate-800 dark:text-white">Skip Already Finished Chapters</span>
-                                                        <span id="completed-chaps-badge" class="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-[#162137] text-slate-500 dark:text-slate-300">0 excluded</span>
+                                                        <span class="text-xs font-bold text-slate-800 dark:text-white">${isML ? ML_I18N.setup.skipFinishedTitle : 'Skip Already Finished Chapters'}</span>
+                                                        <span id="completed-chaps-badge" class="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-[#162137] text-slate-500 dark:text-slate-300">0 ${isML ? ML_I18N.setup.excludedBadge : 'excluded'}</span>
                                                     </div>
-                                                    <span class="text-xs text-slate-500 dark:text-slate-300 block">Mark chapters completed in school or tuition to omit them from the plan.</span>
+                                                    <span class="text-xs text-slate-500 dark:text-slate-300 block">${isML ? ML_I18N.setup.skipFinishedSub : 'Mark chapters completed in school or tuition to omit them from the plan.'}</span>
                                                 </div>
                                             </div>
                                             <i id="chaps-chevron" class="fa-solid fa-chevron-down text-slate-400 dark:text-slate-400 text-xs transition duration-200 shrink-0"></i>
@@ -2266,7 +2267,7 @@ function showToastMessage(text, icon = 'checkCircle') {
 
                             <!-- Submit Button -->
                             <button onclick="handleInitialSetup()" class="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-800 text-white font-black py-3.5 sm:py-4 px-6 rounded-2xl shadow-xl shadow-blue-500/25 transform active:scale-[0.98] transition flex items-center justify-center gap-2 text-sm sm:text-base">
-                                <span>Generate My Study Plan</span>
+                                <span>${isML ? ML_I18N.setup.generateBtn : 'Generate My Study Plan'}</span>
                                 <i class="fa-solid fa-arrow-right"></i>
                             </button>
                         </div>
@@ -2307,10 +2308,10 @@ function showToastMessage(text, icon = 'checkCircle') {
                             <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4">
                                 <i class="fa-solid fa-flag-checkered"></i>
                             </div>
-                            <h3 class="text-xl sm:text-2xl font-bold text-slate-900 mb-1">${isCompletedAll ? 'Target Deadline Reached!' : 'No tasks scheduled for today'}</h3>
-                            <p class="text-xs sm:text-sm text-slate-500 mb-6">Review your full schedule or start an active revision session.</p>
+                            <h3 class="text-xl sm:text-2xl font-bold text-slate-900 mb-1">${isCompletedAll ? (isML ? ML_I18N.dashboard.allDoneTitle : 'Target Deadline Reached!') : (isML ? 'ഇന്നത്തേക്ക് ടാസ്കുകൾ ഇല്ല' : 'No tasks scheduled for today')}</h3>
+                            <p class="text-xs sm:text-sm text-slate-500 mb-6">${isML ? ML_I18N.dashboard.allDoneDesc : 'Review your full schedule or start an active revision session.'}</p>
                             <div class="flex justify-center gap-3">
-                                <button onclick="goToPlan()" class="py-2.5 px-5 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold rounded-xl transition">View Full Plan</button>
+                                <button onclick="goToPlan()" class="py-2.5 px-5 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold rounded-xl transition">${isML ? ML_I18N.dashboard.viewFullPlan : 'View Full Plan'}</button>
                             </div>
                         </div>
                     `;
@@ -2320,8 +2321,8 @@ function showToastMessage(text, icon = 'checkCircle') {
                             <div class="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4">
                                 <i class="fa-solid fa-mug-hot"></i>
                             </div>
-                            <h3 class="text-xl font-bold text-slate-900 mb-1">${todayPlan.isRestDay ? 'Personalized Rest & Recharge Day!' : 'Rest & Retention Day!'}</h3>
-                            <p class="text-xs sm:text-sm text-slate-500 max-w-md mx-auto">${todayPlan.isRestDay ? 'Zero new chapters assigned today per your personalized schedule. Relax, recharge, or do a light 15-minute formula glance.' : 'No new chapters assigned today. Take a breather or review past formulas.'}</p>
+                            <h3 class="text-xl font-bold text-slate-900 mb-1">${isML ? ML_I18N.dashboard.restDayTitle : (todayPlan.isRestDay ? 'Personalized Rest & Recharge Day!' : 'Rest & Retention Day!')}</h3>
+                            <p class="text-xs sm:text-sm text-slate-500 max-w-md mx-auto">${isML ? ML_I18N.dashboard.restDayDesc : (todayPlan.isRestDay ? 'Zero new chapters assigned today per your personalized schedule. Relax, recharge, or do a light 15-minute formula glance.' : 'No new chapters assigned today. Take a breather or review past formulas.')}</p>
                         </div>
                     `;
                 } else {
@@ -2337,15 +2338,15 @@ function showToastMessage(text, icon = 'checkCircle') {
                                 </div>
                                 <div>
                                     <div class="flex items-center justify-center sm:justify-start gap-2">
-                                        <h4 class="text-sm sm:text-base font-extrabold text-slate-900">Today's Mission 100% Completed!</h4>
-                                        <span class="text-xs bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">Day ${todayPlan.dayNumber} Cleared</span>
+                                        <h4 class="text-sm sm:text-base font-extrabold text-slate-900">${isML ? ML_I18N.dashboard.missionDoneTitle : "Today's Mission 100% Completed!"}</h4>
+                                        <span class="text-xs bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">${isML ? `ദിവസം ${todayPlan.dayNumber} പൂർത്തിയായി` : `Day ${todayPlan.dayNumber} Cleared`}</span>
                                     </div>
-                                    <p class="text-xs text-slate-600 mt-0.5">You finished all scheduled chapters for today! Keep this momentum alive.</p>
+                                    <p class="text-xs text-slate-600 mt-0.5">${isML ? ML_I18N.dashboard.missionDoneDesc : 'You finished all scheduled chapters for today! Keep this momentum alive.'}</p>
                                 </div>
                             </div>
                             <button onclick="shareTodayCompletion(${todayPlan.dayNumber})" class="w-full sm:w-auto bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs py-2.5 px-4 rounded-xl shadow-md shadow-emerald-500/25 transition flex items-center justify-center gap-2 active:scale-95 shrink-0">
                                 <i class="fa-brands fa-whatsapp text-base"></i>
-                                <span>Share on WhatsApp Status</span>
+                                <span>${isML ? ML_I18N.dashboard.shareWhatsApp : 'Share on WhatsApp Status'}</span>
                             </button>
                         </div>
                     ` : '';
@@ -2354,7 +2355,7 @@ function showToastMessage(text, icon = 'checkCircle') {
                         <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-4 text-xs sm:text-sm text-amber-900 flex items-start gap-3 shadow-sm animate-fade-in-up">
                             <i class="fa-solid fa-triangle-exclamation text-amber-600 text-base mt-0.5 shrink-0"></i>
                             <div class="flex-1">
-                                <strong class="font-extrabold block mb-0.5">Study Pacing Advisory</strong>
+                                <strong class="font-extrabold block mb-0.5">${isML ? ML_I18N.dashboard.advisoryTitle : 'Study Pacing Advisory'}</strong>
                                 <span>${appState.diagnostics.warningMessage || "The current deadline requires more study capacity than standard availability. The engine has balanced the workload dynamically to prioritize nearest exams and preserve final revision buffers."}</span>
                             </div>
                         </div>
@@ -2365,16 +2366,16 @@ function showToastMessage(text, icon = 'checkCircle') {
                             <div class="flex items-start gap-2.5">
                                 <span class="text-base mt-0.5">⚡</span>
                                 <div>
-                                    <strong class="font-bold block">Focusing on Day ${todayPlan.dayNumber} Portions</strong>
-                                    <span class="text-amber-700 dark:text-amber-300">You have active portions remaining in Day ${todayPlan.dayNumber}. Completing them keeps your prerequisite chain unbroken!</span>
+                                    <strong class="font-bold block">${isML ? `ദിവസം ${todayPlan.dayNumber}-ലെ പാഠഭാഗങ്ങൾ` : `Focusing on Day ${todayPlan.dayNumber} Portions`}</strong>
+                                    <span class="text-amber-700 dark:text-amber-300">${isML ? `ദിവസം ${todayPlan.dayNumber}-ൽ ബാക്കിയുള്ള പാഠങ്ങൾ പൂർത്തിയാക്കി മുന്നേറുക!` : `You have active portions remaining in Day ${todayPlan.dayNumber}. Completing them keeps your prerequisite chain unbroken!`}</span>
                                 </div>
                             </div>
                             <div class="flex items-center gap-2 flex-wrap shrink-0">
-                                <button onclick="shiftPlanToToday()" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs transition whitespace-nowrap shadow-xs" title="Synchronize schedule so Day 1 starts today">
-                                    Make Today Day 1
+                                <button onclick="shiftPlanToToday()" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs transition whitespace-nowrap shadow-xs" title="${isML ? 'ഇന്നത്തെ ദിവസം ഒന്ന് ആക്കി മാറ്റുക' : 'Synchronize schedule so Day 1 starts today'}">
+                                    ${isML ? 'ഇന്ന് ദിവസം 1 ആക്കുക' : 'Make Today Day 1'}
                                 </button>
                                 <button onclick="changeMissionDay(${calendarToday.dayNumber})" class="px-3 py-1.5 bg-white dark:bg-slate-800 border border-amber-300 dark:border-amber-700 font-bold rounded-xl text-xs text-amber-900 dark:text-amber-200 hover:bg-amber-100 dark:hover:bg-slate-700 transition whitespace-nowrap">
-                                    Calendar Day ${calendarToday.dayNumber}
+                                    ${isML ? `കലണ്ടർ ദിവസം ${calendarToday.dayNumber}` : `Calendar Day ${calendarToday.dayNumber}`}
                                 </button>
                             </div>
                         </div>
@@ -2388,12 +2389,12 @@ function showToastMessage(text, icon = 'checkCircle') {
                         <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
                             <div>
                                 <h3 class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2 flex-wrap">
-                                    <span>Today's Mission</span>
-                                    <span class="text-xs font-bold bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 py-0.5 px-2.5 rounded-full">Day ${todayPlan.dayNumber}</span>
-                                    ${isCatchUpDay ? '<span class="text-xs font-bold bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 py-0.5 px-2.5 rounded-full">In Progress</span>' : ''}
-                                    ${todayPlan.isRevisionDay ? '<span class="text-xs font-bold bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 py-0.5 px-2.5 rounded-full">Revision Phase</span>' : ''}
+                                    <span>${isML ? ML_I18N.dashboard.todaysMission : "Today's Mission"}</span>
+                                    <span class="text-xs font-bold bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 py-0.5 px-2.5 rounded-full">${isML ? `ദിവസം ${todayPlan.dayNumber}` : `Day ${todayPlan.dayNumber}`}</span>
+                                    ${isCatchUpDay ? `<span class="text-xs font-bold bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 py-0.5 px-2.5 rounded-full">${isML ? 'തുടരുന്നു' : 'In Progress'}</span>` : ''}
+                                    ${todayPlan.isRevisionDay ? `<span class="text-xs font-bold bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 py-0.5 px-2.5 rounded-full">${isML ? ML_I18N.dashboard.revisionPhase : 'Revision Phase'}</span>` : ''}
                                 </h3>
-                                <p class="text-xs text-slate-400 mt-0.5">${doneToday}/${totalToday} tasks completed today</p>
+                                <p class="text-xs text-slate-400 mt-0.5">${isML ? `${totalToday}-ൽ ${doneToday} ടാസ്കുകൾ പൂർത്തിയായി` : `${doneToday}/${totalToday} tasks completed today`}</p>
                             </div>
                             <div class="flex items-center gap-1.5">
                                 <button onclick="changeMissionDay(${todayPlan.dayNumber - 1})" ${todayPlan.dayNumber <= 1 ? 'disabled class="opacity-30 cursor-not-allowed p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-400"' : 'class="p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"'} title="Previous Day">
@@ -2455,11 +2456,11 @@ function showToastMessage(text, icon = 'checkCircle') {
                         <div class="flex items-center justify-between mb-2.5">
                             <div class="flex items-baseline gap-2">
                                 <span class="text-xl sm:text-2xl font-black text-slate-900">${overallStats.percentage}%</span>
-                                <span class="text-xs text-slate-400 font-medium">${overallStats.completedCount}/${overallStats.totalCount} tasks finished</span>
+                                <span class="text-xs text-slate-400 font-medium">${overallStats.completedCount}/${overallStats.totalCount} ${isML ? ML_I18N.dashboard.tasksFinished : 'tasks finished'}</span>
                             </div>
                             <span class="inline-flex items-center gap-1.5 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200/70 px-2.5 py-1 rounded-xl">
                                 <i class="fa-solid fa-fire text-amber-500"></i>
-                                <span>${getActiveStreak()} Day Streak</span>
+                                <span>${getActiveStreak()} ${isML ? ML_I18N.dashboard.streakSuffix : 'Day Streak'}</span>
                             </span>
                         </div>
 
@@ -2473,17 +2474,17 @@ function showToastMessage(text, icon = 'checkCircle') {
                             <div class="flex items-center gap-4">
                                 <span class="flex items-center gap-1.5">
                                     <i class="fa-regular fa-calendar-check text-blue-600"></i>
-                                    <span>Target: <strong class="text-slate-700">${new Date(appState.deadlineDate).toLocaleDateString('en-US', {month: 'short', day: 'numeric'})}</strong></span>
+                                    <span>${isML ? ML_I18N.dashboard.target : 'Target'}: <strong class="text-slate-700">${new Date(appState.deadlineDate).toLocaleDateString(isML ? 'ml-IN' : 'en-US', {month: 'short', day: 'numeric'})}</strong></span>
                                 </span>
                                 <span class="flex items-center gap-1.5">
                                     <i class="fa-solid fa-shield-halved text-purple-600"></i>
-                                    <span>Revision Buffer: <strong class="text-slate-700">${appState.revisionDaysCount || 0}d</strong></span>
+                                    <span>${isML ? ML_I18N.dashboard.revisionBuffer : 'Revision Buffer'}: <strong class="text-slate-700">${appState.revisionDaysCount || 0}${isML ? 'ദി' : 'd'}</strong></span>
                                 </span>
                             </div>
                             <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">
                                 ${(function() {
                                     const userStream = appState?.stream || (appState?.plan?.some(d => d.tasks.some(t => t.subject === 'Botany' || t.subject === 'Zoology')) ? 'bio' : 'cs');
-                                    return userStream === 'bio' ? '🌿 Biology Science' : '💻 Computer Science';
+                                    return userStream === 'bio' ? (isML ? '🌿 ബയോളജി സയൻസ്' : '🌿 Biology Science') : (isML ? '💻 കമ്പ്യൂട്ടർ സയൻസ്' : '💻 Computer Science');
                                 })()}
                             </span>
                         </div>
@@ -2494,16 +2495,16 @@ function showToastMessage(text, icon = 'checkCircle') {
                         <div class="flex items-center gap-2">
                             <button onclick="printSchedule()" class="flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-bold text-xs py-2 px-3 sm:px-3.5 rounded-xl shadow-sm transition active:scale-95" title="Print full schedule or save as PDF">
                                 <i class="fa-solid fa-print text-blue-600"></i>
-                                <span>Print / PDF</span>
+                                <span>${isML ? ML_I18N.dashboard.printSchedule : 'Print / PDF'}</span>
                             </button>
                             <button onclick="openRegenerateModal()" class="flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-semibold text-xs py-2 px-3 rounded-xl shadow-sm transition active:scale-95" title="Recalculate schedule if you missed days">
                                 <i class="fa-solid fa-wrench text-slate-500"></i>
-                                <span>Adjust Plan</span>
+                                <span>${isML ? ML_I18N.dashboard.adjustPlan : 'Adjust Plan'}</span>
                             </button>
                         </div>
                         <button onclick="shareApp()" class="flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-semibold text-xs py-2 px-3 rounded-xl shadow-sm transition active:scale-95">
                             <i class="fa-solid fa-arrow-up-from-bracket text-slate-500"></i>
-                            <span>Share</span>
+                            <span>${isML ? ML_I18N.dashboard.share : 'Share'}</span>
                         </button>
                     </div>
 
@@ -2516,10 +2517,10 @@ function showToastMessage(text, icon = 'checkCircle') {
                     <div class="flex items-center justify-between pt-4 border-t border-slate-200 text-xs text-slate-400 no-print">
                         <button onclick="openRegenerateModal()" class="text-slate-500 hover:text-slate-800 font-medium transition flex items-center gap-1.5">
                             <i class="fa-solid fa-rotate text-xs"></i>
-                            <span>Fell behind? Recalculate remaining portions</span>
+                            <span>${isML ? ML_I18N.dashboard.fellBehind : 'Fell behind? Recalculate remaining portions'}</span>
                         </button>
                         <button onclick="resetApp()" class="text-slate-400 hover:text-red-600 transition underline">
-                            Reset Plan
+                            ${isML ? ML_I18N.dashboard.resetPlan : 'Reset Plan'}
                         </button>
                     </div>
                 `;
@@ -2556,17 +2557,17 @@ function showToastMessage(text, icon = 'checkCircle') {
                         <div class="bg-white rounded-2xl border ${isToday ? 'border-blue-300 ring-2 ring-blue-100' : 'border-slate-200'} shadow-sm overflow-hidden mb-4 transition-all print-avoid-break">
                             <div class="p-3.5 sm:p-4 bg-slate-50/80 border-b border-slate-100 flex items-center justify-between">
                                 <div class="flex items-center gap-2">
-                                    <span class="text-xs font-extrabold text-slate-900">Day ${day.dayNumber}</span>
+                                    <span class="text-xs font-extrabold text-slate-900">${isML ? `${ML_I18N.plan.day} ${day.dayNumber}` : `Day ${day.dayNumber}`}</span>
                                     <span class="text-xs font-semibold text-slate-400">(${day.date})</span>
-                                    ${isToday ? '<span class="text-xs font-extrabold bg-blue-600 text-white px-2 py-0.5 rounded-full no-print">TODAY</span>' : ''}
-                                    ${day.isRevisionDay ? '<span class="text-xs font-bold bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full">Revision Day</span>' : ''}
-                                    ${day.isRestDay ? '<span class="text-xs font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full"><i class="fa-solid fa-mug-hot mr-1"></i>Rest Day</span>' : ''}
+                                    ${isToday ? `<span class="text-xs font-extrabold bg-blue-600 text-white px-2 py-0.5 rounded-full no-print">${isML ? ML_I18N.plan.todayBadge : 'TODAY'}</span>` : ''}
+                                    ${day.isRevisionDay ? `<span class="text-xs font-bold bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full">${isML ? ML_I18N.plan.revisionDay : 'Revision Day'}</span>` : ''}
+                                    ${day.isRestDay ? `<span class="text-xs font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full"><i class="fa-solid fa-mug-hot mr-1"></i>${isML ? ML_I18N.plan.restDay : 'Rest Day'}</span>` : ''}
                                 </div>
-                                <span class="text-xs font-bold text-slate-500">${displayedTasks.filter(t => t.completed).length}/${displayedTasks.length} Done</span>
+                                <span class="text-xs font-bold text-slate-500">${displayedTasks.filter(t => t.completed).length}/${displayedTasks.length} ${isML ? ML_I18N.plan.done : 'Done'}</span>
                             </div>
 
                             <div class="p-3 sm:p-4 divide-y divide-slate-100">
-                                ${displayedTasks.length === 0 ? (day.isRestDay ? '<p class="text-xs text-emerald-700 font-semibold py-1.5 flex items-center gap-2"><i class="fa-solid fa-mug-hot text-emerald-600"></i><span>Personalized Rest & Recharge Day (0 new chapters)</span></p>' : '<p class="text-xs text-slate-400 italic py-1">Free / Buffer Day</p>') : ''}
+                                ${displayedTasks.length === 0 ? (day.isRestDay ? `<p class="text-xs text-emerald-700 font-semibold py-1.5 flex items-center gap-2"><i class="fa-solid fa-mug-hot text-emerald-600"></i><span>${isML ? ML_I18N.plan.restDayNotice : 'Personalized Rest & Recharge Day (0 new chapters)'}</span></p>` : `<p class="text-xs text-slate-400 italic py-1">${isML ? 'ഫ്രീ / ബഫർ ദിനം' : 'Free / Buffer Day'}</p>`) : ''}
                                 ${displayedTasks.map(task => {
                                     const badgeColor = getSubjectColorBadge(task.subject);
                                     return `
@@ -2602,8 +2603,8 @@ function showToastMessage(text, icon = 'checkCircle') {
                     planDaysHTML = `
                         <div class="bg-white rounded-2xl border border-slate-200 p-8 text-center text-slate-400">
                             <i class="fa-solid fa-filter text-2xl mb-2 text-slate-300"></i>
-                            <p class="text-xs font-semibold">No scheduled tasks found under "${currentPlanSubjectFilter}".</p>
-                            <button onclick="setPlanSubjectFilter('All')" class="mt-3 text-xs font-bold text-blue-600 hover:underline">Show All Subjects</button>
+                            <p class="text-xs font-semibold">${isML ? ML_I18N.plan.noTasks : `No scheduled tasks found under "${currentPlanSubjectFilter}".`}</p>
+                            <button onclick="setPlanSubjectFilter('All')" class="mt-3 text-xs font-bold text-blue-600 hover:underline">${isML ? ML_I18N.plan.showAll : 'Show All Subjects'}</button>
                         </div>
                     `;
                 }
@@ -2626,17 +2627,17 @@ function showToastMessage(text, icon = 'checkCircle') {
                     <!-- Screen Header -->
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 no-print">
                         <div>
-                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900">Complete Study Schedule</h2>
-                            <p class="text-xs text-slate-500">Every single day planned out until your deadline.</p>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900">${isML ? ML_I18N.plan.title : 'Complete Study Schedule'}</h2>
+                            <p class="text-xs text-slate-500">${isML ? ML_I18N.plan.subtitle : 'Every single day planned out until your deadline.'}</p>
                         </div>
                         <div class="flex items-center gap-2">
                             <button onclick="window.print()" class="text-xs font-bold bg-white border border-slate-200 hover:bg-slate-50 px-3 sm:px-3.5 py-2 rounded-xl text-slate-700 transition flex items-center gap-1.5 shadow-sm active:scale-95" title="Print schedule or save as PDF">
                                 <i class="fa-solid fa-print text-blue-600"></i>
-                                <span>Print / Save PDF</span>
+                                <span>${isML ? ML_I18N.plan.printPdf : 'Print / Save PDF'}</span>
                             </button>
                             <button onclick="goToDashboard()" class="text-xs font-bold bg-blue-600 hover:bg-blue-700 px-3.5 py-2 rounded-xl text-white transition flex items-center gap-1.5 shadow-sm active:scale-95">
                                 <i class="fa-solid fa-arrow-left"></i>
-                                <span>Back to Today</span>
+                                <span>${isML ? ML_I18N.plan.backToToday : 'Back to Today'}</span>
                             </button>
                         </div>
                     </div>
@@ -2646,7 +2647,7 @@ function showToastMessage(text, icon = 'checkCircle') {
                         ${(function() {
                             const userStream = appState?.stream || (appState?.plan?.some(d => d.tasks.some(t => t.subject === 'Botany' || t.subject === 'Zoology')) ? 'bio' : 'cs');
                             const filters = userStream === 'bio' ? [
-                                { id: 'All', label: 'All Subjects', icon: 'fa-layer-group' },
+                                { id: 'All', label: isML ? ML_I18N.plan.allSubjects : 'All Subjects', icon: 'fa-layer-group' },
                                 { id: 'Physics', label: 'Physics', icon: 'fa-atom' },
                                 { id: 'Chemistry', label: 'Chemistry', icon: 'fa-flask' },
                                 { id: 'Mathematics', label: 'Maths', icon: 'fa-calculator' },
@@ -2655,7 +2656,7 @@ function showToastMessage(text, icon = 'checkCircle') {
                                 { id: '+2 Regular', label: '+2 Regular', icon: 'fa-graduation-cap' },
                                 { id: '+1 Improvement', label: '+1 Improvement', icon: 'fa-arrow-up-right-dots' }
                             ] : [
-                                { id: 'All', label: 'All Subjects', icon: 'fa-layer-group' },
+                                { id: 'All', label: isML ? ML_I18N.plan.allSubjects : 'All Subjects', icon: 'fa-layer-group' },
                                 { id: 'Physics', label: 'Physics', icon: 'fa-atom' },
                                 { id: 'Chemistry', label: 'Chemistry', icon: 'fa-flask' },
                                 { id: 'Mathematics', label: 'Maths', icon: 'fa-calculator' },
@@ -2689,9 +2690,9 @@ function showToastMessage(text, icon = 'checkCircle') {
                     <!-- Subtle Bottom Rebalance -->
                     <div class="mt-8 pt-4 border-t border-slate-200 flex justify-between items-center text-xs text-slate-500 no-print">
                         <button onclick="openRegenerateModal()" class="py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition flex items-center gap-1.5">
-                            <i class="fa-solid fa-wrench"></i> Adjust Schedule
+                            <i class="fa-solid fa-wrench"></i> ${isML ? ML_I18N.plan.adjustSchedule : 'Adjust Schedule'}
                         </button>
-                        <button onclick="resetApp()" class="text-slate-400 hover:text-red-600 underline">Reset Plan</button>
+                        <button onclick="resetApp()" class="text-slate-400 hover:text-red-600 underline">${isML ? ML_I18N.plan.resetPlan : 'Reset Plan'}</button>
                     </div>
                 `;
                 return;
@@ -2717,12 +2718,12 @@ function showToastMessage(text, icon = 'checkCircle') {
                         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5 mb-4">
                             <div class="border-b pb-2 mb-3">
                                 <h3 class="text-sm sm:text-base font-extrabold text-slate-900 mb-2 flex items-center justify-between">
-                                    <span>${sub} <span class="text-xs text-slate-400 font-normal">(${uniqueP2.length} Official Chapters)</span></span>
-                                    <span class="text-xs font-extrabold text-blue-700 bg-blue-50 border border-blue-200/60 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800/60 px-2.5 py-0.5 rounded-lg"><i class="fa-solid fa-graduation-cap mr-1"></i> Plus Two (+2) DHSE</span>
+                                    <span>${sub} <span class="text-xs text-slate-400 font-normal">(${uniqueP2.length} ${isML ? ML_I18N.syllabus.chaptersCount : 'Official Chapters'})</span></span>
+                                    <span class="text-xs font-extrabold text-blue-700 bg-blue-50 border border-blue-200/60 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800/60 px-2.5 py-0.5 rounded-lg"><i class="fa-solid fa-graduation-cap mr-1"></i> ${isML ? ML_I18N.syllabus.plusTwoDhse : 'Plus Two (+2) DHSE'}</span>
                                 </h3>
                                 ${subRes ? `
                                 <div class="flex flex-wrap items-center gap-3 text-xs pt-1">
-                                    <span class="text-slate-400 font-medium">Study Portals:</span>
+                                    <span class="text-slate-400 font-medium">${isML ? 'പഠന സാമഗ്രികൾ:' : 'Study Portals:'}</span>
                                     ${subTextbook ? `<a href="${subTextbook}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-blue-600 hover:underline font-semibold">${getSvgIcon('book', 'w-3.5 h-3.5')} SCERT</a>` : ''}
                                     ${subPyq ? `<a href="${subPyq}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-purple-600 hover:underline font-semibold">${getSvgIcon('fileText', 'w-3.5 h-3.5')} PYQs</a>` : ''}
                                     ${subVideo ? `<a href="${subVideo}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-rose-600 hover:underline font-semibold">${getSvgIcon('video', 'w-3.5 h-3.5')} Victers</a>` : ''}
@@ -2752,7 +2753,7 @@ function showToastMessage(text, icon = 'checkCircle') {
                                             </div>
                                             <div class="flex-1">
                                                 <span class="font-bold text-slate-800 dark:text-slate-100 block">Chapter ${ch.chapNumber}: ${ch.chapterName.replace(/^Chapter\s+\d+:\s*/i, '').replace(/^\d+\.\s*/, '')}</span>
-                                                <span class="text-xs text-slate-400">Term ${ch.term} ${isAllDone ? '• <strong class="text-emerald-700 dark:text-emerald-400">Mastered</strong>' : ''}</span>
+                                                <span class="text-xs text-slate-400">Term ${ch.term} ${isAllDone ? `• <strong class="text-emerald-700 dark:text-emerald-400">${isML ? ML_I18N.syllabus.mastered : 'Mastered'}</strong>` : ''}</span>
                                             </div>
                                         </div>
                                     `;
@@ -2765,11 +2766,11 @@ function showToastMessage(text, icon = 'checkCircle') {
                 container.innerHTML = `
                     <div class="flex items-center justify-between mb-6">
                         <div>
-                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900">Official DHSE Scheme of Work</h2>
-                            <p class="text-xs text-slate-500">${userStream === 'bio' ? 'Biology Science Stream (Botany & Zoology)' : 'Computer Science Stream'} • Rationalized Kerala Higher Secondary curriculum.</p>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900">${isML ? ML_I18N.syllabus.title : 'Official DHSE Scheme of Work'}</h2>
+                            <p class="text-xs text-slate-500">${isML ? (userStream === 'bio' ? ML_I18N.syllabus.subtitleBio : ML_I18N.syllabus.subtitleCs) : (userStream === 'bio' ? 'Biology Science Stream (Botany & Zoology)' : 'Computer Science Stream') + ' • Rationalized Kerala Higher Secondary curriculum.'}</p>
                         </div>
                         <button onclick="goToDashboard()" class="text-xs font-bold bg-white border border-slate-200 hover:bg-slate-50 px-3.5 py-2 rounded-xl text-slate-700 transition">
-                            <i class="fa-solid fa-arrow-left mr-1"></i> Back to Today
+                            <i class="fa-solid fa-arrow-left mr-1"></i> ${isML ? ML_I18N.syllabus.backToToday : 'Back to Today'}
                         </button>
                     </div>
 
@@ -3049,6 +3050,59 @@ function showToastMessage(text, icon = 'checkCircle') {
             if (mobPlan) mobPlan.textContent = isML ? ML_I18N.nav.plan : 'Full Plan';
             if (mobSyllabus) mobSyllabus.textContent = isML ? ML_I18N.nav.syllabus : 'Syllabus';
             if (mobShare) mobShare.textContent = isML ? ML_I18N.nav.share : 'Share';
+
+            const setText = (id, text) => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = text;
+            };
+
+            // 5. Auth Modal Localization
+            setText('auth-modal-title', isML ? ML_I18N.authModal.title : 'Save Your Study Plan');
+            setText('auth-modal-subtitle', isML ? ML_I18N.authModal.subtitle : 'Sign in with Google to sync between your phone and laptop so you never lose your progress.');
+            setText('auth-chip-sync-title', isML ? ML_I18N.authModal.chipSyncTitle : 'Phone & PC');
+            setText('auth-chip-sync-sub', isML ? ML_I18N.authModal.chipSyncSub : 'Auto-sync');
+            setText('auth-chip-backup-title', isML ? ML_I18N.authModal.chipBackupTitle : 'Backup');
+            setText('auth-chip-backup-sub', isML ? ML_I18N.authModal.chipBackupSub : 'Zero loss');
+            setText('auth-chip-fast-title', isML ? ML_I18N.authModal.chipFastTitle : '1-Tap Fast');
+            setText('auth-chip-fast-sub', isML ? ML_I18N.authModal.chipFastSub : 'Free forever');
+            setText('auth-google-btn-text', isML ? ML_I18N.authModal.googleBtn : 'Continue with Google');
+            setText('auth-guest-btn-text', isML ? ML_I18N.authModal.guestBtn : 'Maybe later (continue as guest)');
+
+            // 6. Settings Modal Localization
+            setText('settings-modal-title', isML ? ML_I18N.settingsModal.title : 'Settings & Customization');
+            setText('settings-modal-subtitle', isML ? ML_I18N.settingsModal.subtitle : 'Personalize your Mission PlusTwo workspace');
+            setText('settings-theme-title-text', isML ? ML_I18N.settingsModal.themeTitle : 'Theme & Appearance');
+            setText('settings-theme-hint', isML ? ML_I18N.settingsModal.themeHint : 'Dark mode features a high-contrast deep slate palette designed for long study sessions without eye strain.');
+            setText('settings-lang-title-text', isML ? ML_I18N.settingsModal.langTitle : 'Language / ഭാഷ');
+            setText('settings-lang-hint', isML ? ML_I18N.settingsModal.langHint : 'Auto-detects browser translation. Switch navigation, study actions, and guidance between English and Malayalam.');
+            setText('settings-exp-title-text', isML ? ML_I18N.settingsModal.expTitle : 'Study Experience & Feedback');
+            setText('settings-sound-label', isML ? ML_I18N.settingsModal.soundTitle : 'Sound Effects (Chimes)');
+            setText('settings-sound-hint', isML ? ML_I18N.settingsModal.soundHint : 'Harmonic chimes when checking off completed chapters');
+            setText('settings-confetti-label', isML ? ML_I18N.settingsModal.confettiTitle : 'Milestone Celebration Confetti');
+            setText('settings-confetti-hint', isML ? ML_I18N.settingsModal.confettiHint : 'Particle bursts when completing targets and full days');
+            setText('settings-autofocus-label', isML ? ML_I18N.settingsModal.autofocusTitle : 'Focus Target Highlighter');
+            setText('settings-autofocus-hint', isML ? ML_I18N.settingsModal.autofocusHint : 'Soft animated glow guiding you to your next chapter');
+            setText('settings-pace-title-text', isML ? ML_I18N.settingsModal.paceTitle : 'Daily Study Pace');
+            setText('settings-pace-hint', isML ? ML_I18N.settingsModal.paceHint : 'Adjust your daily study workload intensity.');
+            setText('pace-label-light', isML ? ML_I18N.settingsModal.paceLight : 'Relaxed');
+            setText('pace-label-balanced', isML ? ML_I18N.settingsModal.paceBalanced : 'Standard');
+            setText('pace-label-intense', isML ? ML_I18N.settingsModal.paceIntense : 'Intensive');
+            setText('settings-backup-title-text', isML ? ML_I18N.settingsModal.backupTitle : 'Data Backup & Offline Sync');
+            setText('settings-backup-hint', isML ? ML_I18N.settingsModal.backupHint : 'Export a backup JSON file or restore your study timetable on any device.');
+            setText('settings-export-text', isML ? ML_I18N.settingsModal.exportBtn : 'Export Backup');
+            setText('settings-restore-text', isML ? ML_I18N.settingsModal.restoreBtn : 'Restore Backup');
+            setText('settings-reset-title', isML ? ML_I18N.settingsModal.resetTitle : 'Reset Plan');
+            setText('settings-reset-hint', isML ? ML_I18N.settingsModal.resetHint : 'Clear current timetable to start fresh');
+            setText('settings-reset-btn-text', isML ? ML_I18N.settingsModal.resetBtn : 'Reset');
+            setText('settings-done-btn', isML ? ML_I18N.settingsModal.doneBtn : 'Done');
+
+            // 7. Regenerate Modal Localization
+            setText('regenerate-modal-title', isML ? ML_I18N.regenerateModal.title : 'Adjust & Rebalance Plan');
+            setText('regenerate-modal-subtitle', isML ? ML_I18N.regenerateModal.subtitle : "Missed some days or fell behind? Don't stress. Select the last day you fully finished, and our intelligent pacing algorithm will recalculate and redistribute only the remaining unfinished syllabus evenly across your available time.");
+            setText('regenerate-completed-label', isML ? ML_I18N.regenerateModal.completedUpTo : 'I have completed up to:');
+            setText('regenerate-revision-note', isML ? ML_I18N.regenerateModal.guaranteedRevision : 'Guaranteed Revision Days: Your target deadline will still maintain dedicated revision buffer days at the end!');
+            setText('regenerate-cancel-btn', isML ? ML_I18N.regenerateModal.cancelBtn : 'Cancel');
+            setText('regenerate-confirm-btn', isML ? ML_I18N.regenerateModal.rebalanceBtn : 'Rebalance Now');
 
             // Update html lang attribute
             document.documentElement.lang = isML ? 'ml' : 'en';

@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://sreyasts.github.io/intelligent-study-planner-for-plus-two-/sitemap.xml
+Sitemap: https://mission-plustwo.web.app/sitemap.xml
