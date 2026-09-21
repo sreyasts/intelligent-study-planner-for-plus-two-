@@ -56,6 +56,14 @@ describe('i18n Language & Browser Translation Auto-Detector', () => {
       configurable: true
     });
 
+    if (!globalThis.navigator || typeof globalThis.navigator !== 'object') {
+      Object.defineProperty(globalThis, 'navigator', {
+        value: {},
+        writable: true,
+        configurable: true
+      });
+    }
+
     Object.defineProperty(globalThis.navigator, 'languages', {
       value: mockLanguages,
       writable: true,
