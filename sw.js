@@ -1,5 +1,5 @@
-// Mission PlusTwo Service Worker v5.6 (High-contrast light & dark mode theme engine)
-const CACHE_NAME = 'plustwo-mission-v5.6';
+// Mission PlusTwo Service Worker v5.7 (High-contrast light & dark mode theme engine)
+const CACHE_NAME = 'plustwo-mission-v5.7';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
