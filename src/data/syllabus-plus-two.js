@@ -668,7 +668,7 @@ export const createCanonicalTasks = (subject, grade, chapters) => {
       const taskId = `${chapId}_P${p}`;
       const prereqId = p > 1 ? `${chapId}_P${p - 1}` : null;
 
-      let topicTitle = '';
+      let topicTitle;
       let estimatedMinutes = 60;
       if (Array.isArray(ch.parts) && ch.parts[p - 1]) {
         const partObj = ch.parts[p - 1];

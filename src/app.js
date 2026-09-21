@@ -1,0 +1,3440 @@
+/**
+ * Mission PlusTwo (v6.1.0) - Core Application Logic
+ * ESM Modular Architecture: Shipped code and tested engine are 100% unified.
+ */
+
+import {
+  PLUS_TWO_SYLLABUS,
+} from './data/syllabus-plus-two.js';
+import {
+  PLUS_ONE_SYLLABUS,
+} from './data/syllabus-plus-one.js';
+import {
+  CHAPTER_RESOURCES,
+} from './data/chapter-resources.js';
+import {
+  PLANNER_ENGINE_VERSION,
+  ENGINE_VERSION,
+  getLocalDateStr,
+  formatLocalDateStr,
+  TODAY_STR,
+  calculateDaysBetween,
+  buildIntelligentPlan,
+  validatePlan,
+  getStreamSubjects,
+} from './engine/planner.js';
+import {
+  PLAN_MIGRATION_VERSION,
+  migrateOldState,
+  migrateLegacyUserPlan,
+  migrateUserState,
+} from './engine/migration.js';
+import {
+  playTaskCompleteSound,
+  playMilestoneCelebrationSound,
+  playUntickSound,
+} from './audio/chime.js';
+import {
+  showAppToast,
+  showAppAlert,
+  showAppConfirm,
+} from './ui/dialogs.js';
+import {
+  getSvgIcon,
+  ICONS,
+} from './ui/icons.js';
+import {
+  trackEvent,
+  trackTaskChecked,
+  ensureFirebaseAnalytics,
+  FUNNEL_STAGES,
+} from './analytics/tracker.js';
+import {
+  ML_STRINGS,
+} from './i18n/ml.js';
+import {
+  detectMalayalamEnvironment,
+  getCurrentLanguage,
+  setLanguagePreference,
+  STORAGE_KEY_LANG,
+} from './i18n/detector.js';
+import {
+  loadFirebaseCompat,
+} from './auth/firebase.js';
+
+
+function getTaskResourceBadge(task) {
+    if (!task) return '';
+    const mins = task.estimatedMinutes || 60;
+    return `<span class="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700">⏱️ ${mins}m</span>`;
+}
+
+function getTaskDeepLinksHtml(task) {
+    if (!task || task.isRevision) return '';
+    const res = CHAPTER_RESOURCES?.subjects?.[task.subject] || CHAPTER_RESOURCES?.[task.subject];
+    if (!res) return '';
+    const textbook = res.textbookUrl || res.textbook;
+    const pyq = res.pyqUrl || res.pyq;
+    const video = res.videoPlaylistUrl || res.video;
+    return `
+        <div class="flex flex-wrap items-center gap-2 mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
+            <span class="text-slate-400 dark:text-slate-500 font-semibold text-xs">Portals:</span>
+            ${textbook ? `<a href="${textbook}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:underline font-semibold" title="Official SCERT Textbook">${getSvgIcon('book', 'w-3.5 h-3.5')} SCERT</a>` : ''}
+            ${pyq ? `<a href="${pyq}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-purple-600 dark:text-purple-400 hover:underline font-semibold" title="${res.pyqTitle || 'Previous Year Questions'}">${getSvgIcon('fileText', 'w-3.5 h-3.5')} PYQs</a>` : ''}
+            ${video ? `<a href="${video}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-rose-600 dark:text-rose-400 hover:underline font-semibold" title="${res.videoTitle || 'KITE Victers Video Classes'}">${getSvgIcon('video', 'w-3.5 h-3.5')} Victers</a>` : ''}
+        </div>
+    `;
+}
+
+
+/* ==========================================================================
+   2. STATE PERSISTENCE & INITIALIZATION
+   ========================================================================== */
+function loadInitialState() {
+            let loaded = null;
+            // 1. Check v2 state
+            try {
+                const v2Raw = localStorage.getItem('plusTwoMissionState_v2');
+                if (v2Raw) {
+                    const parsed = JSON.parse(v2Raw);
+                    if (parsed && Array.isArray(parsed.plan) && parsed.plan.length > 0) {
+                        loaded = parsed;
+                    }
+                }
+            } catch(e) { console.warn("V2 load error:", e); }
+
+            // 2. Check and migrate v1 state from previous app version ('plusTwoPlanState')
+            if (!loaded) {
+                try {
+                    const v1Raw = localStorage.getItem('plusTwoPlanState');
+                    if (v1Raw) {
+                        const oldState = JSON.parse(v1Raw);
+                        if (oldState && Array.isArray(oldState.plan) && oldState.plan.length > 0) {
+                            loaded = migrateOldState(oldState);
+                        }
+                    }
+                } catch(e) { console.warn("V1 migration error:", e); }
+            }
+
+            // 3. One-Time Automatic Migration to Engine v3 (if loaded state has engineVersion < 3)
+            if (loaded && (!loaded.engineVersion || loaded.engineVersion < PLANNER_ENGINE_VERSION)) {
+                try {
+                    const migratedV3 = migrateLegacyUserPlan(loaded);
+                    if (migratedV3) {
+                        loaded = migratedV3;
+                        localStorage.setItem('plusTwoMissionState_v2', JSON.stringify(loaded));
+                        localStorage.setItem('plusTwoPlanState', JSON.stringify(loaded));
+                        console.log("One-time automatic upgrade to Planner Engine v3 completed.");
+                        setTimeout(() => {
+                            showToastMessage("✨ Your study plan was automatically upgraded to the intelligent v3 engine!", "fa-wand-magic-sparkles text-blue-400");
+                        }, 700);
+                    }
+                } catch(err) {
+                    console.error("V3 migration note:", err);
+                }
+            }
+
+            return loaded;
+        }
+
+        let appState = loadInitialState();
+        let currentView = 'today'; // 'today', 'plan', 'syllabus', 'setup'
+        let selectedMissionDayNumber = null;
+
+        /* ==========================================================================
+           2.5 FIREBASE AUTHENTICATION & REAL-TIME CLOUD SYNC
+           ========================================================================== */
+        const firebaseConfig = {
+            apiKey: "AIzaSyDPcQQkOABPaZAv1lc9-u4Xm5UvMcI0g1A",
+            authDomain: "mission-plustwo.firebaseapp.com",
+            projectId: "mission-plustwo",
+            storageBucket: "mission-plustwo.firebasestorage.app",
+            messagingSenderId: "376961059569",
+            appId: "1:376961059569:web:4519080be63d1069a57750",
+            measurementId: "G-12KPP3ZZ80"
+        };
+
+        let auth = null;
+        let db = null;
+        let currentUser = null;
+        let cloudSyncUnsubscribe = null;
+        let authModalTimer = null;
+
+        try {
+            if (window.firebase) {
+                firebase.initializeApp(firebaseConfig);
+                auth = firebase.auth();
+                db = firebase.firestore();
+                db.enablePersistence().catch(() => {});
+            }
+        } catch(err) {
+            console.warn("Firebase initialization note:", err);
+        }
+
+        function getFirestoreCleanData(state) {
+            if (!state) return null;
+            const clean = JSON.parse(JSON.stringify(state));
+            clean.lastSynced = new Date().toISOString();
+            return clean;
+        }
+
+        function saveAppStateLocally() {
+            if (!appState) return;
+            localStorage.setItem('plusTwoMissionState_v2', JSON.stringify(appState));
+            localStorage.setItem('plusTwoPlanState', JSON.stringify(appState));
+        }
+
+        // Save State helper - saves to local storage AND syncs to Firebase Cloud Firestore!
+        async function saveAppState() {
+            if (!appState) return;
+            saveAppStateLocally();
+
+            if (currentUser && db) {
+                try {
+                    const userDocRef = db.collection('users').doc(currentUser.uid);
+                    const payload = getFirestoreCleanData({
+                        ...appState,
+                        userEmail: currentUser.email,
+                        displayName: currentUser.displayName || 'Student'
+                    });
+                    await userDocRef.set(payload);
+                } catch(err) {
+                    console.error("Cloud save failed:", err);
+                    if (err.message && err.message.includes("database (default) does not exist")) {
+                        showAppAlert({
+                            title: "Cloud Sync Setup Needed",
+                            message: "Cloud Firestore database is not yet enabled in the Firebase console. Please open Firebase Console ➔ Firestore Database ➔ 'Create database'.",
+                            icon: "fa-cloud text-amber-500"
+                        });
+                    }
+                }
+            }
+        }
+
+        async function performCloudSync(user, explicitTrigger = false) {
+            if (!user || !db) return;
+            try {
+                if (explicitTrigger) showToastMessage("Checking cloud sync...", "fa-rotate text-blue-400");
+                const userDocRef = db.collection('users').doc(user.uid);
+                const docSnap = await userDocRef.get();
+
+                if (docSnap.exists) {
+                    let cloudData = docSnap.data();
+                    if (cloudData && Array.isArray(cloudData.plan) && cloudData.plan.length > 0) {
+                        // Reconcile and upgrade cloud data to current engine version if needed
+                        if (!cloudData.engineVersion || cloudData.engineVersion < PLANNER_ENGINE_VERSION) {
+                            cloudData = migrateLegacyUserPlan(cloudData);
+                        }
+
+                        // Case A: Local device had no plan (e.g. freshly opened or after clean sign-out)
+                        // Directly restore the student's saved plan and progress from their Google Account!
+                        if (!appState || !Array.isArray(appState.plan) || appState.plan.length === 0) {
+                            appState = cloudData;
+                            saveAppStateLocally();
+                            renderApp();
+                            updateAuthHeaderUI();
+                            showToastMessage("Welcome back! Your study progress has been restored from your Google Account.", "fa-circle-check text-emerald-400");
+                            return;
+                        }
+
+                        // Case B: Student was using the app as a guest and has active progress locally!
+                        if (cloudData.stream === appState.stream) {
+                            // Collect completed task IDs from both local and cloud
+                            const localCompletedTaskIds = new Set();
+                            appState.plan.forEach(day => {
+                                day.tasks.forEach(t => {
+                                    if (t.completed) localCompletedTaskIds.add(t.id);
+                                });
+                            });
+
+                            const cloudCompletedTaskIds = new Set();
+                            cloudData.plan.forEach(day => {
+                                day.tasks.forEach(t => {
+                                    if (t.completed) cloudCompletedTaskIds.add(t.id);
+                                });
+                            });
+
+                            // Determine which schedule structure to use
+                            const localIsNewer = appState.deadlineDate !== cloudData.deadlineDate || 
+                                (appState.createdAt && cloudData.createdAt && new Date(appState.createdAt) > new Date(cloudData.createdAt));
+                            let targetPlan = localIsNewer ? appState : cloudData;
+
+                            // Merge all completed tasks into targetPlan so no tick mark is ever lost
+                            let newTicksFound = false;
+                            targetPlan.plan.forEach(day => {
+                                day.tasks.forEach(t => {
+                                    if (localCompletedTaskIds.has(t.id) || cloudCompletedTaskIds.has(t.id)) {
+                                        if (!t.completed) newTicksFound = true;
+                                        t.completed = true;
+                                    }
+                                });
+                            });
+
+                            appState = targetPlan;
+                            appState.userEmail = user.email;
+                            appState.ownerUid = user.uid;
+                            saveAppStateLocally();
+                            await userDocRef.set(getFirestoreCleanData(appState));
+                            renderApp();
+                            updateAuthHeaderUI();
+                            showToastMessage("Signed in! Your guest progress has been saved to your Google Account.", "fa-circle-check text-emerald-400");
+                        } else {
+                            // Different streams between cloud and local guest session (e.g. Bio vs CS)
+                            const cloudStreamName = cloudData.stream === 'bio' ? 'Biology Science' : 'Computer Science';
+                            const localStreamName = appState.stream === 'bio' ? 'Biology Science' : 'Computer Science';
+                            const restoreCloud = await showAppConfirm({
+                                title: "Cloud Backup Found",
+                                message: `We found a saved <strong>${cloudStreamName}</strong> study plan in your Google Account.<br><br>Your current unsaved guest plan is for <strong>${localStreamName}</strong>.<br><br>Do you want to load your saved ${cloudStreamName} plan, or keep your current ${localStreamName} plan?`,
+                                icon: "fa-cloud-arrow-down text-blue-500",
+                                confirmText: `Load Saved ${cloudStreamName}`,
+                                cancelText: `Keep ${localStreamName}`
+                            });
+
+                            if (restoreCloud) {
+                                appState = cloudData;
+                                saveAppStateLocally();
+                                showToastMessage(`Loaded saved ${cloudStreamName} plan from your account.`, "fa-cloud-arrow-down text-blue-400");
+                            } else {
+                                appState.userEmail = user.email;
+                                appState.ownerUid = user.uid;
+                                saveAppStateLocally();
+                                await userDocRef.set(getFirestoreCleanData(appState));
+                                showToastMessage(`Current ${localStreamName} plan saved to your Google Account!`, "fa-cloud-arrow-up text-emerald-400");
+                            }
+                            renderApp();
+                            updateAuthHeaderUI();
+                        }
+                    } else {
+                        // Cloud doc exists but has empty plan: upload local guest plan
+                        if (appState && Array.isArray(appState.plan) && appState.plan.length > 0) {
+                            appState.userEmail = user.email;
+                            appState.ownerUid = user.uid;
+                            await userDocRef.set(getFirestoreCleanData(appState));
+                            saveAppStateLocally();
+                            renderApp();
+                            updateAuthHeaderUI();
+                            showToastMessage("Signed in! Your progress has been saved to your Google Account.", "fa-cloud-arrow-up text-emerald-400");
+                        }
+                    }
+                } else {
+                    // Document doesn't exist on server yet!
+                    // If local has progress (e.g. Guest who started without sign-in), upload it now!
+                    if (appState && Array.isArray(appState.plan) && appState.plan.length > 0) {
+                        appState.userEmail = user.email;
+                        appState.ownerUid = user.uid;
+                        const payload = getFirestoreCleanData({
+                            ...appState,
+                            userEmail: user.email,
+                            displayName: user.displayName || 'Student'
+                        });
+                        await userDocRef.set(payload);
+                        saveAppStateLocally();
+                        renderApp();
+                        updateAuthHeaderUI();
+                        showToastMessage("Signed in with Google! Your progress has been saved to your account.", "fa-cloud-arrow-up text-emerald-400");
+                    }
+                }
+            } catch(err) {
+                console.error("Cloud sync error:", err);
+                if (err.message && err.message.includes("database (default) does not exist")) {
+                    showAppAlert({
+                        title: "Cloud Sync Setup Needed",
+                        message: "Cloud Firestore database is not yet enabled in your Firebase console. Please go to Firebase Console ➔ Firestore Database ➔ 'Create database'.",
+                        icon: "fa-cloud text-amber-500"
+                    });
+                }
+            }
+        }
+
+        // Handle user authentication and real-time syncing
+        if (auth) {
+            // Handle redirect result if redirected on mobile
+            if (typeof auth.getRedirectResult === 'function') {
+                auth.getRedirectResult().then((result) => {
+                    if (result && result.user) {
+                        showToastMessage("Signed in with Google! Cloud sync active.", "fa-circle-check text-emerald-400");
+                    }
+                }).catch((err) => {
+                    console.warn("Redirect auth note:", err);
+                });
+            }
+
+            let isInitialAuthCheck = true;
+            auth.onAuthStateChanged(async (user) => {
+                const wasSignedIn = !!currentUser;
+                currentUser = user;
+                updateAuthHeaderUI();
+
+                if (user) {
+                    closeAuthModal();
+                    sessionStorage.setItem('auth_modal_dismissed', 'true');
+
+                    // 1. Immediately perform initial cloud fetch/merge
+                    await performCloudSync(user);
+
+                    // 2. Setup real-time listener for multi-device sync
+                    if (cloudSyncUnsubscribe) cloudSyncUnsubscribe();
+                    const userDocRef = db.collection('users').doc(user.uid);
+
+                    cloudSyncUnsubscribe = userDocRef.onSnapshot((docSnap) => {
+                        if (docSnap.exists) {
+                            let cloudData = docSnap.data();
+                            if (cloudData && Array.isArray(cloudData.plan) && cloudData.plan.length > 0) {
+                                if (!cloudData.engineVersion || cloudData.engineVersion < PLANNER_ENGINE_VERSION) {
+                                    cloudData = migrateLegacyUserPlan(cloudData);
+                                }
+                                const cloudLastSynced = cloudData.lastSynced || '';
+                                const localLastSynced = (appState && appState.lastSynced) || '';
+                                if (!appState || cloudLastSynced !== localLastSynced) {
+                                    appState = cloudData;
+                                    saveAppStateLocally();
+                                    renderApp();
+                                    updateAuthHeaderUI();
+                                }
+                            }
+                        }
+                    }, (err) => {
+                        console.warn("Firestore listener note:", err);
+                    });
+                } else {
+                    // User is not signed in (Guest or signed out)
+                    if (cloudSyncUnsubscribe) {
+                        cloudSyncUnsubscribe();
+                        cloudSyncUnsubscribe = null;
+                    }
+                    // If user was signed in and signed out externally (e.g. token revocation)
+                    if (wasSignedIn && !isInitialAuthCheck) {
+                        localStorage.removeItem('plusTwoMissionState_v2');
+                        localStorage.removeItem('plusTwoPlanState');
+                        appState = null;
+                        selectedCompletedChapters.clear();
+                        currentView = 'today';
+                    }
+                    renderApp();
+
+                }
+                isInitialAuthCheck = false;
+            });
+        }
+
+        /* Milestone-Triggered Google Auth Modal (Zero Friction - Triggered only after first milestone) */
+        function checkAndTriggerMilestoneAuth() {
+            if (currentUser) return;
+            if (localStorage.getItem('has_dismissed_milestone_auth')) return;
+            if (!appState || !Array.isArray(appState.plan) || appState.plan.length === 0) return;
+
+            const totalCompleted = appState.plan.reduce((sum, d) => sum + d.tasks.filter(t => t.completed).length, 0);
+            if (totalCompleted >= 1) {
+                openAuthModal();
+            }
+        }
+
+        function openAuthModal() {
+            const modal = document.getElementById('auth-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+        }
+
+        function closeAuthModal() {
+            localStorage.setItem('has_dismissed_milestone_auth', 'true');
+            const modal = document.getElementById('auth-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        }
+
+        function continueAsGuest() {
+            closeAuthModal();
+            showToastMessage("Continuing as Guest (Progress saved on this device)", "fa-circle-info text-blue-400");
+        }
+
+        async function signInWithGoogleFromModal() {
+            await signInWithGoogle();
+        }
+
+        function triggerManualSync() {
+            if (currentUser) {
+                performCloudSync(currentUser, true);
+            } else {
+                signInWithGoogle();
+            }
+        }
+
+        function updateAuthHeaderUI() {
+            const userAvatarImg = document.getElementById('user-avatar-img');
+            const guestAvatarIcon = document.getElementById('guest-avatar-icon');
+            const userNameShort = document.getElementById('user-name-short');
+            const dropdownSignedInBlock = document.getElementById('dropdown-signed-in-block');
+            const dropdownGuestBlock = document.getElementById('dropdown-guest-block');
+            const dropdownAvatarImg = document.getElementById('dropdown-avatar-img');
+            const dropdownUserName = document.getElementById('dropdown-user-name');
+            const dropdownUserEmail = document.getElementById('dropdown-user-email');
+            const signoutBlock = document.getElementById('dropdown-signout-block');
+
+            const activeUser = (typeof window !== 'undefined' && window.currentUser !== undefined) ? window.currentUser : currentUser;
+
+            if (activeUser) {
+                userAvatarImg?.classList.remove('hidden');
+                guestAvatarIcon?.classList.add('hidden');
+                const photoUrl = activeUser.photoURL || 'icon.png';
+                const displayName = activeUser.displayName || activeUser.email?.split('@')[0] || 'Student';
+
+                if (userAvatarImg) userAvatarImg.src = photoUrl;
+                if (dropdownAvatarImg) dropdownAvatarImg.src = photoUrl;
+                if (userNameShort) userNameShort.innerText = displayName;
+                if (dropdownUserName) dropdownUserName.innerText = displayName;
+                if (dropdownUserEmail) dropdownUserEmail.innerText = activeUser.email || '';
+
+                dropdownSignedInBlock?.classList.remove('hidden');
+                dropdownGuestBlock?.classList.add('hidden');
+                signoutBlock?.classList.remove('hidden');
+            } else {
+                userAvatarImg?.classList.add('hidden');
+                guestAvatarIcon?.classList.remove('hidden');
+                if (userNameShort) userNameShort.innerText = 'Guest';
+
+                dropdownSignedInBlock?.classList.add('hidden');
+                dropdownGuestBlock?.classList.remove('hidden');
+                signoutBlock?.classList.add('hidden');
+            }
+            if (typeof updateThemeUI === 'function') {
+                updateThemeUI(getThemePreference ? getThemePreference() : 'system');
+            }
+        }
+
+        function toggleUserDropdown() {
+            const dropdown = document.getElementById('user-dropdown');
+            dropdown?.classList.toggle('hidden');
+        }
+
+        function closeUserDropdown() {
+            const dropdown = document.getElementById('user-dropdown');
+            dropdown?.classList.add('hidden');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            const container = document.getElementById('auth-container');
+            if (container && !container.contains(e.target)) {
+                closeUserDropdown();
+            }
+        });
+
+        async function signInWithGoogle() {
+            if (!auth || !window.firebase) {
+                try {
+                    await loadFirebaseCompat();
+                    if (!window.firebase.apps.length) {
+                        window.firebase.initializeApp(firebaseConfig);
+                    }
+                    auth = window.firebase.auth();
+                    db = window.firebase.firestore();
+                } catch(err) {
+                    console.warn("Lazy Firebase initialization note:", err);
+                }
+            }
+            if (!auth) {
+                showToastMessage("Firebase could not be loaded. Check internet connection.", "triangleExclamation");
+                return;
+            }
+            const modalBtn = document.getElementById('auth-modal-google-btn');
+            const headerBtn = document.getElementById('auth-signin-btn');
+            const originalModalBtnHTML = modalBtn ? modalBtn.innerHTML : '';
+            const originalHeaderBtnHTML = headerBtn ? headerBtn.innerHTML : '';
+
+            try {
+                if (modalBtn) {
+                    modalBtn.disabled = true;
+                    modalBtn.classList.add('opacity-75', 'cursor-wait');
+                    modalBtn.innerHTML = `
+                        <i class="fa-solid fa-circle-notch fa-spin text-blue-600 text-sm"></i>
+                        <span>Connecting to Google...</span>
+                    `;
+                }
+                if (headerBtn) {
+                    headerBtn.disabled = true;
+                    headerBtn.classList.add('opacity-75', 'cursor-wait');
+                    headerBtn.innerHTML = `
+                        <i class="fa-solid fa-circle-notch fa-spin text-blue-600 text-xs"></i>
+                        <span>Signing in...</span>
+                    `;
+                }
+
+                const provider = new window.firebase.auth.GoogleAuthProvider();
+                provider.setCustomParameters({ prompt: 'select_account' });
+
+                if (authModalTimer) {
+                    clearTimeout(authModalTimer);
+                    authModalTimer = null;
+                }
+                localStorage.setItem('has_seen_auth_modal', 'true');
+
+                // Trigger Google Sign-In Popup directly
+                await auth.signInWithPopup(provider);
+
+                closeAuthModal();
+                showToastMessage("Signed in with Google! Cloud sync active.", "fa-circle-check text-emerald-400");
+            } catch(err) {
+                console.error("Sign-in error:", err);
+
+                if (err.code === 'auth/popup-blocked' || err.code === 'auth/cancelled-popup-request') {
+                    try {
+                        const provider = new firebase.auth.GoogleAuthProvider();
+                        await auth.signInWithRedirect(provider);
+                        return;
+                    } catch(e) {
+                        showAppAlert({
+                            title: "Popup Blocked",
+                            message: "Your browser blocked the Google sign-in window. Please allow popups for this site or open in Chrome.",
+                            icon: "fa-shield-halved text-amber-500"
+                        });
+                    }
+                } else if (err.code === 'auth/popup-closed-by-user') {
+                    console.log("Sign-in popup closed by user.");
+                } else if (err.code === 'auth/unauthorized-domain') {
+                    showAppAlert({
+                        title: "Authorized Domain Required",
+                        message: "This domain is not yet added to your Firebase authorized domains list. Please add 'sreyasts.github.io' under Authentication ➔ Settings ➔ Authorized Domains in your Firebase console.",
+                        icon: "fa-key text-rose-500"
+                    });
+                } else if (err.code === 'auth/network-request-failed') {
+                    showAppAlert({
+                        title: "Network Error",
+                        message: "Network connection lost. Please check your internet connection and try again.",
+                        icon: "fa-wifi text-rose-500"
+                    });
+                } else {
+                    showAppAlert({
+                        title: "Sign-In Error",
+                        message: err.message || String(err),
+                        icon: "fa-circle-exclamation text-rose-500"
+                    });
+                }
+            } finally {
+                if (modalBtn) {
+                    modalBtn.disabled = false;
+                    modalBtn.classList.remove('opacity-75', 'cursor-wait');
+                    modalBtn.innerHTML = originalModalBtnHTML;
+                }
+                if (headerBtn) {
+                    headerBtn.disabled = false;
+                    headerBtn.classList.remove('opacity-75', 'cursor-wait');
+                    headerBtn.innerHTML = originalHeaderBtnHTML;
+                }
+            }
+        }
+
+        async function signOutUser() {
+            if (!auth) return;
+            const confirmed = await showAppConfirm({
+                title: "Sign Out?",
+                message: "Sign out of your Google account? Your study progress is safely saved in your cloud account, and you will return to guest mode on this device.",
+                icon: "fa-right-from-bracket text-rose-500",
+                confirmText: "Sign Out",
+                cancelText: "Stay Signed In",
+                isDestructive: true
+            });
+            if (!confirmed) return;
+
+            // 1. Immediately unsubscribe real-time listener so no incoming events trigger during sign-out
+            if (cloudSyncUnsubscribe) {
+                cloudSyncUnsubscribe();
+                cloudSyncUnsubscribe = null;
+            }
+
+            // 2. Sign out of Firebase Auth
+            try {
+                await auth.signOut();
+            } catch(e) {
+                console.warn("Sign-out note:", e);
+            }
+
+            // 3. Clear local storage so this device starts completely fresh
+            localStorage.removeItem('plusTwoMissionState_v2');
+            localStorage.removeItem('plusTwoPlanState');
+
+            // 4. Reset in-memory state variables to initial setup defaults
+            currentUser = null;
+            appState = null;
+            selectedCompletedChapters.clear();
+            currentView = 'today';
+            selectedStream = 'cs';
+            activeSetupSubjectTab = 'Physics';
+            activeSetupGradeTab = '+2';
+
+            // 5. Update UI, close dropdown, and render the fresh Setup view (View 0)
+            closeUserDropdown();
+            updateAuthHeaderUI();
+            renderApp();
+            showToastMessage("Signed out. Your progress is saved in your Google Account. Fresh start ready!", "fa-circle-check text-emerald-400");
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // getLocalDateStr & TODAY_STR imported from ./engine/planner.js
+
+        // Auto-refresh: if date changes (e.g. page left open past midnight) reload so plan updates
+        (function setupAutoRefresh() {
+            // Check every 30 minutes; reload if the date has rolled over
+            setInterval(() => {
+                if (getLocalDateStr() !== TODAY_STR) {
+                    window.location.reload();
+                }
+            }, 30 * 60 * 1000); // 30 minutes
+
+            // Also reload when the tab becomes visible after being hidden
+            // (handles phone screen-off / next-day scenario)
+            let hiddenSince = null;
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    hiddenSince = Date.now();
+                } else if (hiddenSince !== null) {
+                    const awayMs = Date.now() - hiddenSince;
+                    // If hidden for >15 minutes AND date has changed, reload
+                    if (awayMs > 15 * 60 * 1000 && getLocalDateStr() !== TODAY_STR) {
+                        window.location.reload();
+                    }
+                    hiddenSince = null;
+                }
+            });
+        })();
+
+        const getYesterdayStr = () => {
+            const d = new Date();
+            d.setDate(d.getDate() - 1);
+            return getLocalDateStr(d);
+        };
+
+        function getActiveStreak() {
+            if (!appState) return 0;
+            const streak = appState.streakCount || 0;
+            const lastDate = appState.lastCompletedDate;
+            if (!streak || !lastDate) return 0;
+
+            const today = TODAY_STR;
+            const yesterday = getYesterdayStr();
+            if (lastDate === today || lastDate === yesterday) {
+                return streak;
+            }
+            return 0; // Streak reset due to 2+ days inactivity
+        }
+
+        function updateStreakOnCompletion() {
+            if (!appState) return;
+            const today = TODAY_STR;
+            const yesterday = getYesterdayStr();
+            const last = appState.lastCompletedDate;
+
+            if (last === today) {
+                return; // Already progressed today
+            }
+
+            if (last === yesterday) {
+                appState.streakCount = (appState.streakCount || 0) + 1;
+            } else {
+                appState.streakCount = 1; // Start new streak
+            }
+            appState.lastCompletedDate = today;
+        }
+
+        function shareTodayCompletion(dayNumber) {
+            const shareTitle = `Mission PlusTwo — Day ${dayNumber} Cleared!`;
+            const shareText = `🏆 Day ${dayNumber} study targets 100% completed on Mission PlusTwo! Free adaptive daily study planner for Kerala DHSE Plus Two & Plus One Improvement — with guaranteed mock revision buffer. Try it:`;
+            const shareUrl = 'https://sreyasts.github.io/intelligent-study-planner-for-plus-two-/';
+
+            if (navigator.share) {
+                navigator.share({
+                    title: shareTitle,
+                    text: shareText,
+                    url: shareUrl
+                }).then(() => {
+                    showToastMessage("Achievement shared with classmates!", "fa-trophy text-amber-300");
+                }).catch(() => {});
+            } else {
+                const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + '\n' + shareUrl)}`;
+                window.open(whatsappUrl, '_blank');
+            }
+        }
+
+        function printSchedule() {
+            const prevView = currentView;
+            if (currentView !== 'plan') {
+                currentView = 'plan';
+                currentPlanSubjectFilter = 'All';
+                renderApp();
+            }
+            setTimeout(() => {
+                window.print();
+                if (prevView !== 'plan') {
+                    currentView = prevView;
+                    renderApp();
+                }
+            }, 250);
+        }
+
+        let currentPlanSubjectFilter = 'All';
+        function setPlanSubjectFilter(sub) {
+            currentPlanSubjectFilter = sub;
+            renderApp();
+        }
+
+        
+
+/* ==========================================================================
+   3. SETTINGS & USER PREFERENCES
+   ========================================================================== */
+function getUserSetting(key, defaultValue = true) {
+    try {
+        const val = localStorage.getItem('plustwo_' + key);
+        if (val === null) return defaultValue;
+        return val === 'true';
+    } catch(e) {
+        return defaultValue;
+    }
+}
+
+function setUserSetting(key, value) {
+    try {
+        localStorage.setItem('plustwo_' + key, String(value));
+    } catch(e) {}
+}
+
+function playCelebrationSound() {
+    if (getUserSetting('sound', true)) {
+        playMilestoneCelebrationSound();
+    }
+}
+
+function playTaskTickSound() {
+    if (getUserSetting('sound', true)) {
+        playTaskCompleteSound();
+    }
+}
+
+function showToastMessage(text, icon = 'checkCircle') {
+    showAppToast(text, icon);
+}
+
+/* ==========================================================================
+           5. TASK TOGGLE & COMPLETION ENGINE
+           Synchronous across Today & Full Plan views
+           ========================================================================== */
+
+        function toggleTaskDirect(taskId) {
+            if (!appState || !appState.plan) return;
+
+            let targetTask = null;
+            let dayObj = null;
+
+            for (const d of appState.plan) {
+                const found = d.tasks.find(t => t.id === taskId);
+                if (found) {
+                    targetTask = found;
+                    dayObj = d;
+                    break;
+                }
+            }
+
+            if (!targetTask) return;
+
+            // Toggle state
+            targetTask.completed = !targetTask.completed;
+            if (appState) appState.lastModified = new Date().toISOString();
+            saveAppState();
+
+            // Update UI elements in DOM
+            const checkboxElements = document.querySelectorAll(`[data-task-id="${taskId}"]`);
+            checkboxElements.forEach(cb => {
+                if (targetTask.completed) {
+                    cb.classList.add('checked');
+                    const textLabel = cb.closest('.task-item-container')?.querySelector('.task-text-content');
+                    if (textLabel) textLabel.classList.add('line-through', 'opacity-50');
+                } else {
+                    cb.classList.remove('checked');
+                    const textLabel = cb.closest('.task-item-container')?.querySelector('.task-text-content');
+                    if (textLabel) textLabel.classList.remove('line-through', 'opacity-50');
+                }
+            });
+
+            // Play celebratory feedback or untick sound
+            if (targetTask.completed) {
+                try {
+                    const hasRecorded = localStorage.getItem('mpt_first_task_recorded');
+                    if (!hasRecorded) {
+                        localStorage.setItem('mpt_first_task_recorded', 'true');
+                        trackAnalyticsEvent('first_task_checked', { taskId: String(targetTask.id || '') });
+                    }
+                } catch(e) {}
+
+                updateStreakOnCompletion();
+                playMilestoneCelebrationSound();
+
+                // Calculate today's status
+                const todayPlan = appState.plan.find(d => d.date === TODAY_STR);
+                if (todayPlan) {
+                    const completedToday = todayPlan.tasks.filter(t => t.completed).length;
+                    const totalToday = todayPlan.tasks.length;
+                    if (completedToday === totalToday && totalToday > 0) {
+                        try {
+                            if (typeof confetti === 'function') {
+                                confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
+                            }
+                        } catch(e) {}
+                        showAppToast("🎉 Awesome! All of today's targets completed!", "fa-trophy text-amber-300");
+                        if (currentView === 'today') {
+                            renderApp();
+                            return;
+                        }
+                    } else {
+                        const remaining = totalToday - completedToday;
+                        showAppToast(`🎯 Good job! ${remaining} more to finish today's goal.`, "fa-fire text-amber-400");
+                    }
+                } else {
+                    showAppToast("Target checked off! Keep the streak alive!");
+                }
+
+                // Milestone Auth Trigger: Gently prompt to backup upon first completed task
+                if (!currentUser && !localStorage.getItem('has_dismissed_milestone_auth')) {
+                    const allCompletedCount = appState.plan.reduce((sum, d) => sum + d.tasks.filter(t => t.completed).length, 0);
+                    if (allCompletedCount === 1) {
+                        setTimeout(() => {
+                            if (!currentUser && !localStorage.getItem('has_dismissed_milestone_auth')) {
+                                openAuthModal();
+                            }
+                        }, 1200);
+                    }
+                }
+            } else {
+                playUntickSound();
+            }
+
+            updateProgressHeader();
+            highlightNextUnfinishedTask();
+        }
+
+        function highlightNextUnfinishedTask() {
+            // Remove previous pulse
+            document.querySelectorAll('.next-suggested-task').forEach(el => el.classList.remove('next-suggested-task'));
+
+            if (!getUserSetting('autofocus', true)) return;
+
+            // Find first unchecked task in today's list
+            const firstUnchecked = document.querySelector('.today-task-card:not(.task-done)');
+            if (firstUnchecked) {
+                firstUnchecked.classList.add('next-suggested-task');
+            }
+        }
+
+        /* ==========================================================================
+           6. VIEW CONTROLLERS & RENDERING
+           ========================================================================== */
+
+        function goToDashboard() {
+            currentView = 'today';
+            updateActiveNavButtons();
+            renderApp();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function goToPlan() {
+            currentView = 'plan';
+            updateActiveNavButtons();
+            renderApp();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function goToSyllabusView() {
+            currentView = 'syllabus';
+            updateActiveNavButtons();
+            renderApp();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function shareApp() {
+            const shareTitle = 'Mission PlusTwo — Kerala DHSE Study Planner';
+            const shareText = 'Mission PlusTwo: Free intelligent daily study planner for Kerala DHSE Plus Two (+2) & Plus One Improvement students with built-in revision buffer. Plan your syllabus here:';
+            const shareUrl = 'https://sreyasts.github.io/intelligent-study-planner-for-plus-two-/';
+
+            if (navigator.share) {
+                navigator.share({
+                    title: shareTitle,
+                    text: shareText,
+                    url: shareUrl
+                }).then(() => {
+                    showAppToast("Thanks for sharing!", "fa-circle-check text-emerald-400");
+                }).catch(() => {});
+            } else {
+                shareOnWhatsApp();
+            }
+        }
+
+        function shareOnWhatsApp() {
+            const shareText = 'Mission PlusTwo: Free intelligent daily study planner for Kerala DHSE Plus Two (+2) & Plus One Improvement students with built-in revision buffer. Set your target date and generate your personalized daily study plan:';
+            const shareUrl = 'https://sreyasts.github.io/intelligent-study-planner-for-plus-two-/';
+            const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + '\n' + shareUrl)}`;
+            window.open(whatsappUrl, '_blank');
+        }
+
+        function shareOnTelegram() {
+            const shareText = '🎓 Mission PlusTwo — Free intelligent daily study planner for Kerala DHSE Plus Two (+2) & Plus One Improvement students. Generate your personalized study timetable with built-in revision buffer:';
+            const shareUrl = 'https://sreyasts.github.io/intelligent-study-planner-for-plus-two-/';
+            const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
+            window.open(telegramUrl, '_blank');
+        }
+
+        // Safe aliases in case any caller references them
+        function openShareModal() { shareApp(); }
+        function closeShareModal() {}
+        function executeShare() { shareApp(); }
+
+        function updateActiveNavButtons() {
+            const todayBtn = document.getElementById('nav-btn-today');
+            const planBtn = document.getElementById('nav-btn-plan');
+            const sylBtn = document.getElementById('nav-btn-syllabus');
+
+            const mobToday = document.getElementById('mob-btn-today');
+            const mobPlan = document.getElementById('mob-btn-plan');
+            const mobSyl = document.getElementById('mob-btn-syllabus');
+
+            [todayBtn, planBtn, sylBtn].forEach(b => {
+                if (b) {
+                    b.classList.remove('text-blue-600', 'bg-white', 'shadow-sm');
+                    b.classList.add('text-slate-600');
+                }
+            });
+            [mobToday, mobPlan, mobSyl].forEach(b => {
+                if (b) {
+                    b.classList.remove('text-blue-600');
+                    b.classList.add('text-slate-400');
+                }
+            });
+
+            if (currentView === 'today') {
+                todayBtn?.classList.add('text-blue-600', 'bg-white', 'shadow-sm');
+                mobToday?.classList.add('text-blue-600');
+            } else if (currentView === 'plan') {
+                planBtn?.classList.add('text-blue-600', 'bg-white', 'shadow-sm');
+                mobPlan?.classList.add('text-blue-600');
+            } else if (currentView === 'syllabus') {
+                sylBtn?.classList.add('text-blue-600', 'bg-white', 'shadow-sm');
+                mobSyl?.classList.add('text-blue-600');
+            }
+        }
+
+        async function resetApp() {
+            const confirmed = await showAppConfirm({
+                title: "Reset Study Plan?",
+                message: "Are you sure you want to reset your study plan and start fresh? All checkmarks and completed targets on this device will be cleared.",
+                icon: "fa-triangle-exclamation text-rose-500",
+                confirmText: "Reset Everything",
+                cancelText: "Keep My Plan",
+                isDestructive: true
+            });
+            if (!confirmed) return;
+
+            try {
+                // 1. If signed in, delete the cloud document from Firestore so it doesn't restore!
+                if (currentUser && db) {
+                    await db.collection('users').doc(currentUser.uid).delete();
+                }
+            } catch(e) {
+                console.warn("Cloud delete note:", e);
+            }
+
+            // 2. Clear local storage
+            localStorage.removeItem('plusTwoMissionState_v2');
+            localStorage.removeItem('plusTwoPlanState');
+            localStorage.removeItem('has_seen_auth_modal');
+            if (authModalTimer) {
+                clearTimeout(authModalTimer);
+                authModalTimer = null;
+            }
+
+            // 3. Reset in-memory state and re-render setup screen
+            appState = null;
+            selectedStream = 'cs';
+            selectedCompletedChapters.clear();
+            currentView = 'today';
+            showAppToast("Study plan reset. Ready to start fresh!", "fa-rotate text-blue-400");
+            renderApp();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        let setupPersonalization = {
+            subjectConfidence: {}, // e.g. { 'Physics': 'focus' }
+            weeklyRhythm: 'balanced', // 'balanced' | 'weekend_booster' | 'rest_day'
+            restDayOfWeek: 0, // 0 = Sunday, 5 = Friday
+            dailyHours: 3.5
+        };
+
+        function setSubjectConfidence(sub, level) {
+            setupPersonalization.subjectConfidence[sub] = level;
+            const subSafe = sub.replace(/\s+/g, '-');
+            ['focus', 'standard', 'strong'].forEach(lvl => {
+                const btn = document.getElementById(`conf-btn-${subSafe}-${lvl}`);
+                if (btn) {
+                    if (lvl === level) {
+                        if (lvl === 'focus') {
+                            btn.className = 'py-1 px-2 text-xs font-black rounded-lg bg-rose-600 text-white shadow-xs transition';
+                        } else if (lvl === 'strong') {
+                            btn.className = 'py-1 px-2 text-xs font-black rounded-lg bg-emerald-600 text-white shadow-xs transition';
+                        } else {
+                            btn.className = 'py-1 px-2 text-xs font-black rounded-lg bg-blue-600 text-white shadow-xs transition';
+                        }
+                    } else {
+                        btn.className = 'py-1 px-2 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-[#162137] text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#1e2d4a] transition';
+                    }
+                }
+            });
+            // Also re-render rows to update priority tag
+            const container = document.getElementById('personalization-subjects-container');
+            if (container) {
+                container.innerHTML = renderPersonalizationSubjectRows();
+            }
+        }
+
+        function renderPersonalizationSubjectRows() {
+            const isML = getAppLanguage() === 'ml';
+            const subs = getStreamSubjects(selectedStream);
+            const priorityText = isML ? 'പ്രധാനപ്പെട്ടത്' : 'High Priority';
+            const fastText = isML ? 'വേഗത്തിൽ' : 'Fast Paced';
+            return subs.map(sub => {
+                const currentConf = setupPersonalization.subjectConfidence[sub] || 'standard';
+                const subSafe = sub.replace(/\s+/g, '-');
+                return `
+                    <div class="flex flex-col xs:flex-row xs:items-center justify-between gap-1.5 p-2.5 bg-white dark:bg-[#0e1526] rounded-xl border border-slate-200/80 dark:border-slate-700/80 shadow-xs">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold text-slate-800 dark:text-white">${sub}</span>
+                            ${currentConf === 'focus' ? `<span class="text-xs font-extrabold uppercase tracking-wider text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 px-1.5 py-0.5 rounded border border-rose-200/60 dark:border-rose-800/60">${priorityText}</span>` : (currentConf === 'strong' ? `<span class="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-200/60 dark:border-emerald-800/60">${fastText}</span>` : '')}
+                        </div>
+                        <div class="flex items-center gap-1 bg-slate-50 dark:bg-[#141d30] p-1 rounded-xl border border-slate-200/60 dark:border-slate-700/60 self-start xs:self-auto">
+                            <button type="button" id="conf-btn-${subSafe}-focus" onclick="setSubjectConfidence('${sub}', 'focus')" class="py-1 px-2 text-xs ${currentConf === 'focus' ? 'font-black bg-rose-600 text-white shadow-xs' : 'font-semibold bg-slate-100 dark:bg-[#162137] text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#1e2d4a]'} rounded-lg transition" title="Needs extra practice & prioritized in daily rotation">
+                                🎯 Focus
+                            </button>
+                            <button type="button" id="conf-btn-${subSafe}-standard" onclick="setSubjectConfidence('${sub}', 'standard')" class="py-1 px-2 text-xs ${currentConf === 'standard' ? 'font-black bg-blue-600 text-white shadow-xs' : 'font-semibold bg-slate-100 dark:bg-[#162137] text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#1e2d4a]'} rounded-lg transition" title="Standard balanced study pace">
+                                ⚡ Normal
+                            </button>
+                            <button type="button" id="conf-btn-${subSafe}-strong" onclick="setSubjectConfidence('${sub}', 'strong')" class="py-1 px-2 text-xs ${currentConf === 'strong' ? 'font-black bg-emerald-600 text-white shadow-xs' : 'font-semibold bg-slate-100 dark:bg-[#162137] text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#1e2d4a]'} rounded-lg transition" title="Confident in concepts & spaced out lighter frequency">
+                                🌟 Strong
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function setWeeklyRhythmSelection(rhythm, restDay = null) {
+            setupPersonalization.weeklyRhythm = rhythm;
+            if (restDay !== null) setupPersonalization.restDayOfWeek = restDay;
+
+            const cards = [
+                { id: 'rhythm-card-balanced', match: rhythm === 'balanced' },
+                { id: 'rhythm-card-weekend', match: rhythm === 'weekend_booster' },
+                { id: 'rhythm-card-sunday', match: rhythm === 'rest_day' && setupPersonalization.restDayOfWeek === 0 },
+                { id: 'rhythm-card-friday', match: rhythm === 'rest_day' && setupPersonalization.restDayOfWeek === 5 }
+            ];
+
+            cards.forEach(c => {
+                const el = document.getElementById(c.id);
+                if (el) {
+                    if (c.match) {
+                        el.className = 'cursor-pointer p-3 rounded-2xl border-2 border-blue-600 dark:border-blue-500 bg-blue-50/70 dark:bg-blue-950/40 ring-2 ring-blue-500/20 transition text-left flex flex-col justify-between relative shadow-xs';
+                    } else {
+                        el.className = 'cursor-pointer p-3 rounded-2xl border-2 border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#0e1526] hover:border-slate-300 dark:hover:border-slate-600 transition text-left flex flex-col justify-between';
+                    }
+                }
+            });
+        }
+
+        function setDailyHoursSelection(hrs) {
+            setupPersonalization.dailyHours = hrs;
+            [2, 3.5, 5].forEach(h => {
+                const btn = document.getElementById(`hours-chip-${String(h).replace('.', '_')}`);
+                if (btn) {
+                    if (h === hrs) {
+                        btn.className = 'flex-1 py-2 px-3 text-xs font-black rounded-xl bg-blue-600 text-white shadow-sm transition flex flex-col items-center';
+                    } else {
+                        btn.className = 'flex-1 py-2 px-3 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-[#141d30] text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#1a253c] transition flex flex-col items-center';
+                    }
+                }
+            });
+        }
+
+        function getPersonalizationConfig() {
+            const weights = {};
+            const subs = getStreamSubjects(selectedStream);
+            subs.forEach(s => {
+                const conf = setupPersonalization.subjectConfidence[s] || 'standard';
+                weights[s] = (conf === 'focus') ? 1.5 : (conf === 'strong' ? 0.7 : 1.0);
+            });
+
+            return {
+                subjectWeights: weights,
+                subjectConfidence: { ...setupPersonalization.subjectConfidence },
+                weeklyRhythm: setupPersonalization.weeklyRhythm || 'balanced',
+                restDayOfWeek: (setupPersonalization.weeklyRhythm === 'rest_day') ? (setupPersonalization.restDayOfWeek ?? 0) : null,
+                dailyHours: setupPersonalization.dailyHours || 3.5
+            };
+        }
+
+        let selectedStream = 'cs'; // default: 'cs' (Computer Science preset)
+        let activeSetupSubjectTab = 'Physics';
+        let activeSetupGradeTab = '+2'; // '+2' or '+1'
+        const selectedCompletedChapters = new Set();
+
+        // getStreamSubjects imported from ./engine/planner.js
+
+        function setStreamSelection(stream) {
+            selectedStream = stream;
+
+            // Update Stream Card UI
+            const cardBio = document.getElementById('stream-card-bio');
+            const cardCs = document.getElementById('stream-card-cs');
+            if (cardBio && cardCs) {
+                if (stream === 'bio') {
+                    cardBio.className = 'cursor-pointer p-3.5 sm:p-4 rounded-2xl border-2 border-emerald-600 dark:border-emerald-500 bg-emerald-50/60 dark:bg-emerald-950/40 ring-2 ring-emerald-500/20 transition text-left flex flex-col justify-between relative shadow-sm';
+                    const checkBio = cardBio.querySelector('.stream-check');
+                    if (checkBio) {
+                        checkBio.className = 'w-5 h-5 rounded-full bg-emerald-600 dark:bg-emerald-500 text-white flex items-center justify-center text-xs stream-check';
+                        checkBio.innerHTML = '<i class="fa-solid fa-check"></i>';
+                    }
+                    cardCs.className = 'cursor-pointer p-3.5 sm:p-4 rounded-2xl border-2 border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#0e1526] hover:border-slate-300 dark:hover:border-slate-600 transition text-left flex flex-col justify-between relative';
+                    const checkCs = cardCs.querySelector('.stream-check');
+                    if (checkCs) {
+                        checkCs.className = 'w-5 h-5 rounded-full border border-slate-300 dark:border-slate-600 flex items-center justify-center stream-check';
+                        checkCs.innerHTML = '';
+                    }
+                } else {
+                    cardCs.className = 'cursor-pointer p-3.5 sm:p-4 rounded-2xl border-2 border-blue-600 dark:border-blue-500 bg-blue-50/60 dark:bg-blue-950/40 ring-2 ring-blue-500/20 transition text-left flex flex-col justify-between relative shadow-sm';
+                    const checkCs = cardCs.querySelector('.stream-check');
+                    if (checkCs) {
+                        checkCs.className = 'w-5 h-5 rounded-full bg-blue-600 dark:bg-blue-500 text-white flex items-center justify-center text-xs stream-check';
+                        checkCs.innerHTML = '<i class="fa-solid fa-check"></i>';
+                    }
+                    cardBio.className = 'cursor-pointer p-3.5 sm:p-4 rounded-2xl border-2 border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#0e1526] hover:border-slate-300 dark:hover:border-slate-600 transition text-left flex flex-col justify-between relative';
+                    const checkBio = cardBio.querySelector('.stream-check');
+                    if (checkBio) {
+                        checkBio.className = 'w-5 h-5 rounded-full border border-slate-300 dark:border-slate-600 flex items-center justify-center stream-check';
+                        checkBio.innerHTML = '';
+                    }
+                }
+            }
+
+            // If activeSetupSubjectTab is not part of this stream, fallback to 'Physics'
+            const validSubs = getStreamSubjects(stream);
+            if (!validSubs.includes(activeSetupSubjectTab)) {
+                activeSetupSubjectTab = 'Physics';
+            }
+
+            // Re-render Personalization Subjects container
+            const persContainer = document.getElementById('personalization-subjects-container');
+            if (persContainer) {
+                persContainer.innerHTML = renderPersonalizationSubjectRows();
+            }
+
+            // Re-render Subject Tabs in Exclude Chapters section
+            const tabsContainer = document.getElementById('setup-subject-tabs-container');
+            if (tabsContainer) {
+                tabsContainer.innerHTML = renderSetupSubjectTabs();
+            }
+
+            // Re-render Chapter List in Exclude Chapters section
+            const chapsContainer = document.getElementById('setup-subject-chapters-list');
+            if (chapsContainer) {
+                chapsContainer.innerHTML = renderSetupSubjectChapters(activeSetupSubjectTab, activeSetupGradeTab);
+            }
+
+            // Re-render Improvement Options in Step 3
+            const impContainer = document.getElementById('improvement-subject-items-container');
+            if (impContainer) {
+                impContainer.innerHTML = renderImprovementSubjectItems();
+            }
+
+            // Update Term 1 / 2 / 3 chapter counts in Step 2
+            updateTermCardsDescriptions();
+        }
+
+        function updateTermCardsDescriptions() {
+            const desc1 = document.getElementById('term-desc-1');
+            const desc2 = document.getElementById('term-desc-2');
+            const desc3 = document.getElementById('term-desc-3');
+            const isML = getAppLanguage() === 'ml';
+            if (isML) {
+                if (desc1) desc1.innerText = selectedStream === 'bio' ? ML_I18N.setup.term1DescBio : ML_I18N.setup.term1DescCs;
+                if (desc2) desc2.innerText = selectedStream === 'bio' ? ML_I18N.setup.term2DescBio : ML_I18N.setup.term2DescCs;
+                if (desc3) desc3.innerText = selectedStream === 'bio' ? ML_I18N.setup.term3DescBio : ML_I18N.setup.term3DescCs;
+            } else {
+                if (selectedStream === 'bio') {
+                    if (desc1) desc1.innerText = 'Onam Exams (~18 chapters). Rapid short-term focus.';
+                    if (desc2) desc2.innerText = 'Complete pre-Christmas portion (~35 chaps) before model exams.';
+                    if (desc3) desc3.innerText = 'All 49 rationalized chapters (Term 1 + 2 + 3) for Public Exams.';
+                } else {
+                    if (desc1) desc1.innerText = 'Onam Exams (~17 chapters). Rapid short-term focus.';
+                    if (desc2) desc2.innerText = 'Complete pre-Christmas portion (~31 chaps) before model exams.';
+                    if (desc3) desc3.innerText = 'All 46 rationalized chapters (Term 1 + 2 + 3) for Public Exams.';
+                }
+            }
+        }
+
+        function renderSetupSubjectTabs() {
+            const subs = getStreamSubjects(selectedStream);
+            return subs.map(sub => `
+                <button type="button" id="setup-tab-${sub.replace(/\s+/g, '-')}" onclick="switchSetupSubject('${sub}')" class="py-1.5 px-3 text-xs font-bold rounded-xl ${sub === activeSetupSubjectTab ? 'bg-slate-800 dark:bg-slate-700 text-white shadow-sm' : 'bg-slate-100 dark:bg-[#162137] text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#1e2d4a]'} transition">
+                    ${sub}
+                </button>
+            `).join('');
+        }
+
+        function setImprovementToggle(enabled) {
+            const cb = document.getElementById('has-improvement');
+            if (cb) cb.checked = enabled;
+
+            const noCard = document.getElementById('imp-choice-no');
+            const yesCard = document.getElementById('imp-choice-yes');
+            const optionsPanel = document.getElementById('improvement-options');
+
+            if (enabled) {
+                if (yesCard) {
+                    yesCard.className = 'cursor-pointer p-3 sm:p-3.5 rounded-2xl border-2 border-amber-500 dark:border-amber-400 bg-amber-50/80 dark:bg-amber-950/40 ring-2 ring-amber-400/25 transition text-left flex items-center justify-between shadow-xs';
+                    const check = yesCard.querySelector('.choice-check');
+                    if (check) {
+                        check.innerHTML = '<i class="fa-solid fa-check text-white"></i>';
+                        check.className = 'w-5 h-5 rounded-full bg-amber-600 dark:bg-amber-500 flex items-center justify-center text-xs choice-check';
+                    }
+                }
+                if (noCard) {
+                    noCard.className = 'cursor-pointer p-3 sm:p-3.5 rounded-2xl border-2 border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#0e1526] hover:border-slate-300 dark:hover:border-slate-600 transition text-left flex items-center justify-between';
+                    const check = noCard.querySelector('.choice-check');
+                    if (check) {
+                        check.innerHTML = '';
+                        check.className = 'w-5 h-5 rounded-full border border-slate-300 dark:border-slate-600 flex items-center justify-center text-xs choice-check';
+                    }
+                }
+                if (optionsPanel) {
+                    optionsPanel.classList.remove('hidden');
+                }
+            } else {
+                if (noCard) {
+                    noCard.className = 'cursor-pointer p-3 sm:p-3.5 rounded-2xl border-2 border-slate-700 dark:border-slate-500 bg-slate-50 dark:bg-[#141d30] ring-2 ring-slate-400/20 transition text-left flex items-center justify-between shadow-xs';
+                    const check = noCard.querySelector('.choice-check');
+                    if (check) {
+                        check.innerHTML = '<i class="fa-solid fa-check text-white"></i>';
+                        check.className = 'w-5 h-5 rounded-full bg-slate-700 dark:bg-slate-500 flex items-center justify-center text-xs choice-check';
+                    }
+                }
+                if (yesCard) {
+                    yesCard.className = 'cursor-pointer p-3 sm:p-3.5 rounded-2xl border-2 border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#0e1526] hover:border-amber-400 hover:bg-amber-50/40 dark:hover:bg-amber-950/20 transition text-left flex items-center justify-between';
+                    const check = yesCard.querySelector('.choice-check');
+                    if (check) {
+                        check.innerHTML = '';
+                        check.className = 'w-5 h-5 rounded-full border border-slate-300 dark:border-slate-600 flex items-center justify-center text-xs choice-check';
+                    }
+                }
+                if (optionsPanel) {
+                    optionsPanel.classList.add('hidden');
+                }
+            }
+        }
+
+        function renderImprovementSubjectItems() {
+            const defaultDates = {
+                'Physics': '2026-10-12',
+                'Mathematics': '2026-10-14',
+                'Chemistry': '2026-10-16',
+                'Botany': '2026-10-19',
+                'Zoology': '2026-10-19',
+                'Computer Science': '2026-10-19'
+            };
+            const subs = getStreamSubjects(selectedStream);
+            return subs.map(sub => {
+                const subId = sub.replace(/\s+/g, '-').toLowerCase();
+                const defaultDate = defaultDates[sub] || '2026-10-19';
+                return `
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-white dark:bg-[#141d30] rounded-xl border border-amber-200/80 dark:border-amber-500/30 shadow-xs hover:border-amber-300 dark:hover:border-amber-400/50 transition">
+                        <label class="flex items-center gap-2.5 cursor-pointer text-xs font-bold text-slate-800 dark:text-slate-100 select-none">
+                            <input type="checkbox" id="imp-${subId}" class="rounded border-slate-300 dark:border-slate-600 text-amber-600 focus:ring-amber-500 w-4 h-4">
+                            <span>${sub} (+1 Improvement)</span>
+                        </label>
+                        <div class="flex items-center gap-2 self-end sm:self-auto">
+                            <span class="text-xs text-slate-500 dark:text-slate-300 font-medium">Exam Date:</span>
+                            <input type="date" id="input-date-${subId}" value="${defaultDate}" class="border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-[#0e1526] focus:bg-white dark:focus:bg-[#141d30] focus:border-amber-600 outline-none transition">
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function switchSetupGrade(grade) {
+            activeSetupGradeTab = grade;
+            updateSetupTabsUI();
+            const container = document.getElementById('setup-subject-chapters-list');
+            if (container) {
+                container.innerHTML = renderSetupSubjectChapters(activeSetupSubjectTab, activeSetupGradeTab);
+            }
+        }
+
+        function switchSetupSubject(sub) {
+            activeSetupSubjectTab = sub;
+            updateSetupTabsUI();
+            const container = document.getElementById('setup-subject-chapters-list');
+            if (container) {
+                container.innerHTML = renderSetupSubjectChapters(activeSetupSubjectTab, activeSetupGradeTab);
+            }
+        }
+
+        function updateSetupTabsUI() {
+            const btnP2 = document.getElementById('grade-tab-p2');
+            const btnP1 = document.getElementById('grade-tab-p1');
+            if (btnP2 && btnP1) {
+                if (activeSetupGradeTab === '+2') {
+                    btnP2.className = 'flex-1 py-2 px-3 text-xs font-bold rounded-xl bg-blue-600 dark:bg-blue-500 text-white shadow-sm transition flex items-center justify-center gap-1.5';
+                    btnP1.className = 'flex-1 py-2 px-3 text-xs font-bold rounded-xl bg-slate-100 dark:bg-[#162137] text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#1e2d4a] transition flex items-center justify-center gap-1.5';
+                } else {
+                    btnP1.className = 'flex-1 py-2 px-3 text-xs font-bold rounded-xl bg-amber-600 dark:bg-amber-500 text-white shadow-sm transition flex items-center justify-center gap-1.5';
+                    btnP2.className = 'flex-1 py-2 px-3 text-xs font-bold rounded-xl bg-slate-100 dark:bg-[#162137] text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#1e2d4a] transition flex items-center justify-center gap-1.5';
+                }
+            }
+
+            getStreamSubjects(selectedStream).forEach(s => {
+                const btn = document.getElementById(`setup-tab-${s.replace(/\s+/g, '-')}`);
+                if (btn) {
+                    if (s === activeSetupSubjectTab) {
+                        btn.className = 'py-1.5 px-3 text-xs font-bold rounded-xl bg-slate-800 dark:bg-slate-700 text-white shadow-sm transition';
+                    } else {
+                        btn.className = 'py-1.5 px-3 text-xs font-bold rounded-xl bg-slate-100 dark:bg-[#162137] text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#1e2d4a] transition';
+                    }
+                }
+            });
+        }
+
+        function toggleChapterSelection(chapId, isChecked) {
+            if (isChecked) {
+                selectedCompletedChapters.add(chapId);
+            } else {
+                selectedCompletedChapters.delete(chapId);
+            }
+            updateCompletedChaptersCountBadge();
+        }
+
+        function toggleAllSubjectChapters(grade, sub, shouldCheck) {
+            const sourceSyllabus = grade === '+1' ? PLUS_ONE_SYLLABUS : PLUS_TWO_SYLLABUS;
+            const chaps = sourceSyllabus.filter(t => t.subject === sub);
+            const uniqueChaps = [...new Map(chaps.map(item => [item.chapId, item])).values()];
+
+            uniqueChaps.forEach(ch => {
+                if (shouldCheck) {
+                    selectedCompletedChapters.add(ch.chapId);
+                } else {
+                    selectedCompletedChapters.delete(ch.chapId);
+                }
+            });
+
+            // Re-render current list so checked styling and state are updated
+            const container = document.getElementById('setup-subject-chapters-list');
+            if (container) {
+                container.innerHTML = renderSetupSubjectChapters(activeSetupSubjectTab, activeSetupGradeTab);
+            }
+            updateCompletedChaptersCountBadge();
+        }
+
+        function updateCompletedChaptersCountBadge() {
+            const badge = document.getElementById('completed-chaps-badge');
+            if (!badge) return;
+            const isML = getAppLanguage() === 'ml';
+            const p2Count = Array.from(selectedCompletedChapters).filter(id => id.startsWith('+2_')).length;
+            const p1Count = Array.from(selectedCompletedChapters).filter(id => id.startsWith('+1_')).length;
+            const total = selectedCompletedChapters.size;
+            if (total === 0) {
+                badge.innerHTML = isML ? '0 ഒഴിവാക്കി' : '0 excluded';
+                badge.className = 'text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-[#162137] text-slate-500 dark:text-slate-300';
+            } else {
+                badge.innerHTML = isML
+                    ? `<i class="fa-solid fa-check mr-1"></i>${total} ഒഴിവാക്കി (${p2Count} +2-ലും, ${p1Count} +1-ലും)`
+                    : `<i class="fa-solid fa-check mr-1"></i>${total} excluded (${p2Count} in +2, ${p1Count} in +1)`;
+                badge.className = 'text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-600/50';
+            }
+        }
+
+        function renderSetupSubjectChapters(subject, grade = activeSetupGradeTab) {
+            const isML = getAppLanguage() === 'ml';
+            const sourceSyllabus = grade === '+1' ? PLUS_ONE_SYLLABUS : PLUS_TWO_SYLLABUS;
+            const chaps = sourceSyllabus.filter(t => t.subject === subject);
+            const uniqueChaps = [...new Map(chaps.map(item => [item.chapId, item])).values()];
+            const markedCount = uniqueChaps.filter(c => selectedCompletedChapters.has(c.chapId)).length;
+            const excludedText = isML ? `(${markedCount}/${uniqueChaps.length} ഒഴിവാക്കി)` : `(${markedCount}/${uniqueChaps.length} excluded)`;
+            const selectAllText = isML ? 'എല്ലാം തിരഞ്ഞെടുക്കുക' : 'Select All';
+            const clearText = isML ? 'ഒഴിവാക്കുക' : 'Clear';
+            const studyPartsLabel = isML ? 'പഠന ഭാഗങ്ങൾ' : 'study parts';
+
+            let html = `
+                <div class="flex items-center justify-between pb-2 mb-2.5 border-b border-slate-100 dark:border-slate-700/60">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold text-slate-700 dark:text-slate-200">
+                            ${grade === '+1' ? '<span class="text-amber-700 dark:text-amber-300 font-extrabold bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded border border-amber-200/60 dark:border-amber-700/60">+1 Improvement</span>' : '<span class="text-blue-700 dark:text-blue-300 font-extrabold bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded border border-blue-200/60 dark:border-blue-700/60">+2 Regular</span>'} • ${subject}
+                        </span>
+                        <span class="text-xs text-slate-400 dark:text-slate-400 font-medium">${excludedText}</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="toggleAllSubjectChapters('${grade}', '${subject}', true)" class="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline">${selectAllText}</button>
+                        <span class="text-slate-300 dark:text-slate-600">|</span>
+                        <button type="button" onclick="toggleAllSubjectChapters('${grade}', '${subject}', false)" class="text-xs font-bold text-slate-500 dark:text-slate-300 hover:underline">${clearText}</button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1">
+            `;
+
+            uniqueChaps.forEach(ch => {
+                const isChecked = selectedCompletedChapters.has(ch.chapId);
+                html += `
+                    <label class="flex items-start gap-2.5 p-2 rounded-xl ${isChecked ? 'bg-emerald-50/70 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-600/50' : 'hover:bg-slate-50 dark:hover:bg-[#141d30] border-slate-200/80 dark:border-slate-700/60'} border cursor-pointer transition text-xs select-none">
+                        <input type="checkbox" data-grade="${grade}" data-subject="${subject}" value="${ch.chapId}" ${isChecked ? 'checked' : ''} onchange="toggleChapterSelection('${ch.chapId}', this.checked); this.closest('label').classList.toggle('bg-emerald-50/70', this.checked); this.closest('label').classList.toggle('dark:bg-emerald-950/40', this.checked); this.closest('label').classList.toggle('border-emerald-200', this.checked); this.closest('label').classList.toggle('dark:border-emerald-600/50', this.checked); this.closest('label').classList.toggle('border-slate-200/80', !this.checked); this.closest('label').classList.toggle('dark:border-slate-700/60', !this.checked);" class="completed-chapter-cb mt-0.5 rounded border-slate-300 dark:border-slate-600 text-emerald-600 focus:ring-emerald-500 w-4 h-4">
+                        <div class="flex-1 truncate">
+                            <span class="font-bold text-slate-800 dark:text-white block truncate" title="${ch.chapterName}">Chapter ${ch.chapNumber}: ${ch.chapterName.replace(/^Chapter\s+\d+:\s*/i, '').replace(/^\d+\.\s*/, '')}</span>
+                            <span class="text-xs ${grade === '+1' ? 'text-amber-700 dark:text-amber-300' : 'text-slate-400 dark:text-slate-400'} font-medium">${grade === '+1' ? '+1 Improvement Paper' : 'Term ' + ch.term} • ${ch.totalParts} ${studyPartsLabel}</span>
+                        </div>
+                    </label>
+                `;
+            });
+
+            html += `</div>`;
+            return html;
+        }
+
+        function setTermSelection(termNum) {
+            const input = document.getElementById('target-term');
+            if (input) input.value = termNum;
+            [1, 2, 3].forEach(n => {
+                const card = document.getElementById(`term-card-${n}`);
+                if (card) {
+                    const checkIcon = card.querySelector('.check-indicator');
+                    if (n === termNum) {
+                        card.className = 'cursor-pointer p-3.5 sm:p-4 rounded-2xl border-2 border-blue-600 dark:border-blue-500 bg-blue-50/60 dark:bg-blue-950/40 ring-2 ring-blue-500/20 transition text-left flex flex-col justify-between relative shadow-sm';
+                        if (checkIcon) {
+                            checkIcon.className = 'w-4 h-4 rounded-full bg-blue-600 dark:bg-blue-500 text-white flex items-center justify-center text-xs check-indicator';
+                            checkIcon.innerHTML = '<i class="fa-solid fa-check"></i>';
+                        }
+                    } else {
+                        card.className = 'cursor-pointer p-3.5 sm:p-4 rounded-2xl border-2 border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#0e1526] hover:border-slate-300 dark:hover:border-slate-600 transition text-left flex flex-col justify-between';
+                        if (checkIcon) {
+                            checkIcon.className = 'w-4 h-4 rounded-full border border-slate-300 dark:border-slate-600 flex items-center justify-center check-indicator';
+                            checkIcon.innerHTML = '';
+                        }
+                    }
+                }
+            });
+        }
+
+        function getPresetDate(month, day, nextYear = false) {
+            let now = new Date();
+            let year = now.getFullYear();
+            if (nextYear) year += 1;
+            const mStr = String(month).padStart(2, '0');
+            const dStr = String(day).padStart(2, '0');
+            return `${year}-${mStr}-${dStr}`;
+        }
+
+        function setDeadlinePreset(dateStr) {
+            const input = document.getElementById('deadline-date');
+            if (input) {
+                input.value = dateStr;
+                updateDeadlinePreview();
+            }
+        }
+
+        function updateDeadlinePreview() {
+            const input = document.getElementById('deadline-date');
+            const label = document.getElementById('deadline-calc-label');
+            if (!input || !label) return;
+            const isML = getAppLanguage() === 'ml';
+            const days = calculateDaysBetween(TODAY_STR, input.value);
+            if (days <= 0) {
+                label.innerHTML = isML
+                    ? '<span class="text-rose-600 dark:text-rose-400 font-bold flex items-center gap-1.5"><i class="fa-solid fa-triangle-exclamation"></i> തിരഞ്ഞെടുത്ത തീയതി കഴിഞ്ഞുപോയി! ഭാവിയിലെ തീയതി നൽകുക.</span>'
+                    : '<span class="text-rose-600 dark:text-rose-400 font-bold flex items-center gap-1.5"><i class="fa-solid fa-triangle-exclamation"></i> Selected date has passed! Please select a future target date.</span>';
+            } else {
+                let revDays = 0;
+                if (days >= 75) revDays = 10;
+                else if (days >= 45) revDays = 7;
+                else if (days >= 25) revDays = 4;
+                else if (days >= 14) revDays = 2;
+                else if (days >= 7) revDays = 1;
+                const studyDays = Math.max(1, days - revDays);
+                label.innerHTML = isML ? `
+                    <div class="flex flex-wrap items-center justify-between gap-1">
+                        <span class="font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
+                            <i class="fa-solid fa-calculator text-blue-600 dark:text-blue-400"></i>
+                            <span><strong>${days}</strong> ദിവസങ്ങൾ ലഭ്യമാണ്</span>
+                        </span>
+                        <span class="text-purple-700 dark:text-purple-300 font-bold bg-purple-100/70 dark:bg-purple-950/40 px-2 py-0.5 rounded-md text-xs">
+                            <i class="fa-solid fa-shield-check mr-1"></i>${revDays} ദിവസങ്ങൾ റിവിഷനായി മാറ്റി വെച്ചു
+                        </span>
+                    </div>
+                    <div class="text-xs text-slate-500 dark:text-slate-300 mt-1">
+                        ${studyDays} ദിവസത്തെ പഠനം. അവസാന ${revDays} ദിവസങ്ങൾ മുൻവർഷ ചോദ്യങ്ങളും ഫോർമുലകളും പഠിക്കാൻ നീക്കിവെച്ചു.
+                    </div>
+                ` : `
+                    <div class="flex flex-wrap items-center justify-between gap-1">
+                        <span class="font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
+                            <i class="fa-solid fa-calculator text-blue-600 dark:text-blue-400"></i>
+                            <span><strong>${days}</strong> calendar days available</span>
+                        </span>
+                        <span class="text-purple-700 dark:text-purple-300 font-bold bg-purple-100/70 dark:bg-purple-950/40 px-2 py-0.5 rounded-md text-xs">
+                            <i class="fa-solid fa-shield-check mr-1"></i>${revDays} days reserved for Mock Revision
+                        </span>
+                    </div>
+                    <div class="text-xs text-slate-500 dark:text-slate-300 mt-1">
+                        ${studyDays} active syllabus study days. Final ${revDays} days will strictly run PYQ sets and formula drills.
+                    </div>
+                `;
+            }
+        }
+
+        function handleInitialSetup() {
+            const deadlineInput = document.getElementById('deadline-date')?.value;
+            const targetTerm = parseInt(document.getElementById('target-term')?.value || "2");
+            const studyIntensity = document.getElementById('study-intensity')?.value || 'balanced';
+
+            if (!deadlineInput) {
+                showAppAlert({
+                    title: "Deadline Required",
+                    message: "Please choose your target examination deadline date.",
+                    icon: "fa-calendar-days text-blue-500"
+                });
+                return;
+            }
+
+            const days = calculateDaysBetween(TODAY_STR, deadlineInput);
+            if (days <= 0) {
+                showAppAlert({
+                    title: "Future Date Required",
+                    message: "Please select a target deadline date in the future.",
+                    icon: "fa-calendar-xmark text-amber-500"
+                });
+                return;
+            }
+
+            // Collect excluded / already completed chapters (both +2 and +1)
+            const checkedCompletedBoxes = Array.from(selectedCompletedChapters);
+
+            // Filter Plus Two tasks: only include tasks of the chosen stream, up to targetTerm, and not marked completed
+            const allowedSubjects = getStreamSubjects(selectedStream);
+            let tasksToPlan = PLUS_TWO_SYLLABUS.filter(t => 
+                allowedSubjects.includes(t.subject) && 
+                t.term <= targetTerm && 
+                !checkedCompletedBoxes.includes(t.chapId)
+            );
+
+            // Plus One Improvement Config (Strictly Stream Isolated)
+            let improvementConfig = [];
+            const hasImp = document.getElementById('has-improvement')?.checked;
+
+            if (hasImp) {
+                let hasError = false;
+                allowedSubjects.forEach(sub => {
+                    const subId = sub.replace(/\s+/g, '-').toLowerCase();
+                    const cb = document.getElementById(`imp-${subId}`);
+                    if (cb && cb.checked) {
+                        const examDate = document.getElementById(`input-date-${subId}`)?.value;
+                        if (!examDate) {
+                            showAppAlert({
+                                title: "Exam Date Missing",
+                                message: `Please choose an exam date for ${sub} improvement.`,
+                                icon: "fa-calendar-day text-amber-500"
+                            });
+                            hasError = true;
+                            return;
+                        }
+                        improvementConfig.push({ subject: sub, examDate: examDate });
+                        // Exclude finished Plus One chapters!
+                        const incompletePlusOne = PLUS_ONE_SYLLABUS.filter(t => t.subject === sub && !checkedCompletedBoxes.includes(t.chapId));
+                        tasksToPlan.push(...incompletePlusOne);
+                    }
+                });
+                if (hasError) return;
+            }
+
+            if (tasksToPlan.length === 0) {
+                showAppAlert({
+                    title: "All Chapters Excluded",
+                    message: "All chapters in the selected term/improvement were marked finished! Please select a higher term or uncheck some chapters.",
+                    icon: "fa-circle-info text-blue-500"
+                });
+                return;
+            }
+
+            const personalization = getPersonalizationConfig();
+            const planResult = buildIntelligentPlan(deadlineInput, tasksToPlan, TODAY_STR, improvementConfig, selectedStream, {
+                intensity: studyIntensity,
+                personalization: personalization
+            });
+
+            if (planResult && planResult.planDays) {
+                appState = {
+                    engineVersion: PLANNER_ENGINE_VERSION,
+                    stream: selectedStream,
+                    studyIntensity: studyIntensity,
+                    personalization: personalization,
+                    startDate: TODAY_STR,
+                    deadlineDate: deadlineInput,
+                    targetTerm: targetTerm,
+                    completedChaptersOnInit: checkedCompletedBoxes,
+                    improvementConfig: improvementConfig,
+                    plan: planResult.planDays,
+                    revisionDaysCount: planResult.revisionDaysCount,
+                    totalConfiguredTasks: tasksToPlan.length,
+                    diagnostics: planResult.diagnostics,
+                    createdAt: new Date().toISOString(),
+                    lastModified: new Date().toISOString()
+                };
+                saveAppState();
+                trackAnalyticsEvent('plan_created', {
+                    stream: selectedStream,
+                    daysTotal: days,
+                    tasksCount: tasksToPlan.length
+                });
+                goToDashboard();
+                showAppToast("🎉 Your personalized study plan is ready! Let's conquer Day 1!", "fa-rocket text-blue-400");
+            }
+        }
+
+        /* ==========================================================================
+           7. REGENERATION / SCHEDULE REBALANCING & DAY NAVIGATION
+           ========================================================================== */
+
+        function changeMissionDay(dayNum) {
+            if (!appState || !appState.plan) return;
+            const target = appState.plan.find(d => d.dayNumber === dayNum);
+            if (target) {
+                selectedMissionDayNumber = dayNum;
+                renderApp();
+            }
+        }
+
+        function shiftPlanToToday() {
+            if (!appState || !appState.plan || appState.plan.length === 0) return;
+            shiftPlanToStartDate(TODAY_STR);
+        }
+
+        function shiftPlanToStartDate(newStartDateStr = TODAY_STR) {
+            if (!appState || !appState.plan || appState.plan.length === 0) return;
+            const s = new Date(newStartDateStr + 'T00:00:00');
+            appState.startDate = newStartDateStr;
+            appState.plan.forEach((day, idx) => {
+                const d = new Date(s);
+                d.setDate(d.getDate() + idx);
+                day.date = formatLocalDateStr(d);
+                day.dayOfWeek = d.getDay();
+            });
+            const lastDay = appState.plan[appState.plan.length - 1];
+            if (lastDay && lastDay.date > appState.deadlineDate) {
+                appState.deadlineDate = lastDay.date;
+            }
+            selectedMissionDayNumber = 1;
+            appState.lastModified = new Date().toISOString();
+            saveAppState();
+            renderApp();
+            showAppToast("📅 Schedule synchronized! Day 1 starts today.", "fa-calendar-check text-blue-400");
+        }
+
+        function openRegenerateModal() {
+            if (!appState || !appState.plan) return;
+            const select = document.getElementById('completed-day-select');
+            select.innerHTML = '';
+
+            const todayIdx = appState.plan.findIndex(d => d.date === TODAY_STR);
+            const currentDayNumber = todayIdx !== -1 ? appState.plan[todayIdx].dayNumber : appState.plan.length;
+            const maxChoice = Math.max(0, currentDayNumber - 1);
+
+            const opt0 = document.createElement('option');
+            opt0.value = 0;
+            opt0.text = "Day 0 (Start fresh from Day 1 today)";
+            if (maxChoice === 0) opt0.selected = true;
+            select.appendChild(opt0);
+
+            for (let i = 1; i <= maxChoice; i++) {
+                const dayPlan = appState.plan.find(p => p.dayNumber === i);
+                const dateNote = dayPlan ? ` (${dayPlan.date})` : '';
+                const opt = document.createElement('option');
+                opt.value = i;
+                opt.text = `Day ${i}${dateNote}`;
+                if (i === maxChoice && maxChoice > 0) opt.selected = true;
+                select.appendChild(opt);
+            }
+
+            document.getElementById('regenerate-modal').classList.remove('hidden');
+            document.getElementById('regenerate-modal').classList.add('flex');
+        }
+
+        function closeRegenerateModal() {
+            document.getElementById('regenerate-modal').classList.add('hidden');
+            document.getElementById('regenerate-modal').classList.remove('flex');
+        }
+
+        function executeRegeneration() {
+            const completedUpTo = parseInt(document.getElementById('completed-day-select').value);
+
+            let keptDays = [];
+            const completedTaskIds = new Set();
+            const completedChapterIds = new Set(appState.completedChaptersOnInit || []);
+
+            if (completedUpTo > 0) {
+                appState.plan.forEach(day => {
+                    if (day.dayNumber <= completedUpTo) {
+                        day.tasks.forEach(t => {
+                            t.completed = true;
+                            completedTaskIds.add(t.id);
+                        });
+                        keptDays.push(day);
+                    } else {
+                        // Preserve tasks completed ahead of schedule in future days!
+                        day.tasks.forEach(t => {
+                            if (t.completed) {
+                                completedTaskIds.add(t.id);
+                            }
+                        });
+                    }
+                });
+            } else {
+                // If starting fresh from Day 1 today, preserve checkmarks for previously completed tasks
+                appState.plan.forEach(day => {
+                    day.tasks.forEach(t => {
+                        if (t.completed) completedTaskIds.add(t.id);
+                    });
+                });
+            }
+
+            // Rebuild intelligent plan for uncompleted tasks starting from TODAY
+            const rebuildStartDate = (completedUpTo === 0) ? TODAY_STR : getLocalDateStr();
+
+            const userStream = appState.stream || (appState.plan.some(d => d.tasks.some(t => t.subject === 'Botany' || t.subject === 'Zoology')) ? 'bio' : 'cs');
+            const targetTerm = appState.targetTerm || 3;
+            const allowedSubjects = getStreamSubjects(userStream);
+
+            // Reconstruct remaining Plus Two tasks in canonical prerequisite order
+            let uncompletedTasks = PLUS_TWO_SYLLABUS.filter(t =>
+                allowedSubjects.includes(t.subject) &&
+                t.term <= targetTerm &&
+                !completedChapterIds.has(t.chapId) &&
+                !completedTaskIds.has(t.id)
+            );
+
+            // Reconstruct remaining Plus One Improvement tasks in canonical prerequisite order
+            if (appState.improvementConfig && appState.improvementConfig.length > 0) {
+                appState.improvementConfig.forEach(cfg => {
+                    const incompleteP1 = PLUS_ONE_SYLLABUS.filter(t =>
+                        t.subject === cfg.subject &&
+                        !completedChapterIds.has(t.chapId) &&
+                        !completedTaskIds.has(t.id)
+                    );
+                    uncompletedTasks.push(...incompleteP1);
+                });
+            }
+
+            const result = buildIntelligentPlan(appState.deadlineDate, uncompletedTasks, rebuildStartDate, appState.improvementConfig || [], userStream, {
+                intensity: appState.studyIntensity || 'balanced',
+                personalization: appState.personalization || {}
+            });
+
+            if (result && result.planDays) {
+                // Adjust day numbering seamlessly following keptDays
+                result.planDays.forEach((d, idx) => {
+                    d.dayNumber = completedUpTo + idx + 1;
+                });
+
+                appState.plan = [...keptDays, ...result.planDays];
+                if (completedUpTo === 0) {
+                    appState.startDate = TODAY_STR;
+                }
+                selectedMissionDayNumber = completedUpTo + 1;
+                appState.revisionDaysCount = result.revisionDaysCount;
+                appState.diagnostics = result.diagnostics;
+                appState.engineVersion = PLANNER_ENGINE_VERSION;
+                appState.lastModified = new Date().toISOString();
+                saveAppState();
+
+                closeRegenerateModal();
+                showAppToast("Schedule rebalanced with dependency tracking!", "fa-wand-magic-sparkles text-blue-400");
+                renderApp();
+            }
+        }
+
+        /* ==========================================================================
+           8. CORE APP VIEW RENDERER
+           ========================================================================== */
+
+        function renderApp() {
+            const container = document.getElementById('app-container');
+            if (!container) return;
+            const dateDisplay = document.getElementById('date-display');
+            if (dateDisplay) {
+                dateDisplay.innerText = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+            }
+
+            // View 0: Initial Setup View
+            if (!appState) {
+                trackAnalyticsEvent('setup_started');
+                // Default target date: November 30 (Term 1 & 2 Half-Yearly)
+                let defaultTarget = new Date();
+                defaultTarget.setMonth(10); // November
+                defaultTarget.setDate(30);
+                if (new Date() > defaultTarget) defaultTarget.setFullYear(defaultTarget.getFullYear() + 1);
+
+                container.innerHTML = `
+                    <div class="max-w-2xl mx-auto bg-white dark:bg-[#0e1422] rounded-3xl p-5 sm:p-8 shadow-xl border border-slate-100 dark:border-slate-800/80 animate-fade-in-up">
+                        <!-- Header -->
+                        <div class="text-center mb-6">
+                            <div class="w-12 h-12 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center text-white text-xl mx-auto mb-2.5 shadow-md shadow-blue-500/20">
+                                <i class="fa-solid fa-graduation-cap"></i>
+                            </div>
+                            <h2 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">Create Your Study Plan</h2>
+                            <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-300 mt-1 max-w-sm mx-auto">
+                                A day-by-day timetable tailored to your Kerala DHSE exam syllabus.
+                            </p>
+                        </div>
+
+                        <div class="space-y-5">
+                            <!-- Step 1: Stream Selection -->
+                            <div>
+                                <label class="text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-200 flex items-center gap-2 mb-2.5">
+                                    <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-black">1</span>
+                                    <span>Select Stream</span>
+                                </label>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <!-- Option 1: Computer Science (Preset) -->
+                                    <div id="stream-card-cs" onclick="setStreamSelection('cs')" class="cursor-pointer p-3.5 sm:p-4 rounded-2xl border-2 ${selectedStream === 'cs' ? 'border-blue-600 dark:border-blue-500 bg-blue-50/60 dark:bg-blue-950/40 ring-2 ring-blue-500/20 shadow-sm' : 'border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#0e1526] hover:border-slate-300 dark:hover:border-slate-600'} transition text-left flex flex-col justify-between relative">
+                                        <div class="absolute -top-2.5 right-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-black px-2 py-0.5 rounded-full shadow-sm uppercase tracking-wider">
+                                            Preset
+                                        </div>
+                                        <div class="flex items-start justify-between">
+                                            <div class="flex items-center gap-2.5">
+                                                <div class="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 flex items-center justify-center text-sm font-bold">
+                                                    <i class="fa-solid fa-laptop-code"></i>
+                                                </div>
+                                                <div>
+                                                    <h4 class="font-bold text-slate-900 dark:text-white text-sm">Computer Science</h4>
+                                                    <span class="text-xs font-semibold text-blue-700 dark:text-blue-300">Physics • Chem • Maths • CS</span>
+                                                </div>
+                                            </div>
+                                            <span class="w-5 h-5 rounded-full ${selectedStream === 'cs' ? 'bg-blue-600 dark:bg-blue-500 text-white' : 'border border-slate-300 dark:border-slate-600'} flex items-center justify-center text-xs stream-check">
+                                                ${selectedStream === 'cs' ? '<i class="fa-solid fa-check"></i>' : ''}
+                                            </span>
+                                        </div>
+                                        <p class="text-xs text-slate-500 dark:text-slate-300 mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/80 font-medium">
+                                            Physics • Chemistry • Maths • <strong class="text-slate-900 dark:text-white">Computer Science</strong>
+                                        </p>
+                                    </div>
+
+                                    <!-- Option 2: Biology Science -->
+                                    <div id="stream-card-bio" onclick="setStreamSelection('bio')" class="cursor-pointer p-3.5 sm:p-4 rounded-2xl border-2 ${selectedStream === 'bio' ? 'border-emerald-600 dark:border-emerald-500 bg-emerald-50/60 dark:bg-emerald-950/40 ring-2 ring-emerald-500/20 shadow-sm' : 'border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#0e1526] hover:border-slate-300 dark:hover:border-slate-600'} transition text-left flex flex-col justify-between relative">
+                                        <div class="flex items-start justify-between">
+                                            <div class="flex items-center gap-2.5">
+                                                <div class="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 flex items-center justify-center text-sm font-bold">
+                                                    <i class="fa-solid fa-seedling"></i>
+                                                </div>
+                                                <div>
+                                                    <h4 class="font-bold text-slate-900 dark:text-white text-sm">Biology Science</h4>
+                                                    <span class="text-xs font-semibold text-emerald-700 dark:text-emerald-300">Bio-Maths / General</span>
+                                                </div>
+                                            </div>
+                                            <span class="w-5 h-5 rounded-full ${selectedStream === 'bio' ? 'bg-emerald-600 dark:bg-emerald-500 text-white' : 'border border-slate-300 dark:border-slate-600'} flex items-center justify-center text-xs stream-check">
+                                                ${selectedStream === 'bio' ? '<i class="fa-solid fa-check"></i>' : ''}
+                                            </span>
+                                        </div>
+                                        <p class="text-xs text-slate-500 dark:text-slate-300 mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/80 font-medium">
+                                            Physics • Chemistry • Maths • <strong class="text-slate-900 dark:text-white">Botany & Zoology</strong>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Step 2: Target Syllabus Scope -->
+                            <div>
+                                <label class="text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-200 flex items-center gap-2 mb-2.5">
+                                    <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-black">2</span>
+                                    <span>Target Syllabus</span>
+                                </label>
+                                <input type="hidden" id="target-term" value="2">
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                                    <!-- Card 1: Term 1 -->
+                                    <div id="term-card-1" onclick="setTermSelection(1)" class="cursor-pointer p-3 sm:p-3.5 rounded-2xl border-2 border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#0e1526] hover:border-slate-300 dark:hover:border-slate-600 transition text-left flex flex-col justify-between">
+                                        <div>
+                                            <span class="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block mb-0.5">First Terminal</span>
+                                            <h4 class="font-bold text-slate-900 dark:text-white text-sm">Term 1 Only</h4>
+                                            <p id="term-desc-1" class="text-xs text-slate-500 dark:text-slate-300 mt-0.5">${selectedStream === 'bio' ? 'Onam exams portion (~18 chapters)' : 'Onam exams portion (~17 chapters)'}</p>
+                                        </div>
+                                        <div class="mt-2.5 flex items-center justify-end">
+                                            <span class="w-4 h-4 rounded-full border border-slate-300 dark:border-slate-600 flex items-center justify-center check-indicator"></span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Card 2: Term 1 & 2 (Recommended) -->
+                                    <div id="term-card-2" onclick="setTermSelection(2)" class="cursor-pointer p-3 sm:p-3.5 rounded-2xl border-2 border-blue-600 dark:border-blue-500 bg-blue-50/60 dark:bg-blue-950/40 ring-2 ring-blue-500/20 transition text-left flex flex-col justify-between relative shadow-sm">
+                                        <div class="absolute -top-2.5 right-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-black px-2 py-0.5 rounded-full shadow-sm uppercase tracking-wider">
+                                            ★ Popular
+                                        </div>
+                                        <div>
+                                            <span class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider block mb-0.5">Half-Yearly</span>
+                                            <h4 class="font-bold text-slate-900 dark:text-white text-sm">Term 1 & Term 2</h4>
+                                            <p id="term-desc-2" class="text-xs text-slate-600 dark:text-slate-200 mt-0.5">${selectedStream === 'bio' ? 'Christmas exam portion (~35 chapters)' : 'Christmas exam portion (~31 chapters)'}</p>
+                                        </div>
+                                        <div class="mt-2.5 flex items-center justify-end">
+                                            <span class="w-4 h-4 rounded-full bg-blue-600 dark:bg-blue-500 text-white flex items-center justify-center text-xs check-indicator"><i class="fa-solid fa-check"></i></span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Card 3: Full Syllabus -->
+                                    <div id="term-card-3" onclick="setTermSelection(3)" class="cursor-pointer p-3 sm:p-3.5 rounded-2xl border-2 border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#0e1526] hover:border-slate-300 dark:hover:border-slate-600 transition text-left flex flex-col justify-between">
+                                        <div>
+                                            <span class="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider block mb-0.5">Board Ready</span>
+                                            <h4 class="font-bold text-slate-900 dark:text-white text-sm">Full Syllabus</h4>
+                                            <p id="term-desc-3" class="text-xs text-slate-500 dark:text-slate-300 mt-0.5">${selectedStream === 'bio' ? 'All 49 chapters for March Public Exams' : 'All 46 chapters for March Public Exams'}</p>
+                                        </div>
+                                        <div class="mt-2.5 flex items-center justify-end">
+                                            <span class="w-4 h-4 rounded-full border border-slate-300 dark:border-slate-600 flex items-center justify-center check-indicator"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Step 3: Plus One (+1) Improvement Papers -->
+                            <div id="step-improvement-card" class="setup-improvement-box border-2 border-amber-200/90 rounded-3xl p-4 sm:p-5 shadow-sm transition">
+                                <div class="flex items-center justify-between mb-2.5">
+                                    <label class="text-xs font-extrabold uppercase tracking-wider text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                                        <span class="w-5 h-5 rounded-full bg-amber-600 text-white flex items-center justify-center text-xs font-black">3</span>
+                                        <span>Plus One (+1) Improvement Papers</span>
+                                    </label>
+                                    <span class="text-xs font-extrabold uppercase tracking-wider text-amber-800 dark:text-amber-300 bg-amber-200/80 dark:bg-amber-950/60 px-2 py-0.5 rounded-full flex items-center gap-1 border border-amber-300/40 dark:border-amber-700/50">
+                                        <i class="fa-solid fa-bolt text-amber-600 dark:text-amber-400"></i> Important Option
+                                    </span>
+                                </div>
+                                <p class="text-xs text-slate-600 dark:text-slate-200 mb-3">
+                                    Are you writing the DHSE <strong class="text-slate-900 dark:text-white">Plus One (+1) Improvement / Supplementary Exam</strong> this year?
+                                </p>
+
+                                <!-- Hidden form checkbox kept in sync for handleInitialSetup() compatibility -->
+                                <input type="checkbox" id="has-improvement" class="hidden">
+
+                                <!-- Prominent Choice Cards -->
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-3">
+                                    <!-- Option A: No Improvement -->
+                                    <div id="imp-choice-no" onclick="setImprovementToggle(false)" class="cursor-pointer p-3 sm:p-3.5 rounded-2xl border-2 border-slate-700 dark:border-slate-500 bg-slate-50 dark:bg-[#141d30] ring-2 ring-slate-400/20 transition text-left flex items-center justify-between shadow-xs">
+                                        <div class="flex items-center gap-2.5">
+                                            <div class="w-8 h-8 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center text-sm font-bold shrink-0">
+                                                <i class="fa-solid fa-graduation-cap"></i>
+                                            </div>
+                                            <div>
+                                                <h4 class="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">No, Plus Two (+2) Only</h4>
+                                                <p class="text-xs text-slate-500 dark:text-slate-300">I am only preparing for 12th standard</p>
+                                            </div>
+                                        </div>
+                                        <span class="w-5 h-5 rounded-full bg-slate-700 dark:bg-slate-500 flex items-center justify-center text-xs choice-check">
+                                            <i class="fa-solid fa-check text-white"></i>
+                                        </span>
+                                    </div>
+
+                                    <!-- Option B: Yes, Has Improvement Papers -->
+                                    <div id="imp-choice-yes" onclick="setImprovementToggle(true)" class="cursor-pointer p-3 sm:p-3.5 rounded-2xl border-2 border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#0e1526] hover:border-amber-400 hover:bg-amber-50/40 dark:hover:bg-amber-950/20 transition text-left flex items-center justify-between">
+                                        <div class="flex items-center gap-2.5">
+                                            <div class="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 flex items-center justify-center text-sm font-bold shrink-0">
+                                                <i class="fa-solid fa-file-pen"></i>
+                                            </div>
+                                            <div>
+                                                <h4 class="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">Yes, I Have +1 Papers!</h4>
+                                                <p class="text-xs text-amber-700 dark:text-amber-300 font-semibold">Weave +1 chapters before exam dates</p>
+                                            </div>
+                                        </div>
+                                        <span class="w-5 h-5 rounded-full border border-slate-300 dark:border-slate-600 flex items-center justify-center text-xs choice-check">
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- Improvement Subjects & Exam Dates Panel (Toggled via setImprovementToggle) -->
+                                <div id="improvement-options" class="hidden p-3 sm:p-4 bg-white dark:bg-[#101726] rounded-2xl border border-amber-300 dark:border-amber-500/40 shadow-xs space-y-2.5 animate-fade-in-up">
+                                    <div class="flex items-center justify-between border-b border-amber-100 dark:border-amber-900/40 pb-2">
+                                        <span class="text-xs font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                                            <i class="fa-solid fa-list-check text-amber-600 dark:text-amber-400"></i>
+                                            <span>Select Your +1 Improvement Subjects & Exam Dates</span>
+                                        </span>
+                                        <span class="text-xs font-semibold text-slate-400 dark:text-slate-400">Strictly 2025–26 syllabus</span>
+                                    </div>
+                                    <div id="improvement-subject-items-container" class="space-y-2">
+                                        ${renderImprovementSubjectItems()}
+                                    </div>
+                                    <p class="text-xs text-slate-500 dark:text-slate-300 pt-1">
+                                        <i class="fa-solid fa-circle-info text-blue-500 dark:text-blue-400 mr-1"></i>
+                                        The planner will automatically prioritize these +1 chapters and finish them well in advance of each subject's exam date!
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Step 4: Target Completion Deadline -->
+                            <div>
+                                <label class="text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-200 flex items-center gap-2 mb-2">
+                                    <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-black">4</span>
+                                    <span>Target Deadline</span>
+                                </label>
+
+                                <!-- Preset Buttons -->
+                                <div class="flex flex-wrap gap-2 mb-2">
+                                    <button type="button" onclick="setDeadlinePreset('${getPresetDate(11, 30)}')" class="py-1.5 px-3 rounded-xl bg-slate-100 dark:bg-[#162137] hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-700 dark:hover:text-blue-300 text-slate-700 dark:text-slate-200 text-xs font-semibold border border-slate-200 dark:border-slate-700/80 transition flex items-center gap-1.5">
+                                        <i class="fa-regular fa-calendar-check text-xs text-blue-600 dark:text-blue-400"></i>
+                                        <span>Nov 30 (Term 2 Target)</span>
+                                    </button>
+                                    <button type="button" onclick="setDeadlinePreset('${getPresetDate(12, 20)}')" class="py-1.5 px-3 rounded-xl bg-slate-100 dark:bg-[#162137] hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-700 dark:hover:text-blue-300 text-slate-700 dark:text-slate-200 text-xs font-semibold border border-slate-200 dark:border-slate-700/80 transition flex items-center gap-1.5">
+                                        <i class="fa-regular fa-calendar-check text-xs text-blue-600 dark:text-blue-400"></i>
+                                        <span>Dec 20 (Christmas Break)</span>
+                                    </button>
+                                    <button type="button" onclick="setDeadlinePreset('${getPresetDate(2, 28, true)}')" class="py-1.5 px-3 rounded-xl bg-slate-100 dark:bg-[#162137] hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-700 dark:hover:text-blue-300 text-slate-700 dark:text-slate-200 text-xs font-semibold border border-slate-200 dark:border-slate-700/80 transition flex items-center gap-1.5">
+                                        <i class="fa-regular fa-calendar-check text-xs text-blue-600 dark:text-blue-400"></i>
+                                        <span>Feb 28 (Public Exam Ready)</span>
+                                    </button>
+                                </div>
+
+                                <input type="date" id="deadline-date" value="${getLocalDateStr(defaultTarget)}" onchange="updateDeadlinePreview()" oninput="updateDeadlinePreview()" class="w-full border-2 border-slate-200 dark:border-slate-700 rounded-2xl p-3 text-sm font-bold text-slate-800 dark:text-white bg-slate-50 dark:bg-[#101726] focus:bg-white dark:focus:bg-[#141d30] focus:border-blue-600 focus:ring-4 focus:ring-blue-50 dark:focus:ring-blue-900/30 outline-none transition">
+
+                                <!-- Live Calculation Feedback Box -->
+                                <div id="deadline-calc-label" class="mt-2 p-2.5 rounded-xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-800/40 text-xs text-slate-600 dark:text-slate-200"></div>
+                            </div>
+
+                            <!-- Step 5: Personalize Study Routine -->
+                            <div id="step-personalization-card" class="setup-personalization-box border-2 border-indigo-100/80 rounded-3xl p-4 sm:p-5 shadow-xs space-y-4">
+                                <div class="flex items-center justify-between">
+                                    <label class="text-xs font-extrabold uppercase tracking-wider text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                                        <span class="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-black">5</span>
+                                        <span>Personalize Your Study Routine</span>
+                                    </label>
+                                    <span class="text-xs font-extrabold uppercase tracking-wider text-indigo-700 dark:text-indigo-300 bg-indigo-100/80 dark:bg-indigo-950/60 px-2 py-0.5 rounded-full border border-indigo-200/40 dark:border-indigo-700/50">
+                                        ✨ Tailored Pacing
+                                    </span>
+                                </div>
+
+                                <!-- 5.1 Subject Confidence Level -->
+                                <div>
+                                    <div class="flex items-center justify-between mb-1.5">
+                                        <span class="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                                            <i class="fa-solid fa-bullseye text-indigo-600 dark:text-indigo-400"></i>
+                                            <span>Subject Confidence & Priority</span>
+                                        </span>
+                                        <span class="text-xs text-slate-400 dark:text-slate-400">Mark weak subjects to get higher frequency</span>
+                                    </div>
+                                    <div id="personalization-subjects-container" class="space-y-1.5">
+                                        ${renderPersonalizationSubjectRows()}
+                                    </div>
+                                </div>
+
+                                <!-- 5.2 Weekly Study Rhythm -->
+                                <div>
+                                    <span class="text-xs font-bold text-slate-700 dark:text-slate-200 block mb-1.5 flex items-center gap-1.5">
+                                        <i class="fa-regular fa-calendar-days text-indigo-600 dark:text-indigo-400"></i>
+                                        <span>Weekly Study Rhythm & Rest Day</span>
+                                    </span>
+                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                        <!-- Card A: Daily Balanced -->
+                                        <div id="rhythm-card-balanced" onclick="setWeeklyRhythmSelection('balanced')" class="cursor-pointer p-3 rounded-2xl border-2 border-blue-600 dark:border-blue-500 bg-blue-50/70 dark:bg-blue-950/40 ring-2 ring-blue-500/20 transition text-left flex flex-col justify-between relative shadow-xs">
+                                            <div>
+                                                <div class="flex items-center justify-between mb-0.5">
+                                                    <span class="font-bold text-slate-900 dark:text-white text-xs">Daily Balanced</span>
+                                                    <span class="text-xs font-extrabold text-blue-600 dark:text-blue-300 bg-blue-100 dark:bg-blue-950/60 px-1.5 rounded">Standard</span>
+                                                </div>
+                                                <p class="text-xs text-slate-500 dark:text-slate-300">Even portions every day across the week.</p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Card B: Weekend Booster -->
+                                        <div id="rhythm-card-weekend" onclick="setWeeklyRhythmSelection('weekend_booster')" class="cursor-pointer p-3 rounded-2xl border-2 border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#0e1526] hover:border-slate-300 dark:hover:border-slate-600 transition text-left flex flex-col justify-between">
+                                            <div>
+                                                <div class="flex items-center justify-between mb-0.5">
+                                                    <span class="font-bold text-slate-900 dark:text-white text-xs">Weekend Booster</span>
+                                                    <span class="text-xs font-bold text-purple-600 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/60 px-1.5 rounded">School</span>
+                                                </div>
+                                                <p class="text-xs text-slate-500 dark:text-slate-300">Light weekdays (school), power study on Sat/Sun.</p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Card C: Sunday Rest Day -->
+                                        <div id="rhythm-card-sunday" onclick="setWeeklyRhythmSelection('rest_day', 0)" class="cursor-pointer p-3 rounded-2xl border-2 border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#0e1526] hover:border-slate-300 dark:hover:border-slate-600 transition text-left flex flex-col justify-between">
+                                            <div>
+                                                <div class="flex items-center justify-between mb-0.5">
+                                                    <span class="font-bold text-slate-900 dark:text-white text-xs">Sunday Rest Day</span>
+                                                    <span class="text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 rounded">Recharge</span>
+                                                </div>
+                                                <p class="text-xs text-slate-500 dark:text-slate-300">Zero new chapters on Sunday (free recharge/recall).</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 5.3 Daily Study Hours Window -->
+                                <div>
+                                    <div class="flex items-center justify-between mb-1.5">
+                                        <span class="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                                            <i class="fa-solid fa-clock text-indigo-600 dark:text-indigo-400"></i>
+                                            <span>Daily Self-Study Time Budget</span>
+                                        </span>
+                                        <span class="text-xs text-slate-400 dark:text-slate-400">Maps to chapter effort scores</span>
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <button type="button" id="hours-chip-2" onclick="setDailyHoursSelection(2)" class="flex-1 py-2 px-3 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-[#141d30] text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#1a253c] transition flex flex-col items-center">
+                                            <span class="font-black text-slate-800 dark:text-white">2 Hours/day</span>
+                                            <span class="text-xs text-slate-400 dark:text-slate-400">Paced (~1-2 parts)</span>
+                                        </button>
+                                        <button type="button" id="hours-chip-3_5" onclick="setDailyHoursSelection(3.5)" class="flex-1 py-2 px-3 text-xs font-black rounded-xl bg-blue-600 dark:bg-blue-500 text-white shadow-sm transition flex flex-col items-center">
+                                            <span class="font-black">3–4 Hours/day</span>
+                                            <span class="text-xs text-blue-100">Optimal (~2-3 parts)</span>
+                                        </button>
+                                        <button type="button" id="hours-chip-5" onclick="setDailyHoursSelection(5)" class="flex-1 py-2 px-3 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-[#141d30] text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#1a253c] transition flex flex-col items-center">
+                                            <span class="font-black text-slate-800 dark:text-white">5+ Hours/day</span>
+                                            <span class="text-xs text-slate-400 dark:text-slate-400">Intensive (~3-4 parts)</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Optional Advanced Options Collapsible Accordion -->
+                            <details class="group setup-accordion border border-slate-200 dark:border-slate-700/80 rounded-2xl bg-slate-50/50 dark:bg-[#101726] overflow-hidden">
+                                <summary class="p-3.5 sm:p-4 flex items-center justify-between cursor-pointer font-bold text-xs sm:text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100/60 dark:hover:bg-[#162137] transition list-none select-none">
+                                    <div class="flex items-center gap-2.5">
+                                        <i class="fa-solid fa-sliders text-blue-600 dark:text-blue-400"></i>
+                                        <span>More Options (Skip finished chapters, daily pace)</span>
+                                    </div>
+                                    <i class="fa-solid fa-chevron-down text-slate-400 dark:text-slate-400 text-xs transition duration-200 group-open:rotate-180"></i>
+                                </summary>
+
+                                <div class="p-4 pt-2 border-t border-slate-200/80 dark:border-slate-700/80 space-y-4 bg-white dark:bg-[#0e1422]">
+                                    <!-- Daily Study Pace / Capacity Selector -->
+                                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-slate-50 dark:bg-[#121a2c] rounded-xl border border-slate-200/70 dark:border-slate-700/80">
+                                        <div>
+                                            <label for="study-intensity" class="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
+                                                <i class="fa-solid fa-gauge-high text-blue-600 dark:text-blue-400"></i>
+                                                <span>Daily Study Intensity</span>
+                                            </label>
+                                            <p class="text-xs text-slate-500 dark:text-slate-300">Adapts daily task pacing to your capacity</p>
+                                        </div>
+                                        <select id="study-intensity" class="text-xs font-bold bg-white dark:bg-[#101726] border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-800 dark:text-white outline-none focus:border-blue-600 transition cursor-pointer">
+                                            <option value="balanced" selected>Standard (2-3 parts/day)</option>
+                                            <option value="intense">Intensive (3-4+ parts/day)</option>
+                                            <option value="light">Relaxed (1-2 parts/day)</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Exclude Finished Chapters (+2 & +1 Improvement) -->
+                                    <div class="border border-slate-200 dark:border-slate-700/80 rounded-xl overflow-hidden bg-slate-50/40 dark:bg-[#121a2c]">
+                                        <button type="button" onclick="const w = document.getElementById('setup-chaps-wrapper'); w.classList.toggle('hidden'); const chv = document.getElementById('chaps-chevron'); chv.classList.toggle('rotate-180');" class="w-full p-3.5 flex items-center justify-between text-left hover:bg-slate-100/60 dark:hover:bg-[#162137] transition">
+                                            <div class="flex items-center gap-2.5">
+                                                <div class="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 flex items-center justify-center text-xs font-bold shrink-0">
+                                                    <i class="fa-solid fa-check-double"></i>
+                                                </div>
+                                                <div>
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="text-xs font-bold text-slate-800 dark:text-white">Skip Already Finished Chapters</span>
+                                                        <span id="completed-chaps-badge" class="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-[#162137] text-slate-500 dark:text-slate-300">0 excluded</span>
+                                                    </div>
+                                                    <span class="text-xs text-slate-500 dark:text-slate-300 block">Mark chapters completed in school or tuition to omit them from the plan.</span>
+                                                </div>
+                                            </div>
+                                            <i id="chaps-chevron" class="fa-solid fa-chevron-down text-slate-400 dark:text-slate-400 text-xs transition duration-200 shrink-0"></i>
+                                        </button>
+
+                                        <div id="setup-chaps-wrapper" class="hidden p-3.5 bg-white dark:bg-[#0e1422] border-t border-slate-200 dark:border-slate-700/80">
+                                            <!-- Grade Tabs Switcher (+2 vs +1) -->
+                                            <div class="flex bg-slate-200/80 dark:bg-[#162137] p-1 rounded-xl mb-3 gap-1">
+                                                <button type="button" id="grade-tab-p2" onclick="switchSetupGrade('+2')" class="flex-1 py-1.5 px-3 text-xs font-bold rounded-lg bg-blue-600 dark:bg-blue-500 text-white shadow-sm transition flex items-center justify-center gap-1.5">
+                                                    <i class="fa-solid fa-book-bookmark text-xs"></i>
+                                                    <span>📘 Plus Two (+2)</span>
+                                                </button>
+                                                <button type="button" id="grade-tab-p1" onclick="switchSetupGrade('+1')" class="flex-1 py-1.5 px-3 text-xs font-bold rounded-lg bg-slate-100 dark:bg-[#121a2c] text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#1a253c] transition flex items-center justify-center gap-1.5">
+                                                    <i class="fa-solid fa-star text-xs"></i>
+                                                    <span>📙 +1 Improvement</span>
+                                                </button>
+                                            </div>
+
+                                            <!-- Subject Tabs Switcher (Strictly Stream Isolated) -->
+                                            <div id="setup-subject-tabs-container" class="flex flex-wrap gap-1.5 mb-3">
+                                                ${renderSetupSubjectTabs()}
+                                            </div>
+
+                                            <!-- Active Chapter List Container -->
+                                            <div id="setup-subject-chapters-list" class="bg-slate-50/50 dark:bg-[#101726] p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700/80">
+                                                ${renderSetupSubjectChapters(activeSetupSubjectTab, activeSetupGradeTab)}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </details>
+
+                            <!-- Submit Button -->
+                            <button onclick="handleInitialSetup()" class="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-800 text-white font-black py-3.5 sm:py-4 px-6 rounded-2xl shadow-xl shadow-blue-500/25 transform active:scale-[0.98] transition flex items-center justify-center gap-2 text-sm sm:text-base">
+                                <span>Generate My Study Plan</span>
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                setTimeout(() => {
+                    updateDeadlinePreview();
+                    updateCompletedChaptersCountBadge();
+                }, 0);
+                return;
+            }
+
+            // View 1: Today's Target View (Default First Attention Screen)
+            if (currentView === 'today') {
+                const calendarToday = appState.plan.find(d => d.date === TODAY_STR);
+                const firstIncompleteDay = appState.plan.find(d => (d.tasks || []).some(t => !t.completed));
+
+                let activeMissionDay = null;
+                if (selectedMissionDayNumber) {
+                    activeMissionDay = appState.plan.find(d => d.dayNumber === selectedMissionDayNumber);
+                }
+                if (!activeMissionDay) {
+                    if (firstIncompleteDay && calendarToday && firstIncompleteDay.dayNumber < calendarToday.dayNumber) {
+                        activeMissionDay = firstIncompleteDay;
+                    } else {
+                        activeMissionDay = calendarToday || appState.plan[0];
+                    }
+                }
+                const todayPlan = activeMissionDay;
+                const isCatchUpDay = Boolean(calendarToday && todayPlan && (todayPlan.dayNumber < calendarToday.dayNumber));
+                const overallStats = getOverallStats();
+
+                let todayTasksHTML;
+                if (!todayPlan) {
+                    const isCompletedAll = new Date(TODAY_STR) > new Date(appState.deadlineDate);
+                    todayTasksHTML = `
+                        <div class="bg-white rounded-3xl p-8 sm:p-12 text-center border border-slate-200 shadow-sm">
+                            <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4">
+                                <i class="fa-solid fa-flag-checkered"></i>
+                            </div>
+                            <h3 class="text-xl sm:text-2xl font-bold text-slate-900 mb-1">${isCompletedAll ? 'Target Deadline Reached!' : 'No tasks scheduled for today'}</h3>
+                            <p class="text-xs sm:text-sm text-slate-500 mb-6">Review your full schedule or start an active revision session.</p>
+                            <div class="flex justify-center gap-3">
+                                <button onclick="goToPlan()" class="py-2.5 px-5 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold rounded-xl transition">View Full Plan</button>
+                            </div>
+                        </div>
+                    `;
+                } else if (todayPlan.tasks.length === 0) {
+                    todayTasksHTML = `
+                        <div class="bg-white rounded-3xl p-8 sm:p-12 text-center border border-slate-200 shadow-sm">
+                            <div class="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4">
+                                <i class="fa-solid fa-mug-hot"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-slate-900 mb-1">${todayPlan.isRestDay ? 'Personalized Rest & Recharge Day!' : 'Rest & Retention Day!'}</h3>
+                            <p class="text-xs sm:text-sm text-slate-500 max-w-md mx-auto">${todayPlan.isRestDay ? 'Zero new chapters assigned today per your personalized schedule. Relax, recharge, or do a light 15-minute formula glance.' : 'No new chapters assigned today. Take a breather or review past formulas.'}</p>
+                        </div>
+                    `;
+                } else {
+                    const totalToday = todayPlan.tasks.length;
+                    const doneToday = todayPlan.tasks.filter(t => t.completed).length;
+                    const isAllDoneToday = (totalToday > 0 && doneToday === totalToday);
+
+                    const milestoneCardHTML = isAllDoneToday ? `
+                        <div class="bg-gradient-to-r from-amber-500/15 via-orange-500/15 to-emerald-500/15 border-2 border-amber-300/90 rounded-2xl p-4 sm:p-5 mb-5 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
+                            <div class="flex items-center gap-3 text-center sm:text-left">
+                                <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white flex items-center justify-center text-xl font-black shrink-0 shadow-md shadow-orange-500/20">
+                                    🏆
+                                </div>
+                                <div>
+                                    <div class="flex items-center justify-center sm:justify-start gap-2">
+                                        <h4 class="text-sm sm:text-base font-extrabold text-slate-900">Today's Mission 100% Completed!</h4>
+                                        <span class="text-xs bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">Day ${todayPlan.dayNumber} Cleared</span>
+                                    </div>
+                                    <p class="text-xs text-slate-600 mt-0.5">You finished all scheduled chapters for today! Keep this momentum alive.</p>
+                                </div>
+                            </div>
+                            <button onclick="shareTodayCompletion(${todayPlan.dayNumber})" class="w-full sm:w-auto bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs py-2.5 px-4 rounded-xl shadow-md shadow-emerald-500/25 transition flex items-center justify-center gap-2 active:scale-95 shrink-0">
+                                <i class="fa-brands fa-whatsapp text-base"></i>
+                                <span>Share on WhatsApp Status</span>
+                            </button>
+                        </div>
+                    ` : '';
+
+                    const warningBannerHTML = (appState.diagnostics && appState.diagnostics.isInfeasible) ? `
+                        <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-4 text-xs sm:text-sm text-amber-900 flex items-start gap-3 shadow-sm animate-fade-in-up">
+                            <i class="fa-solid fa-triangle-exclamation text-amber-600 text-base mt-0.5 shrink-0"></i>
+                            <div class="flex-1">
+                                <strong class="font-extrabold block mb-0.5">Study Pacing Advisory</strong>
+                                <span>${appState.diagnostics.warningMessage || "The current deadline requires more study capacity than standard availability. The engine has balanced the workload dynamically to prioritize nearest exams and preserve final revision buffers."}</span>
+                            </div>
+                        </div>
+                    ` : '';
+
+                    const catchUpBannerHTML = isCatchUpDay ? `
+                        <div class="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-2xl p-3.5 sm:p-4 mb-4 text-xs text-amber-900 dark:text-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+                            <div class="flex items-start gap-2.5">
+                                <span class="text-base mt-0.5">⚡</span>
+                                <div>
+                                    <strong class="font-bold block">Focusing on Day ${todayPlan.dayNumber} Portions</strong>
+                                    <span class="text-amber-700 dark:text-amber-300">You have active portions remaining in Day ${todayPlan.dayNumber}. Completing them keeps your prerequisite chain unbroken!</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 flex-wrap shrink-0">
+                                <button onclick="shiftPlanToToday()" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs transition whitespace-nowrap shadow-xs" title="Synchronize schedule so Day 1 starts today">
+                                    Make Today Day 1
+                                </button>
+                                <button onclick="changeMissionDay(${calendarToday.dayNumber})" class="px-3 py-1.5 bg-white dark:bg-slate-800 border border-amber-300 dark:border-amber-700 font-bold rounded-xl text-xs text-amber-900 dark:text-amber-200 hover:bg-amber-100 dark:hover:bg-slate-700 transition whitespace-nowrap">
+                                    Calendar Day ${calendarToday.dayNumber}
+                                </button>
+                            </div>
+                        </div>
+                    ` : '';
+
+                    todayTasksHTML = `
+                        ${warningBannerHTML}
+                        ${catchUpBannerHTML}
+                        ${milestoneCardHTML}
+
+                        <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+                            <div>
+                                <h3 class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2 flex-wrap">
+                                    <span>Today's Mission</span>
+                                    <span class="text-xs font-bold bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 py-0.5 px-2.5 rounded-full">Day ${todayPlan.dayNumber}</span>
+                                    ${isCatchUpDay ? '<span class="text-xs font-bold bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 py-0.5 px-2.5 rounded-full">In Progress</span>' : ''}
+                                    ${todayPlan.isRevisionDay ? '<span class="text-xs font-bold bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 py-0.5 px-2.5 rounded-full">Revision Phase</span>' : ''}
+                                </h3>
+                                <p class="text-xs text-slate-400 mt-0.5">${doneToday}/${totalToday} tasks completed today</p>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <button onclick="changeMissionDay(${todayPlan.dayNumber - 1})" ${todayPlan.dayNumber <= 1 ? 'disabled class="opacity-30 cursor-not-allowed p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-400"' : 'class="p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"'} title="Previous Day">
+                                    ${getSvgIcon('chevronLeft', 'w-4 h-4')}
+                                </button>
+                                <span class="text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-xl">${todayPlan.date}</span>
+                                <button onclick="changeMissionDay(${todayPlan.dayNumber + 1})" ${todayPlan.dayNumber >= appState.plan.length ? 'disabled class="opacity-30 cursor-not-allowed p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-400"' : 'class="p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"'} title="Next Day">
+                                    ${getSvgIcon('chevronRight', 'w-4 h-4')}
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Task Cards -->
+                        <div class="space-y-3">
+                            ${todayPlan.tasks.map((task, idx) => {
+                                const subjectBadgeClass = getSubjectColorBadge(task.subject);
+                                return `
+                                    <div class="task-item-container today-task-card ${task.completed ? 'task-done bg-slate-50/70 border-slate-200' : 'bg-white border-slate-200/90 shadow-sm'} border rounded-2xl p-4 transition-all duration-200 flex items-start gap-3.5 hover:shadow-md">
+                                        <!-- Custom Checkbox -->
+                                        <div class="task-checkbox ${task.completed ? 'checked' : ''} mt-0.5" data-task-id="${task.id}" onclick="toggleTaskDirect('${task.id}')">
+                                            <svg class="svg-check" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                <polyline points="20 6 9 17 4 12"></polyline>
+                                            </svg>
+                                        </div>
+
+                                        <!-- Content -->
+                                        <div class="flex-1 cursor-pointer" onclick="toggleTaskDirect('${task.id}')">
+                                            <div class="flex flex-wrap items-center gap-1.5 mb-1.5">
+                                                <span class="text-xs font-bold px-2 py-0.5 rounded-md ${subjectBadgeClass}">
+                                                    ${task.subject}
+                                                </span>
+                                                ${task.isFocusSubject ? '<span class="text-xs font-extrabold px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 border border-rose-200/70"><i class="fa-solid fa-bullseye mr-1"></i>Focus</span>' : ''}
+                                                ${renderTaskGradeBadge(task)}
+                                                ${renderTaskPartBadge(task)}
+                                                ${getTaskResourceBadge(task)}
+                                            </div>
+                                            <h4 class="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-100 task-text-content ${task.completed ? 'line-through opacity-50' : ''}">
+                                                ${getTaskChapterTitle(task)}
+                                            </h4>
+                                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
+                                                ${formatTaskTopicTitle(task)}
+                                            </p>
+                                            ${getTaskDeepLinksHtml(task)}
+                                        </div>
+
+                                        <button onclick="toggleTaskDirect('${task.id}')" class="text-slate-300 hover:text-blue-600 transition p-1">
+                                            <i class="fa-solid fa-chevron-right text-xs"></i>
+                                        </button>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    `;
+                }
+
+                container.innerHTML = `
+                    <!-- Unified Minimal Progress Card -->
+                    <div class="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/90 shadow-sm mb-5">
+                        <div class="flex items-center justify-between mb-2.5">
+                            <div class="flex items-baseline gap-2">
+                                <span class="text-xl sm:text-2xl font-black text-slate-900">${overallStats.percentage}%</span>
+                                <span class="text-xs text-slate-400 font-medium">${overallStats.completedCount}/${overallStats.totalCount} tasks finished</span>
+                            </div>
+                            <span class="inline-flex items-center gap-1.5 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200/70 px-2.5 py-1 rounded-xl">
+                                <i class="fa-solid fa-fire text-amber-500"></i>
+                                <span>${getActiveStreak()} Day Streak</span>
+                            </span>
+                        </div>
+
+                        <!-- Progress Bar -->
+                        <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden mb-3.5">
+                            <div class="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 h-2.5 rounded-full transition-all duration-500" style="width: ${overallStats.percentage}%"></div>
+                        </div>
+
+                        <!-- Key Milestone Badges -->
+                        <div class="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500 pt-3 border-t border-slate-100">
+                            <div class="flex items-center gap-4">
+                                <span class="flex items-center gap-1.5">
+                                    <i class="fa-regular fa-calendar-check text-blue-600"></i>
+                                    <span>Target: <strong class="text-slate-700">${new Date(appState.deadlineDate).toLocaleDateString('en-US', {month: 'short', day: 'numeric'})}</strong></span>
+                                </span>
+                                <span class="flex items-center gap-1.5">
+                                    <i class="fa-solid fa-shield-halved text-purple-600"></i>
+                                    <span>Revision Buffer: <strong class="text-slate-700">${appState.revisionDaysCount || 0}d</strong></span>
+                                </span>
+                            </div>
+                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                                ${(function() {
+                                    const userStream = appState?.stream || (appState?.plan?.some(d => d.tasks.some(t => t.subject === 'Botany' || t.subject === 'Zoology')) ? 'bio' : 'cs');
+                                    return userStream === 'bio' ? '🌿 Biology Science' : '💻 Computer Science';
+                                })()}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Quick Action Bar -->
+                    <div class="flex items-center justify-between gap-2 mb-4 no-print">
+                        <div class="flex items-center gap-2">
+                            <button onclick="printSchedule()" class="flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-bold text-xs py-2 px-3 sm:px-3.5 rounded-xl shadow-sm transition active:scale-95" title="Print full schedule or save as PDF">
+                                <i class="fa-solid fa-print text-blue-600"></i>
+                                <span>Print / PDF</span>
+                            </button>
+                            <button onclick="openRegenerateModal()" class="flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-semibold text-xs py-2 px-3 rounded-xl shadow-sm transition active:scale-95" title="Recalculate schedule if you missed days">
+                                <i class="fa-solid fa-wrench text-slate-500"></i>
+                                <span>Adjust Plan</span>
+                            </button>
+                        </div>
+                        <button onclick="shareApp()" class="flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-semibold text-xs py-2 px-3 rounded-xl shadow-sm transition active:scale-95">
+                            <i class="fa-solid fa-arrow-up-from-bracket text-slate-500"></i>
+                            <span>Share</span>
+                        </button>
+                    </div>
+
+                    <!-- Main Section: Today's Targets -->
+                    <div class="bg-white rounded-3xl p-5 sm:p-7 border border-slate-200 shadow-sm mb-6">
+                        ${todayTasksHTML}
+                    </div>
+
+                    <!-- Clean Bottom Controls -->
+                    <div class="flex items-center justify-between pt-4 border-t border-slate-200 text-xs text-slate-400 no-print">
+                        <button onclick="openRegenerateModal()" class="text-slate-500 hover:text-slate-800 font-medium transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-rotate text-xs"></i>
+                            <span>Fell behind? Recalculate remaining portions</span>
+                        </button>
+                        <button onclick="resetApp()" class="text-slate-400 hover:text-red-600 transition underline">
+                            Reset Plan
+                        </button>
+                    </div>
+                `;
+
+                highlightNextUnfinishedTask();
+                return;
+            }
+
+            // View 2: Detailed Full Plan View (With subject filters & printable PDF export)
+            if (currentView === 'plan') {
+                let planDaysHTML = '';
+                let matchingDaysCount = 0;
+
+                appState.plan.forEach(day => {
+                    const isToday = (day.date === TODAY_STR);
+                    const isPast = (new Date(day.date) < new Date(TODAY_STR));
+
+                    let displayedTasks = day.tasks;
+                    if (currentPlanSubjectFilter === '+1 Improvement') {
+                        displayedTasks = day.tasks.filter(t => t.grade === '+1');
+                    } else if (currentPlanSubjectFilter === '+2 Regular') {
+                        displayedTasks = day.tasks.filter(t => t.grade === '+2');
+                    } else if (currentPlanSubjectFilter !== 'All') {
+                        displayedTasks = day.tasks.filter(t => t.subject === currentPlanSubjectFilter);
+                    }
+
+                    // If a specific subject is filtered and this day has none, don't clutter the view
+                    if (currentPlanSubjectFilter !== 'All' && displayedTasks.length === 0) {
+                        return;
+                    }
+                    matchingDaysCount++;
+
+                    planDaysHTML += `
+                        <div class="bg-white rounded-2xl border ${isToday ? 'border-blue-300 ring-2 ring-blue-100' : 'border-slate-200'} shadow-sm overflow-hidden mb-4 transition-all print-avoid-break">
+                            <div class="p-3.5 sm:p-4 bg-slate-50/80 border-b border-slate-100 flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs font-extrabold text-slate-900">Day ${day.dayNumber}</span>
+                                    <span class="text-xs font-semibold text-slate-400">(${day.date})</span>
+                                    ${isToday ? '<span class="text-xs font-extrabold bg-blue-600 text-white px-2 py-0.5 rounded-full no-print">TODAY</span>' : ''}
+                                    ${day.isRevisionDay ? '<span class="text-xs font-bold bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full">Revision Day</span>' : ''}
+                                    ${day.isRestDay ? '<span class="text-xs font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full"><i class="fa-solid fa-mug-hot mr-1"></i>Rest Day</span>' : ''}
+                                </div>
+                                <span class="text-xs font-bold text-slate-500">${displayedTasks.filter(t => t.completed).length}/${displayedTasks.length} Done</span>
+                            </div>
+
+                            <div class="p-3 sm:p-4 divide-y divide-slate-100">
+                                ${displayedTasks.length === 0 ? (day.isRestDay ? '<p class="text-xs text-emerald-700 font-semibold py-1.5 flex items-center gap-2"><i class="fa-solid fa-mug-hot text-emerald-600"></i><span>Personalized Rest & Recharge Day (0 new chapters)</span></p>' : '<p class="text-xs text-slate-400 italic py-1">Free / Buffer Day</p>') : ''}
+                                ${displayedTasks.map(task => {
+                                    const badgeColor = getSubjectColorBadge(task.subject);
+                                    return `
+                                        <div class="task-item-container py-2.5 first:pt-0 last:pb-0 flex items-start gap-3">
+                                            <!-- Working Clickable Checkbox in Full Plan -->
+                                            <div class="task-checkbox ${task.completed ? 'checked' : ''} mt-0.5" data-task-id="${task.id}" onclick="toggleTaskDirect('${task.id}')">
+                                                <svg class="svg-check" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                                </svg>
+                                            </div>
+                                            <div class="flex-1 cursor-pointer" onclick="toggleTaskDirect('${task.id}')">
+                                                <div class="flex flex-wrap items-center gap-1.5 mb-1">
+                                                    <span class="text-xs font-bold px-1.5 py-0.5 rounded ${badgeColor}">${task.subject}</span>
+                                                    ${task.isFocusSubject ? '<span class="text-xs font-black px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 border border-rose-200">🎯 FOCUS</span>' : ''}
+                                                    ${renderTaskGradeBadge(task)}
+                                                    ${renderTaskPartBadge(task)}
+                                                    ${getTaskResourceBadge(task)}
+                                                </div>
+                                                <div class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 task-text-content ${task.completed ? 'line-through opacity-50' : ''}">
+                                                    ${getTaskChapterTitle(task)} - <span class="font-normal text-slate-500 dark:text-slate-400">${formatTaskTopicTitle(task)}</span>
+                                                </div>
+                                                ${getTaskDeepLinksHtml(task)}
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                if (!planDaysHTML) {
+                    planDaysHTML = `
+                        <div class="bg-white rounded-2xl border border-slate-200 p-8 text-center text-slate-400">
+                            <i class="fa-solid fa-filter text-2xl mb-2 text-slate-300"></i>
+                            <p class="text-xs font-semibold">No scheduled tasks found under "${currentPlanSubjectFilter}".</p>
+                            <button onclick="setPlanSubjectFilter('All')" class="mt-3 text-xs font-bold text-blue-600 hover:underline">Show All Subjects</button>
+                        </div>
+                    `;
+                }
+
+                container.innerHTML = `
+                    <!-- Print-Only Page Header -->
+                    <div class="print-only mb-6 border-b-2 border-slate-900 pb-3">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h1 class="text-2xl font-black text-slate-900 tracking-tight">Mission PlusTwo — Daily Study Schedule</h1>
+                                <p class="text-xs text-slate-600 font-semibold mt-0.5">Kerala DHSE Class 12 (+2) & +1 Improvement Scheme of Work</p>
+                            </div>
+                            <div class="text-right text-xs">
+                                <span class="font-bold text-slate-900 block">Deadline: ${new Date(appState.deadlineDate).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'})}</span>
+                                <span class="text-slate-500">Generated: ${new Date().toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'})}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Screen Header -->
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 no-print">
+                        <div>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900">Complete Study Schedule</h2>
+                            <p class="text-xs text-slate-500">Every single day planned out until your deadline.</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="window.print()" class="text-xs font-bold bg-white border border-slate-200 hover:bg-slate-50 px-3 sm:px-3.5 py-2 rounded-xl text-slate-700 transition flex items-center gap-1.5 shadow-sm active:scale-95" title="Print schedule or save as PDF">
+                                <i class="fa-solid fa-print text-blue-600"></i>
+                                <span>Print / Save PDF</span>
+                            </button>
+                            <button onclick="goToDashboard()" class="text-xs font-bold bg-blue-600 hover:bg-blue-700 px-3.5 py-2 rounded-xl text-white transition flex items-center gap-1.5 shadow-sm active:scale-95">
+                                <i class="fa-solid fa-arrow-left"></i>
+                                <span>Back to Today</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Subject Filter Tabs (Horizontal Scrollable Pills strictly stream-isolated) -->
+                    <div class="no-print flex items-center gap-1.5 overflow-x-auto pb-2 mb-4 scrollbar-none text-xs">
+                        ${(function() {
+                            const userStream = appState?.stream || (appState?.plan?.some(d => d.tasks.some(t => t.subject === 'Botany' || t.subject === 'Zoology')) ? 'bio' : 'cs');
+                            const filters = userStream === 'bio' ? [
+                                { id: 'All', label: 'All Subjects', icon: 'fa-layer-group' },
+                                { id: 'Physics', label: 'Physics', icon: 'fa-atom' },
+                                { id: 'Chemistry', label: 'Chemistry', icon: 'fa-flask' },
+                                { id: 'Mathematics', label: 'Maths', icon: 'fa-calculator' },
+                                { id: 'Botany', label: 'Botany', icon: 'fa-seedling' },
+                                { id: 'Zoology', label: 'Zoology', icon: 'fa-dna' },
+                                { id: '+2 Regular', label: '+2 Regular', icon: 'fa-graduation-cap' },
+                                { id: '+1 Improvement', label: '+1 Improvement', icon: 'fa-arrow-up-right-dots' }
+                            ] : [
+                                { id: 'All', label: 'All Subjects', icon: 'fa-layer-group' },
+                                { id: 'Physics', label: 'Physics', icon: 'fa-atom' },
+                                { id: 'Chemistry', label: 'Chemistry', icon: 'fa-flask' },
+                                { id: 'Mathematics', label: 'Maths', icon: 'fa-calculator' },
+                                { id: 'Computer Science', label: 'CS', icon: 'fa-laptop-code' },
+                                { id: '+2 Regular', label: '+2 Regular', icon: 'fa-graduation-cap' },
+                                { id: '+1 Improvement', label: '+1 Improvement', icon: 'fa-arrow-up-right-dots' }
+                            ];
+
+                            return filters.map(f => {
+                                const isActive = (currentPlanSubjectFilter === f.id);
+                                return `
+                                    <button onclick="setPlanSubjectFilter('${f.id}')" class="py-1.5 px-3 rounded-xl font-bold transition-all shrink-0 flex items-center gap-1.5 ${isActive ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/20' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'}">
+                                        <i class="fa-solid ${f.icon} text-xs"></i>
+                                        <span>${f.label}</span>
+                                    </button>
+                                `;
+                            }).join('');
+                        })()}
+                    </div>
+
+                    <div class="space-y-4">
+                        ${planDaysHTML}
+                    </div>
+
+                    <!-- Print-Only Viral Attribution Watermark Footer -->
+                    <div class="print-only mt-8 pt-4 border-t border-slate-300 text-center text-xs text-slate-600">
+                        <p class="font-bold">Generated for free by Mission PlusTwo (https://sreyasts.github.io/intelligent-study-planner-for-plus-two-/)</p>
+                        <p class="text-xs text-slate-500 mt-0.5">Kerala DHSE Class 12 (+2) & +1 Improvement Free Daily Study Planner • Open Source on GitHub</p>
+                    </div>
+
+                    <!-- Subtle Bottom Rebalance -->
+                    <div class="mt-8 pt-4 border-t border-slate-200 flex justify-between items-center text-xs text-slate-500 no-print">
+                        <button onclick="openRegenerateModal()" class="py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-wrench"></i> Adjust Schedule
+                        </button>
+                        <button onclick="resetApp()" class="text-slate-400 hover:text-red-600 underline">Reset Plan</button>
+                    </div>
+                `;
+                return;
+            }
+
+            // View 3: Official Syllabus Reference & Completed Chapters Overview (Strictly Stream Isolated)
+            if (currentView === 'syllabus') {
+                const userStream = appState?.stream || (appState?.plan?.some(d => d.tasks.some(t => t.subject === 'Botany' || t.subject === 'Zoology')) ? 'bio' : 'cs');
+                const subjects = userStream === 'bio'
+                    ? ['Physics', 'Chemistry', 'Mathematics', 'Botany', 'Zoology']
+                    : ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'];
+
+                let syllabusHTML = '';
+                subjects.forEach(sub => {
+                    const p2Chaps = PLUS_TWO_SYLLABUS.filter(t => t.subject === sub);
+                    const uniqueP2 = [...new Map(p2Chaps.map(item => [item.chapId, item])).values()];
+                    const subRes = CHAPTER_RESOURCES?.subjects?.[sub] || CHAPTER_RESOURCES?.[sub];
+                    const subTextbook = subRes?.textbookUrl || subRes?.textbook;
+                    const subPyq = subRes?.pyqUrl || subRes?.pyq;
+                    const subVideo = subRes?.videoPlaylistUrl || subRes?.video;
+
+                    syllabusHTML += `
+                        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5 mb-4">
+                            <div class="border-b pb-2 mb-3">
+                                <h3 class="text-sm sm:text-base font-extrabold text-slate-900 mb-2 flex items-center justify-between">
+                                    <span>${sub} <span class="text-xs text-slate-400 font-normal">(${uniqueP2.length} Official Chapters)</span></span>
+                                    <span class="text-xs font-extrabold text-blue-700 bg-blue-50 border border-blue-200/60 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800/60 px-2.5 py-0.5 rounded-lg"><i class="fa-solid fa-graduation-cap mr-1"></i> Plus Two (+2) DHSE</span>
+                                </h3>
+                                ${subRes ? `
+                                <div class="flex flex-wrap items-center gap-3 text-xs pt-1">
+                                    <span class="text-slate-400 font-medium">Study Portals:</span>
+                                    ${subTextbook ? `<a href="${subTextbook}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-blue-600 hover:underline font-semibold">${getSvgIcon('book', 'w-3.5 h-3.5')} SCERT</a>` : ''}
+                                    ${subPyq ? `<a href="${subPyq}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-purple-600 hover:underline font-semibold">${getSvgIcon('fileText', 'w-3.5 h-3.5')} PYQs</a>` : ''}
+                                    ${subVideo ? `<a href="${subVideo}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-rose-600 hover:underline font-semibold">${getSvgIcon('video', 'w-3.5 h-3.5')} Victers</a>` : ''}
+                                </div>` : ''}
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                ${uniqueP2.map(ch => {
+                                    // Check if all tasks of this chapter are completed
+                                    let isAllDone = false;
+                                    if (appState && appState.plan) {
+                                        const chapterTasksInPlan = [];
+                                        appState.plan.forEach(d => {
+                                            d.tasks.forEach(t => {
+                                                if (t.chapId === ch.chapId) chapterTasksInPlan.push(t);
+                                            });
+                                        });
+                                        if (chapterTasksInPlan.length > 0 && chapterTasksInPlan.every(t => t.completed)) {
+                                            isAllDone = true;
+                                        }
+                                    }
+
+                                    return `
+                                        <div class="p-2.5 rounded-xl border ${isAllDone ? 'bg-emerald-50/60 border-emerald-200 dark:bg-emerald-950/40 dark:border-emerald-800/60' : 'bg-slate-50/50 border-slate-100 dark:bg-slate-800/50 dark:border-slate-700/60'} flex items-start gap-2 text-xs">
+                                            <div class="w-5 h-5 rounded-md ${isAllDone ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-400 dark:bg-slate-700 dark:text-slate-400'} flex items-center justify-center shrink-0 mt-0.5 text-xs">
+                                                <i class="fa-solid ${isAllDone ? 'fa-check' : 'fa-book'}"></i>
+                                            </div>
+                                            <div class="flex-1">
+                                                <span class="font-bold text-slate-800 dark:text-slate-100 block">Chapter ${ch.chapNumber}: ${ch.chapterName.replace(/^Chapter\s+\d+:\s*/i, '').replace(/^\d+\.\s*/, '')}</span>
+                                                <span class="text-xs text-slate-400">Term ${ch.term} ${isAllDone ? '• <strong class="text-emerald-700 dark:text-emerald-400">Mastered</strong>' : ''}</span>
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = `
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900">Official DHSE Scheme of Work</h2>
+                            <p class="text-xs text-slate-500">${userStream === 'bio' ? 'Biology Science Stream (Botany & Zoology)' : 'Computer Science Stream'} • Rationalized Kerala Higher Secondary curriculum.</p>
+                        </div>
+                        <button onclick="goToDashboard()" class="text-xs font-bold bg-white border border-slate-200 hover:bg-slate-50 px-3.5 py-2 rounded-xl text-slate-700 transition">
+                            <i class="fa-solid fa-arrow-left mr-1"></i> Back to Today
+                        </button>
+                    </div>
+
+                    <div class="space-y-4">
+                        ${syllabusHTML}
+                    </div>
+                `;
+                return;
+            }
+        }
+
+        function getSubjectColorBadge(subject) {
+            switch(subject) {
+                case 'Physics': return 'bg-indigo-50 text-indigo-700 border border-indigo-200/60 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800/60';
+                case 'Chemistry': return 'bg-amber-50 text-amber-700 border border-amber-200/60 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800/60';
+                case 'Mathematics': return 'bg-rose-50 text-rose-700 border border-rose-200/60 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800/60';
+                case 'Computer Science': return 'bg-cyan-50 text-cyan-700 border border-cyan-200/60 dark:bg-cyan-950/60 dark:text-cyan-300 dark:border-cyan-800/60';
+                case 'Botany': return 'bg-emerald-50 text-emerald-700 border border-emerald-200/60 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800/60';
+                case 'Zoology': return 'bg-teal-50 text-teal-700 border border-teal-200/60 dark:bg-teal-950/60 dark:text-teal-300 dark:border-teal-800/60';
+                default: return 'bg-purple-50 text-purple-700 border border-purple-200/60 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800/60';
+            }
+        }
+
+        function getTaskChapterTitle(task) {
+            if (!task) return '';
+            if (task.isRevision) return task.chapterName;
+            let chapNum = task.chapNumber;
+            if (!chapNum && task.id) {
+                const m = task.id.match(/_(\d+)_P\d+$/);
+                if (m) chapNum = parseInt(m[1]);
+            }
+            const rawName = task.chapterName || '';
+            const cleanName = rawName.replace(/^Chapter\s+\d+:\s*/i, '').replace(/^\d+\.\s*/, '');
+            if (chapNum) {
+                return `Chapter ${chapNum}: ${cleanName}`;
+            }
+            return cleanName || rawName;
+        }
+
+        function formatTaskTopicTitle(task) {
+            if (!task) return '';
+            if (task.isRevision) return task.topicTitle || '';
+            const p = task.part || 1;
+            const total = task.totalParts || 1;
+            
+            // Extract the descriptive text after any "Part X of Y:" or "Part X/Y:"
+            let desc = task.topicTitle || '';
+            desc = desc.replace(/^Part\s+\d+\s*(?:of|\/)\s*\d+(?:\s*\([^)]*\))?:\s*/i, '');
+            desc = desc.replace(/^Full\s+Chapter(?:\s*Concepts\s*&\s*Key\s*Problems)?:\s*/i, '');
+            if (!desc) {
+                desc = (p === total || p > 1) ? 'Exercise Problems & PYQs' : 'Core Concepts & Theory';
+            }
+
+            if (total === 1) {
+                return `Part 1/1 (Full Chapter): ${desc}`;
+            }
+            if (p === total) {
+                return `Part ${p}/${total} (Full Chapter): ${desc}`;
+            }
+            return `Part ${p}/${total}: ${desc}`;
+        }
+
+        function renderTaskGradeBadge(task) {
+            if (!task) return '';
+            if (task.isRevision) {
+                return `<span class="text-xs font-bold px-1.5 py-0.5 rounded-md bg-purple-100 text-purple-800 border border-purple-200/70 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800/60">Revision</span>`;
+            }
+            if (task.grade === '+1') {
+                return `<span class="text-xs font-extrabold px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-800 border border-amber-300/80 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-700/60 flex items-center gap-1 shadow-xs"><i class="fa-solid fa-arrow-up-right-dots text-xs text-amber-600"></i> +1 Imp</span>`;
+            }
+            // Plus Two (+2)
+            return `
+                <span class="text-xs font-extrabold px-1.5 py-0.5 rounded-md bg-blue-100 text-blue-800 border border-blue-300/80 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-700/60 flex items-center gap-1 shadow-xs"><i class="fa-solid fa-graduation-cap text-xs text-blue-600"></i> +2</span>
+                ${task.term ? `<span class="text-xs font-semibold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 border border-slate-200/50 dark:border-slate-700/50">Term ${task.term}</span>` : ''}
+            `;
+        }
+
+        function renderTaskPartBadge(task) {
+            if (!task || task.isRevision) return '';
+            const p = task.part || 1;
+            const total = task.totalParts || 1;
+            if (p === total) {
+                return `<span class="text-xs font-black px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-300/80 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-700/60 flex items-center gap-1 shadow-xs"><i class="fa-solid fa-circle-check text-xs text-emerald-600"></i> Full Chapter (${p}/${total})</span>`;
+            }
+            return `<span class="text-xs font-bold px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60">Part ${p}/${total}</span>`;
+        }
+
+        function getOverallStats() {
+            if (!appState || !appState.plan) return { percentage: 0, completedCount: 0, totalCount: 0 };
+            let total = 0;
+            let done = 0;
+            appState.plan.forEach(d => {
+                d.tasks.forEach(t => {
+                    total++;
+                    if (t.completed) done++;
+                });
+            });
+            const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+            return { percentage: pct, completedCount: done, totalCount: total };
+        }
+
+        function updateProgressHeader() {
+            const stats = getOverallStats();
+            // In case there are quick summary elements
+        }
+
+        /* ==========================================================================
+           10. SETTINGS, THEME ENGINE & CUSTOMIZATIONS
+           ========================================================================== */
+        function getThemePreference() {
+            try {
+                return localStorage.getItem('plustwo_theme') || 'system';
+            } catch(e) {
+                return 'system';
+            }
+        }
+
+        function isDarkModeActive() {
+            const pref = getThemePreference();
+            if (pref === 'dark') return true;
+            if (pref === 'light') return false;
+            return typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        }
+
+        function applyTheme(pref) {
+            if (!pref) pref = getThemePreference();
+            const isDark = (pref === 'dark') || (pref === 'system' && typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            if (typeof document !== 'undefined' && document.documentElement) {
+                if (isDark) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+                const metaTheme = document.querySelector('meta[name="theme-color"]');
+                if (metaTheme) metaTheme.setAttribute('content', isDark ? '#080c14' : '#2563eb');
+            }
+            updateThemeUI(pref);
+        }
+
+        function setThemePreference(pref) {
+            try {
+                localStorage.setItem('plustwo_theme', pref);
+            } catch(e) {}
+            applyTheme(pref);
+            if (typeof renderApp === 'function') {
+                try { renderApp(); } catch(e) {}
+            }
+            if (typeof updateSettingsUI === 'function') {
+                try { updateSettingsUI(); } catch(e) {}
+            }
+            const label = pref === 'dark' ? 'Dark mode enabled' : (pref === 'light' ? 'Light mode enabled' : 'System theme matched');
+            const icon = pref === 'dark' ? 'fa-moon text-indigo-400' : (pref === 'light' ? 'fa-sun text-amber-400' : 'fa-desktop text-blue-400');
+            showAppToast(label, icon);
+        }
+
+        function updateThemeUI(pref) {
+            if (typeof document === 'undefined') return;
+            if (!pref) pref = getThemePreference();
+
+            const modes = ['light', 'dark', 'system'];
+            modes.forEach(m => {
+                // Modal buttons
+                const btn = document.getElementById(`theme-btn-${m}`);
+                if (btn) {
+                    if (m === pref) {
+                        btn.className = 'flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-black transition-all bg-blue-600 text-white shadow-xs';
+                    } else {
+                        btn.className = 'flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-semibold transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white';
+                    }
+                }
+                // Dropdown menu buttons
+                const menuBtn = document.getElementById(`menu-theme-btn-${m}`);
+                if (menuBtn) {
+                    if (m === pref) {
+                        menuBtn.className = 'py-1.5 px-2 rounded-lg text-center font-black text-xs transition-all flex items-center justify-center gap-1 bg-blue-600 text-white shadow-xs';
+                    } else {
+                        menuBtn.className = 'py-1.5 px-2 rounded-lg text-center font-bold text-xs transition-all flex items-center justify-center gap-1 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white';
+                    }
+                }
+            });
+
+            // Update badge in profile dropdown
+            const dropdownBadge = document.getElementById('dropdown-theme-badge');
+            if (dropdownBadge) {
+                dropdownBadge.textContent = pref.toUpperCase();
+            }
+        }
+
+        /* ==========================================================================
+           INTERNATIONALIZATION (i18n) & BROWSER TRANSLATION AUTO-DETECTOR (v6.1)
+           ========================================================================== */
+        const ML_I18N = ML_STRINGS;
+        function getAppLanguage() { return getCurrentLanguage(); }
+
+        function setAppLanguage(lang) {
+            try {
+                localStorage.setItem(STORAGE_KEY_LANG, lang);
+            } catch(e) {}
+            applyAppLanguage(lang);
+            if (typeof renderApp === 'function') {
+                try { renderApp(); } catch(e) {}
+            }
+            const label = lang === 'ml' ? 'മലയാളം ഭാഷ സജ്ജമാക്കി' : 'English language enabled';
+            showAppToast(label, 'fa-language text-blue-400');
+        }
+
+        function toggleLanguagePreference() {
+            const current = getAppLanguage();
+            const next = current === 'ml' ? 'en' : 'ml';
+            setAppLanguage(next);
+        }
+
+        function applyAppLanguage(lang) {
+            if (!lang) lang = getAppLanguage();
+            const isML = lang === 'ml';
+
+            // 1. Update Settings Modal Language Buttons & Badge
+            const btnEn = document.getElementById('lang-btn-en');
+            const btnMl = document.getElementById('lang-btn-ml');
+            const langBadge = document.getElementById('settings-lang-badge');
+
+            if (btnEn) {
+                if (!isML) {
+                    btnEn.className = 'flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-black transition-all bg-blue-600 text-white shadow-xs';
+                } else {
+                    btnEn.className = 'flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-semibold transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white';
+                }
+            }
+            if (btnMl) {
+                if (isML) {
+                    btnMl.className = 'flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-black transition-all bg-blue-600 text-white shadow-xs';
+                } else {
+                    btnMl.className = 'flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-semibold transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white';
+                }
+            }
+            if (langBadge) {
+                langBadge.textContent = isML ? 'മലയാളം' : 'English';
+                langBadge.className = isML
+                    ? 'text-xs bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 font-bold px-2 py-0.5 rounded-full'
+                    : 'text-xs bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 font-bold px-2 py-0.5 rounded-full uppercase';
+            }
+
+            // 2. Safe check for any legacy button
+            const flag = document.getElementById('lang-btn-flag');
+            const lbl = document.getElementById('lang-btn-label');
+            const switchBtn = document.getElementById('lang-switch-btn');
+            if (flag && lbl) {
+                if (isML) {
+                    flag.textContent = 'മല';
+                    flag.className = 'text-xs font-black text-emerald-600 dark:text-emerald-400';
+                    lbl.textContent = '| EN';
+                } else {
+                    flag.textContent = 'EN';
+                    flag.className = 'text-xs font-black text-blue-600 dark:text-blue-400';
+                    lbl.textContent = '| മ';
+                }
+            }
+            if (switchBtn) {
+                switchBtn.setAttribute('title', isML ? 'Switch to English' : 'മലയാളത്തിലേക്ക് മാറ്റുക');
+                switchBtn.setAttribute('aria-label', isML ? 'Switch to English' : 'Switch to Malayalam');
+            }
+
+            // 3. Update Desktop Navigation Labels
+            const navToday = document.getElementById('nav-text-today');
+            const navPlan = document.getElementById('nav-text-plan');
+            const navSyllabus = document.getElementById('nav-text-syllabus');
+            if (navToday) navToday.textContent = isML ? ML_I18N.nav.today : 'Today';
+            if (navPlan) navPlan.textContent = isML ? ML_I18N.nav.plan : 'Full Plan';
+            if (navSyllabus) navSyllabus.textContent = isML ? ML_I18N.nav.syllabus : 'Syllabus';
+
+            // 4. Update Mobile Navigation Labels
+            const mobToday = document.getElementById('mob-text-today');
+            const mobPlan = document.getElementById('mob-text-plan');
+            const mobSyllabus = document.getElementById('mob-text-syllabus');
+            const mobShare = document.getElementById('mob-text-share');
+            if (mobToday) mobToday.textContent = isML ? ML_I18N.nav.today : 'Today';
+            if (mobPlan) mobPlan.textContent = isML ? ML_I18N.nav.plan : 'Full Plan';
+            if (mobSyllabus) mobSyllabus.textContent = isML ? ML_I18N.nav.syllabus : 'Syllabus';
+            if (mobShare) mobShare.textContent = isML ? ML_I18N.nav.share : 'Share';
+
+            // Update html lang attribute
+            document.documentElement.lang = isML ? 'ml' : 'en';
+        }
+
+        /* ==========================================================================
+           PRIVACY-FIRST ANONYMOUS ANALYTICS (FIREBASE ANALYTICS G-12KPP3ZZ80)
+           ========================================================================== */
+        function trackAnalyticsEvent(name, params = {}) {
+            trackEvent(name, params);
+        }
+
+        function initAppAnalytics() {
+            try {
+                const now = Date.now();
+                let firstVisit = localStorage.getItem('mpt_first_visit_ts');
+                if (!firstVisit) {
+                    localStorage.setItem('mpt_first_visit_ts', String(now));
+                    trackAnalyticsEvent('opened', { isFirstVisit: true });
+                } else {
+                    trackAnalyticsEvent('opened', { isFirstVisit: false });
+                    const hoursSince = (now - Number(firstVisit)) / (1000 * 60 * 60);
+                    const day3Logged = localStorage.getItem('mpt_day3_recorded');
+                    if (!day3Logged && hoursSince >= 48 && hoursSince <= 144) {
+                        localStorage.setItem('mpt_day3_recorded', 'true');
+                        trackAnalyticsEvent('returned_day3', { days: Math.round(hoursSince / 24) });
+                    }
+                }
+
+                // Lazy load Firebase Analytics in idle time
+                if ('requestIdleCallback' in window) {
+                    window.requestIdleCallback(() => ensureFirebaseAnalytics());
+                } else {
+                    setTimeout(() => ensureFirebaseAnalytics(), 1500);
+                }
+            } catch(e) {}
+        }
+
+        function toggleUserSetting(key) {
+            const current = getUserSetting(key, true);
+            const next = !current;
+            setUserSetting(key, next);
+            updateSettingsUI();
+
+            const labels = {
+                sound: next ? "Audio chimes enabled" : "Audio chimes muted",
+                confetti: next ? "Celebration confetti enabled" : "Celebration confetti off",
+                autofocus: next ? "Focus highlighter enabled" : "Focus highlighter off"
+            };
+            const icons = {
+                sound: next ? "fa-volume-high text-blue-400" : "fa-volume-xmark text-slate-400",
+                confetti: next ? "fa-wand-magic-sparkles text-amber-400" : "fa-ban text-slate-400",
+                autofocus: next ? "fa-bullseye text-blue-400" : "fa-eye-slash text-slate-400"
+            };
+            showAppToast(labels[key] || "Setting updated", icons[key] || "fa-check text-emerald-400");
+
+            if (key === 'autofocus') {
+                highlightNextUnfinishedTask();
+            }
+        }
+
+        function updateSettingsUI() {
+            if (typeof document === 'undefined') return;
+            const settings = ['sound', 'confetti', 'autofocus'];
+            settings.forEach(k => {
+                const isEnabled = getUserSetting(k, true);
+                const toggle = document.getElementById(`setting-toggle-${k}`);
+                const knob = document.getElementById(`setting-knob-${k}`);
+                if (toggle && knob) {
+                    if (isEnabled) {
+                        toggle.classList.remove('bg-slate-300');
+                        toggle.classList.add('bg-blue-600');
+                        toggle.setAttribute('aria-checked', 'true');
+                        knob.classList.remove('translate-x-0');
+                        knob.classList.add('translate-x-5');
+                    } else {
+                        toggle.classList.remove('bg-blue-600');
+                        toggle.classList.add('bg-slate-300');
+                        toggle.setAttribute('aria-checked', 'false');
+                        knob.classList.remove('translate-x-5');
+                        knob.classList.add('translate-x-0');
+                    }
+                }
+            });
+
+            // Update pace buttons
+            const currentPace = (appState && appState.studyIntensity) ? appState.studyIntensity : 'balanced';
+            const paces = ['light', 'balanced', 'intense'];
+            paces.forEach(p => {
+                const btn = document.getElementById(`pace-btn-${p}`);
+                if (btn) {
+                    if (p === currentPace) {
+                        btn.className = 'p-2 rounded-xl text-center border-2 border-blue-600 bg-blue-50/70 transition shadow-xs';
+                    } else {
+                        btn.className = 'p-2 rounded-xl text-center border border-slate-200 bg-white hover:border-slate-300 transition';
+                    }
+                }
+            });
+
+            const paceBadge = document.getElementById('settings-current-pace-badge');
+            if (paceBadge) {
+                const paceNames = { light: 'Relaxed', balanced: 'Standard', intense: 'Intensive' };
+                paceBadge.textContent = paceNames[currentPace] || 'Standard';
+            }
+
+            updateThemeUI(getThemePreference());
+            applyAppLanguage(getAppLanguage());
+        }
+
+        function selectSettingsStudyPace(pace) {
+            if (appState) {
+                appState.studyIntensity = pace;
+                saveAppState();
+            }
+            updateSettingsUI();
+            const names = { light: 'Relaxed (1-2 chapters/day)', balanced: 'Standard (2-3 chapters/day)', intense: 'Intensive (3-4+ chapters/day)' };
+            showAppToast(`Pace set to: ${names[pace]}`, "fa-gauge-high text-indigo-400");
+        }
+
+        function exportStudyPlanJSON() {
+            if (!appState || !Array.isArray(appState.plan) || appState.plan.length === 0) {
+                showAppToast("No study plan data to export yet!", "fa-circle-exclamation text-amber-400");
+                return;
+            }
+            try {
+                const exportData = {
+                    ...appState,
+                    exportedAt: new Date().toISOString(),
+                    appVersion: "5.2"
+                };
+                const jsonStr = JSON.stringify(exportData, null, 2);
+                const blob = new Blob([jsonStr], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                const dateStr = new Date().toISOString().split('T')[0];
+                a.href = url;
+                a.download = `mission-plustwo-backup-${dateStr}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showAppToast("Backup exported successfully!", "fa-file-circle-check text-emerald-400");
+            } catch(err) {
+                console.error("Export error:", err);
+                showAppToast("Could not export backup.", "fa-triangle-exclamation text-rose-400");
+            }
+        }
+
+        function importStudyPlanJSON(event) {
+            const file = event.target?.files?.[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (!parsed || !Array.isArray(parsed.plan)) {
+                        showAppAlert({
+                            title: "Invalid File Format",
+                            message: "The selected file is not a recognized Mission PlusTwo JSON backup.",
+                            icon: "fa-file-circle-xmark text-rose-500"
+                        });
+                        return;
+                    }
+                    // Validate and migrate if needed
+                    let validPlan = parsed;
+                    if (!validPlan.engineVersion || validPlan.engineVersion < PLANNER_ENGINE_VERSION) {
+                        validPlan = migrateLegacyUserPlan(validPlan);
+                    }
+                    appState = validPlan;
+                    saveAppStateLocally();
+                    await saveAppState(); // syncs to cloud if logged in
+                    closeSettingsModal();
+                    renderApp();
+                    showAppToast("Study plan restored successfully!", "fa-circle-check text-emerald-400");
+                } catch(err) {
+                    console.error("Import error:", err);
+                    showAppAlert({
+                        title: "File Read Error",
+                        message: "Could not read or parse the backup file. Please make sure it is a valid JSON file.",
+                        icon: "fa-triangle-exclamation text-rose-500"
+                    });
+                } finally {
+                    event.target.value = '';
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function openSettingsModal() {
+            const modal = document.getElementById('settings-modal');
+            if (!modal) return;
+            updateSettingsUI();
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeSettingsModal() {
+            const modal = document.getElementById('settings-modal');
+            if (!modal) return;
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+        }
+
+        /* ==========================================================================
+           11. 1-CLICK PWA INSTALL PROMPT
+           Handles 'beforeinstallprompt' with 1-click automatic trigger
+           ========================================================================== */
+        let deferredPWAInstallPrompt = null;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPWAInstallPrompt = e;
+            const installBtn = document.getElementById('pwa-install-btn');
+            if (installBtn) {
+                installBtn.classList.remove('hidden');
+                installBtn.classList.add('flex');
+            }
+        });
+
+        function triggerPWAInstall() {
+            if (deferredPWAInstallPrompt) {
+                deferredPWAInstallPrompt.prompt();
+                deferredPWAInstallPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        showAppToast("Thank you for installing Mission PlusTwo!", "fa-circle-check text-emerald-400");
+                        const installBtn = document.getElementById('pwa-install-btn');
+                        if (installBtn) installBtn.classList.add('hidden');
+                    }
+                    deferredPWAInstallPrompt = null;
+                });
+            } else {
+                // If browser already installed or iOS Safari
+                showAppAlert({
+                    title: "Install Mission PlusTwo App",
+                    message: "• <strong>On Android / Chrome:</strong> Tap menu (⋮) ➔ 'Install App'<br>• <strong>On iPhone / Safari:</strong> Tap Share (📤) ➔ 'Add to Home Screen'<br>• <strong>On Brave / Edge:</strong> Click the install icon in the URL address bar.",
+                    icon: "fa-download text-emerald-500"
+                });
+            }
+        }
+
+        // Register Service Worker for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').then((reg) => {
+                    // Service worker active
+                }).catch((err) => {
+                    console.log('SW registration note:', err);
+                });
+            });
+        }
+
+        // Initialize Theme, Language, Analytics & System Listener
+        applyTheme();
+        applyAppLanguage();
+        initAppAnalytics();
+
+        if (typeof window !== 'undefined' && window.matchMedia) {
+            try {
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+                    if (getThemePreference() === 'system') {
+                        applyTheme('system');
+                        if (typeof renderApp === 'function') {
+                            try { renderApp(); } catch(e) {}
+                        }
+                    }
+                });
+            } catch(e) {}
+        }
+
+        // Initialize App on DOM Load
+        renderApp();
+    
+
+// Attach all controllers and API to window for inline HTML onclick handlers
+if (typeof window !== 'undefined') {
+    Object.assign(window, {
+        appState,
+        currentUser: typeof currentUser !== 'undefined' ? currentUser : null,
+        loadInitialState,
+        saveAppStateLocally,
+        saveAppState,
+        performCloudSync,
+        checkAndTriggerMilestoneAuth,
+        openAuthModal,
+        closeAuthModal,
+        continueAsGuest,
+        signInWithGoogleFromModal,
+        triggerManualSync,
+        updateAuthHeaderUI,
+        toggleUserDropdown,
+        closeUserDropdown,
+        signInWithGoogle,
+        signOutUser,
+        shareTodayCompletion,
+        printSchedule,
+        setPlanSubjectFilter,
+        showAppAlert,
+        showAppConfirm,
+        getUserSetting,
+        setUserSetting,
+        showToastMessage: showAppToast,
+        showAppToast,
+        toggleTaskDirect,
+        toggleTask: toggleTaskDirect,
+        highlightNextUnfinishedTask,
+        goToDashboard,
+        goToPlan,
+        goToSyllabusView,
+        switchView: (view) => {
+            if (view === 'today') goToDashboard();
+            else if (view === 'plan') goToPlan();
+            else if (view === 'syllabus') goToSyllabusView();
+        },
+        shareApp,
+        shareOnWhatsApp,
+        shareOnTelegram,
+        openShareModal,
+        closeShareModal,
+        executeShare,
+        resetApp,
+        setSubjectConfidence,
+        renderPersonalizationSubjectRows,
+        setWeeklyRhythmSelection,
+        setDailyHoursSelection,
+        getPersonalizationConfig,
+        getStreamSubjects,
+        setStreamSelection,
+        updateTermCardsDescriptions,
+        renderSetupSubjectTabs,
+        setImprovementToggle,
+        renderImprovementSubjectItems,
+        switchSetupGrade,
+        switchSetupSubject,
+        updateSetupTabsUI,
+        toggleChapterSelection,
+        toggleAllSubjectChapters,
+        updateCompletedChaptersCountBadge,
+        renderSetupSubjectChapters,
+        setTermSelection,
+        getPresetDate,
+        setDeadlinePreset,
+        updateDeadlinePreview,
+        handleInitialSetup,
+        openRegenerateModal,
+        closeRegenerateModal,
+        openSettingsModal,
+        closeSettingsModal,
+        executeRegeneration,
+        changeMissionDay,
+        shiftPlanToToday,
+        shiftPlanToStartDate,
+        renderApp,
+        getSubjectColorBadge,
+        getTaskChapterTitle,
+        formatTaskTopicTitle,
+        renderTaskGradeBadge,
+        renderTaskPartBadge,
+        getOverallStats,
+        updateProgressHeader,
+        getThemePreference,
+        isDarkModeActive,
+        applyTheme,
+        setThemePreference,
+        updateThemeUI,
+        getAppLanguage,
+        setAppLanguage,
+        toggleLanguagePreference,
+        applyAppLanguage,
+        trackAnalyticsEvent,
+        initAppAnalytics,
+        toggleUserSetting,
+        updateSettingsUI,
+        selectSettingsStudyPace,
+        exportStudyPlanJSON,
+        importStudyPlanJSON,
+        triggerPWAInstall,
+        triggerPwaInstall: triggerPWAInstall,
+        PLANNER_ENGINE_VERSION,
+        PLAN_MIGRATION_VERSION,
+        PLUS_TWO_SYLLABUS,
+        PLUS_ONE_SYLLABUS,
+        buildIntelligentPlan,
+        validatePlan,
+        migrateLegacyUserPlan,
+        getLocalDateStr,
+        calculateDaysBetween,
+        TODAY_STR,
+    });
+}

@@ -25,7 +25,10 @@ export default [
         caches: 'readonly',
         CustomEvent: 'readonly',
         process: 'readonly',
-        __dirname: 'readonly'
+        __dirname: 'readonly',
+        sessionStorage: 'readonly',
+        Blob: 'readonly',
+        URL: 'readonly'
       }
     },
     rules: {

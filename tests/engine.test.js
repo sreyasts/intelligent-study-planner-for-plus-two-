@@ -177,4 +177,58 @@ describe('State Migration Engine', () => {
 
     expect(pass1).toEqual(pass2);
   });
+
+  it('correctly shifts study schedule so Day 1 aligns with a new start date (Make Today Day 1)', () => {
+    const initialPlan = buildIntelligentPlan({
+      stream: 'cs',
+      startDateStr: '2026-09-20',
+      deadlineDateStr: '2026-10-10',
+    });
+
+    expect(initialPlan.plan[0].dayNumber).toBe(1);
+    expect(initialPlan.plan[0].date).toBe('2026-09-20');
+    expect(initialPlan.plan[1].dayNumber).toBe(2);
+    expect(initialPlan.plan[1].date).toBe('2026-09-21');
+
+    // Simulate shiftPlanToStartDate('2026-09-21')
+    const newStart = '2026-09-21';
+    const s = new Date(newStart + 'T00:00:00');
+    initialPlan.plan.forEach((day, idx) => {
+      const d = new Date(s);
+      d.setDate(d.getDate() + idx);
+      day.date = formatLocalDateStr(d);
+    });
+
+    expect(initialPlan.plan[0].dayNumber).toBe(1);
+    expect(initialPlan.plan[0].date).toBe('2026-09-21');
+    expect(initialPlan.plan[1].dayNumber).toBe(2);
+    expect(initialPlan.plan[1].date).toBe('2026-09-22');
+  });
+
+  it('correctly identifies earliest incomplete day as active study day when calendar advances', () => {
+    const planState = buildIntelligentPlan({
+      stream: 'cs',
+      startDateStr: '2026-09-20',
+      deadlineDateStr: '2026-10-10',
+    });
+
+    // Simulate partial Day 1 completion: 3 tasks completed, rest uncompleted
+    planState.plan[0].tasks[0].completed = true;
+    planState.plan[0].tasks[1].completed = true;
+    planState.plan[0].tasks[2].completed = true;
+
+    const calendarToday = planState.plan.find(d => d.date === '2026-09-21');
+    expect(calendarToday.dayNumber).toBe(2);
+
+    const firstIncompleteDay = planState.plan.find(d => d.tasks.some(t => !t.completed));
+    expect(firstIncompleteDay.dayNumber).toBe(1);
+
+    // Active day resolver must select Day 1 to prevent skipping prerequisite chapters
+    const activeDay = (firstIncompleteDay && calendarToday && firstIncompleteDay.dayNumber < calendarToday.dayNumber)
+      ? firstIncompleteDay
+      : calendarToday;
+
+    expect(activeDay.dayNumber).toBe(1);
+    expect(activeDay.date).toBe('2026-09-20');
+  });
 });

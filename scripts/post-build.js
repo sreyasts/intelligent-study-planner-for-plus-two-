@@ -48,4 +48,15 @@ rootAssets.forEach((asset) => {
   }
 });
 
+// Also copy icon assets into dist/assets for relative resolution from nested bundles
+const distAssetsDir = path.join(distDir, 'assets');
+if (fs.existsSync(distAssetsDir)) {
+  ['icon-192.png', 'icon-512.png', 'icon.png', 'icon-maskable-192.png', 'icon-maskable-512.png'].forEach((icon) => {
+    const srcPath = path.join(rootDir, icon);
+    if (fs.existsSync(srcPath)) {
+      fs.copyFileSync(srcPath, path.join(distAssetsDir, icon));
+    }
+  });
+}
+
 console.log('[post-build] All static assets successfully verified in dist/.');

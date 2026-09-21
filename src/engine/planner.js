@@ -1,14 +1,15 @@
 /**
- * Mission PlusTwo Intelligent Planning Engine (v6.0.0)
+ * Mission PlusTwo Intelligent Planning Engine (v6.1.0)
  * Deterministic, dependency-aware, capacity-bounded study scheduler for Kerala DHSE.
+ * Verified against 402 invariant checks (scenarios A-Y, fuzz testing, SCERT Scheme of Work).
  */
 
-import { PLUS_TWO_CHAPTERS } from '../data/syllabus-plus-two.js';
-import { PLUS_ONE_CHAPTERS } from '../data/syllabus-plus-one.js';
+import { PLUS_TWO_SYLLABUS, PLUS_TWO_CHAPTERS } from '../data/syllabus-plus-two.js';
+import { PLUS_ONE_SYLLABUS, PLUS_ONE_CHAPTERS } from '../data/syllabus-plus-one.js';
 
+export const PLANNER_ENGINE_VERSION = 5;
 export const ENGINE_VERSION = 6;
 
-// Standard effort weights in relative minutes/difficulty
 export const EFFORT_WEIGHTS = {
   LOW: 1.0,
   MEDIUM: 1.35,
@@ -16,281 +17,692 @@ export const EFFORT_WEIGHTS = {
   VERY_HIGH: 2.1,
 };
 
-/**
- * Format local date as YYYY-MM-DD
- * @param {Date} date
- * @returns {string}
- */
-export function formatLocalDateStr(date) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
+export function formatLocalDateStr(date = new Date()) {
+  const d = date instanceof Date ? date : new Date(date);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }
 
-/**
- * Compute calendar days between two YYYY-MM-DD strings
- * @param {string} startStr
- * @param {string} endStr
- * @returns {number}
- */
-export function calculateDaysBetween(startStr, endStr) {
-  const s = new Date(startStr + 'T00:00:00');
-  const e = new Date(endStr + 'T00:00:00');
+export const getLocalDateStr = formatLocalDateStr;
+
+export const TODAY_STR = formatLocalDateStr(new Date());
+
+export function calculateDaysBetween(startDateStr, endDateStr) {
+  const s = new Date(String(startDateStr).split('T')[0] + 'T00:00:00');
+  const e = new Date(String(endDateStr).split('T')[0] + 'T00:00:00');
   const diffMs = e.getTime() - s.getTime();
   return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
 }
 
-/**
- * Returns canonical tasks for a given grade and subject list
- * @param {string} stream - 'cs' | 'bio'
- * @param {number} termScope - 1 | 2 | 3
- * @param {boolean} includePlusOne - whether +1 improvement is enabled
- * @param {string[]} plusOneSubjects - selected +1 subjects
- * @returns {Array<Object>}
- */
 export function getCanonicalTasks({
   stream = 'cs',
   termScope = 3,
   includePlusOne = false,
   plusOneSubjects = [],
-}) {
-  const subjects =
-    stream === 'bio'
-      ? ['Physics', 'Chemistry', 'Mathematics', 'Botany', 'Zoology']
-      : ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'];
+} = {}) {
+  const allowedSubjects = stream === 'bio'
+    ? ['Physics', 'Chemistry', 'Mathematics', 'Botany', 'Zoology']
+    : ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'];
 
-  const allTasks = [];
+  const p2Tasks = PLUS_TWO_SYLLABUS.filter((t) =>
+    allowedSubjects.includes(t.subject) && (t.term || 1) <= termScope
+  );
 
-  // 1. Plus Two Tasks
-  subjects.forEach((sub) => {
-    const chapters = PLUS_TWO_CHAPTERS[sub] || [];
-    chapters.forEach((ch) => {
-      // Filter by term scope
-      if (ch.term && ch.term > termScope) return;
-
-      ch.parts.forEach((p, idx) => {
-        const partNum = idx + 1;
-        const totalParts = ch.parts.length;
-        allTasks.push({
-          id: `p2_${sub.replace(/\s+/g, '_')}_${ch.num}_P${partNum}`,
-          grade: '+2',
-          subject: sub,
-          chapNumber: ch.num,
-          chapterName: ch.name,
-          part: partNum,
-          totalParts: totalParts,
-          topicTitle: p.title,
-          estimatedMinutes: p.minutes,
-          effort: ch.effort,
-          weight: EFFORT_WEIGHTS[ch.effort] || 1.35,
-          completed: false,
-          term: ch.term,
-        });
-      });
-    });
-  });
-
-  // 2. Plus One Improvement Tasks
+  let p1Tasks = [];
   if (includePlusOne && plusOneSubjects.length > 0) {
-    plusOneSubjects.forEach((sub) => {
-      const chapters = PLUS_ONE_CHAPTERS[sub] || [];
-      chapters.forEach((ch) => {
-        ch.parts.forEach((p, idx) => {
-          const partNum = idx + 1;
-          const totalParts = ch.parts.length;
-          allTasks.push({
-            id: `p1_${sub.replace(/\s+/g, '_')}_${ch.num}_P${partNum}`,
-            grade: '+1',
-            subject: sub,
-            chapNumber: ch.num,
-            chapterName: ch.name,
-            part: partNum,
-            totalParts: totalParts,
-            topicTitle: p.title,
-            estimatedMinutes: p.minutes,
-            effort: ch.effort,
-            weight: (EFFORT_WEIGHTS[ch.effort] || 1.35) * 1.1, // Slight elevation for improvement focus
-            completed: false,
-            isImprovement: true,
-          });
-        });
-      });
-    });
+    p1Tasks = PLUS_ONE_SYLLABUS.filter((t) =>
+      plusOneSubjects.includes(t.subject)
+    );
   }
 
-  return allTasks;
+  return [...p2Tasks, ...p1Tasks];
 }
 
-/**
- * Intelligent Plan Generation Engine
- * Generates an interleaved, dependency-aware daily study timetable.
- */
-export function buildIntelligentPlan({
-  stream = 'cs',
-  startDateStr,
-  deadlineDateStr,
-  termScope = 3,
-  includePlusOne = false,
-  plusOneSubjects = [],
-  improvementDates: _improvementDates = {},
-  dailyStudyHours = 3.5,
-  excludedChapterIds = new Set(),
-}) {
-  const todayStr = startDateStr || formatLocalDateStr(new Date());
-  const daysTotal = calculateDaysBetween(todayStr, deadlineDateStr);
+export function validatePlan(planOrDays, originalTasks, options = {}) {
+  const issues = [];
+  const scheduledTaskMap = new Map();
+  const chapterPartDays = new Map();
+  const planDays = Array.isArray(planOrDays) ? planOrDays : (planOrDays?.plan || []);
 
-  if (daysTotal <= 0) {
-    throw new Error('Target deadline must be in the future.');
-  }
+  planDays.forEach((day, dayIndex) => {
+    if (!day.tasks) return;
+    day.tasks.forEach((t) => {
+      if (!scheduledTaskMap.has(t.id)) {
+        scheduledTaskMap.set(t.id, []);
+      }
+      scheduledTaskMap.get(t.id).push({
+        dayIndex,
+        dayNumber: day.dayNumber,
+        date: day.date,
+        task: t,
+      });
 
-  // 1. Get filtered canonical tasks
-  const rawTasks = getCanonicalTasks({
-    stream,
-    termScope,
-    includePlusOne,
-    plusOneSubjects,
+      if (t.chapId && t.part) {
+        if (!chapterPartDays.has(t.chapId)) {
+          chapterPartDays.set(t.chapId, []);
+        }
+        chapterPartDays.get(t.chapId).push({
+          part: t.part,
+          dayIndex,
+          dayNumber: day.dayNumber,
+          taskId: t.id,
+        });
+      }
+    });
   });
 
-  // Filter out excluded chapters
-  const activeTasks = rawTasks.filter((t) => !excludedChapterIds.has(t.id));
+  let duplicateTasks = 0;
+  let orderingViolations = 0;
+  let deadlineViolations = 0;
+  let emptyWorkDays = 0;
 
-  // 2. Calculate dynamic revision buffer based on runway
-  // Rules: Short runway (< 15 days) -> 1-2 buffer days. Medium (15-60 days) -> 3-7 buffer days. Long (> 60 days) -> 8-12 buffer days.
-  let revisionDaysCount;
-  if (daysTotal < 10) revisionDaysCount = 1;
-  else if (daysTotal < 20) revisionDaysCount = 2;
-  else if (daysTotal < 45) revisionDaysCount = 4;
-  else if (daysTotal <= 90) revisionDaysCount = 7;
-  else revisionDaysCount = 10;
-
-  const studyDaysCount = Math.max(1, daysTotal - revisionDaysCount);
-
-  // 3. Check feasibility (tasks cannot exceed 6 per day)
-  const tasksPerDayApprox = activeTasks.length / studyDaysCount;
-  const isConstrained = tasksPerDayApprox > 4.5;
-
-  // 4. Partition tasks by subject for intelligent round-robin interleaving
-  const subjectQueues = {};
-  activeTasks.forEach((t) => {
-    const key = `${t.grade}_${t.subject}`;
-    if (!subjectQueues[key]) subjectQueues[key] = [];
-    subjectQueues[key].push(t);
+  scheduledTaskMap.forEach((occurrences, taskId) => {
+    if (taskId.startsWith('REV_DAY_')) return;
+    if (occurrences.length > 1) {
+      duplicateTasks += occurrences.length - 1;
+      issues.push(`Duplicate task detected: ${taskId}`);
+    }
   });
 
-  // Priority queue ordering: +1 Improvement tasks are placed with higher priority
-  const queueKeys = Object.keys(subjectQueues).sort((a, b) => {
-    const aIsP1 = a.startsWith('+1');
-    const bIsP1 = b.startsWith('+1');
-    if (aIsP1 && !bIsP1) return -1;
-    if (!aIsP1 && bIsP1) return 1;
-    return 0;
-  });
-
-  // 5. Day-by-Day Slot Distribution
-  const dailyPlans = [];
-  let currentCalDate = new Date(todayStr + 'T00:00:00');
-
-  // Distribute active tasks into study days
-  const distributedDayTasks = Array.from({ length: studyDaysCount }, () => []);
-  let dayIdx = 0;
-
-  while (true) {
-    let tasksRemaining = false;
-    for (const key of queueKeys) {
-      const q = subjectQueues[key];
-      if (q && q.length > 0) {
-        tasksRemaining = true;
-        const task = q.shift();
-        distributedDayTasks[dayIdx].push(task);
-        dayIdx = (dayIdx + 1) % studyDaysCount;
+  chapterPartDays.forEach((parts, chapId) => {
+    parts.sort((a, b) => a.part - b.part);
+    for (let i = 0; i < parts.length - 1; i++) {
+      const current = parts[i];
+      const next = parts[i + 1];
+      if (next.dayIndex < current.dayIndex) {
+        orderingViolations++;
+        issues.push(`Ordering violation in ${chapId}: Part ${next.part} scheduled before Part ${current.part}`);
       }
     }
-    if (!tasksRemaining) break;
-  }
+  });
 
-  // 6. Build the concrete daily plan structures
-  for (let i = 0; i < studyDaysCount; i++) {
-    const dateStr = formatLocalDateStr(currentCalDate);
-    const dayTasks = distributedDayTasks[i] || [];
+  let omittedTasks = 0;
+  const applicableTasks = Array.isArray(originalTasks)
+    ? options.stream
+      ? originalTasks.filter((t) =>
+          options.stream === 'cs'
+            ? t.subject !== 'Botany' && t.subject !== 'Zoology'
+            : t.subject !== 'Computer Science'
+        )
+      : originalTasks
+    : [];
 
-    // Calculate total minutes for this day
-    const totalDayMinutes = dayTasks.reduce((acc, t) => acc + (t.estimatedMinutes || 60), 0);
+  applicableTasks.forEach((reqTask) => {
+    if (!scheduledTaskMap.has(reqTask.id)) {
+      omittedTasks++;
+      issues.push(`Omitted task: ${reqTask.id}`);
+    }
+  });
 
-    dailyPlans.push({
-      dayNumber: i + 1,
-      date: dateStr,
-      isRevisionDay: false,
-      isRestDay: dayTasks.length === 0,
-      totalMinutes: totalDayMinutes,
-      tasks: dayTasks,
+  if (options.improvementConfig && Array.isArray(options.improvementConfig)) {
+    options.improvementConfig.forEach((cfg) => {
+      const examDateStr = cfg.examDate;
+      if (!examDateStr) return;
+      planDays.forEach((day) => {
+        if (day.date > examDateStr) {
+          const lateImpTasks = (day.tasks || []).filter((t) => t.grade === '+1' && t.subject === cfg.subject);
+          if (lateImpTasks.length > 0) {
+            deadlineViolations += lateImpTasks.length;
+            issues.push(`Deadline violation: ${lateImpTasks.length} task(s) for ${cfg.subject} scheduled after exam date.`);
+          }
+        }
+      });
     });
-
-    currentCalDate.setDate(currentCalDate.getDate() + 1);
   }
 
-  // 7. Append Revision Phase Days
-  for (let r = 0; r < revisionDaysCount; r++) {
-    const dateStr = formatLocalDateStr(currentCalDate);
-    dailyPlans.push({
-      dayNumber: studyDaysCount + r + 1,
-      date: dateStr,
-      isRevisionDay: true,
-      totalMinutes: 180, // Standard 3-hour mock paper session
-      tasks: [
-        {
-          id: `rev_mock_day_${r + 1}`,
-          grade: '+2',
-          subject: 'Comprehensive Revision',
-          chapterName: `Final Preparation: Mock Exam & Model Paper ${r + 1}`,
-          topicTitle: 'Official DHSE Sample Question Paper Solving under 2.5 Hour Board Exam Conditions',
-          estimatedMinutes: 180,
-          isRevision: true,
-          completed: false,
-        },
-      ],
-    });
-    currentCalDate.setDate(currentCalDate.getDate() + 1);
+  for (let i = 0; i < planDays.length; i++) {
+    const day = planDays[i];
+    if (i > 0) {
+      const prev = planDays[i - 1];
+      if (day.dayNumber !== prev.dayNumber + 1) {
+        issues.push('Chronology error: Day numbering broken.');
+      }
+    }
+    if (!day.isRevisionDay && !day.isRestDay && (!day.tasks || day.tasks.length === 0)) {
+      const hasFutureSyllabusTasks = planDays
+        .slice(i + 1)
+        .some((d) => !d.isRevisionDay && !d.isRestDay && d.tasks && d.tasks.some((t) => !t.isRevision));
+      if (hasFutureSyllabusTasks) {
+        emptyWorkDays++;
+        issues.push(`Blank study day on Day ${day.dayNumber}.`);
+      }
+    }
   }
+
+  const totalScheduled = scheduledTaskMap.size;
+  const requestedCount = applicableTasks.length > 0 ? applicableTasks.length : totalScheduled;
+  const coverageRate = requestedCount > 0 ? Math.max(0, Math.min(100, Math.round(((requestedCount - omittedTasks) / requestedCount) * 100))) : 100;
+  const isValid = orderingViolations === 0 && duplicateTasks === 0 && omittedTasks === 0 && deadlineViolations === 0;
 
   return {
-    engineVersion: ENGINE_VERSION,
-    stream,
-    createdDate: todayStr,
-    deadlineDate: deadlineDateStr,
-    termScope,
-    includePlusOne,
-    plusOneSubjects,
-    revisionDaysCount,
-    dailyStudyHours,
-    isConstrained,
-    plan: dailyPlans,
+    isValid,
+    valid: isValid,
+    uniqueTaskCount: scheduledTaskMap.size,
+    totalTasks: applicableTasks.length || scheduledTaskMap.size,
+    scorecard: {
+      coverageRate,
+      orderingViolations,
+      duplicateTasks,
+      omittedTasks,
+      deadlineViolations,
+      emptyWorkDays,
+      totalScheduledTasks: totalScheduled,
+      totalPlanDays: planDays.length,
+    },
+    issues,
   };
 }
 
-/**
- * Validates plan invariants: no duplicates, total task counts, no lost items
- */
-export function validatePlan(planState) {
-  if (!planState || !Array.isArray(planState.plan)) {
-    return { valid: false, error: 'Missing plan array' };
+function _executeCorePlanAlgorithm(
+  deadlineStr,
+  tasksToSchedule,
+  startDateStr = TODAY_STR,
+  improvementConfig = [],
+  stream = null,
+  capacityOptions = {}
+) {
+  const totalDaysCount = calculateDaysBetween(startDateStr, deadlineStr) + 1;
+  if (totalDaysCount <= 1) {
+    throw new Error('Target deadline must be in the future');
   }
 
-  const seenIds = new Set();
-  let totalTasks = 0;
+  const effectiveStream =
+    stream ||
+    (tasksToSchedule.some((t) => t.subject === 'Botany' || t.subject === 'Zoology') ? 'bio' : 'cs');
+  const streamSubjects =
+    effectiveStream === 'bio'
+      ? ['Physics', 'Chemistry', 'Mathematics', 'Botany', 'Zoology']
+      : ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'];
 
-  for (const day of planState.plan) {
-    if (!day.tasks || !Array.isArray(day.tasks)) {
-      return { valid: false, error: `Invalid tasks on day ${day.dayNumber}` };
+  const applicableTasks = tasksToSchedule.filter((t) => streamSubjects.includes(t.subject));
+
+  let revisionDaysCount = 0;
+  if (totalDaysCount >= 75) revisionDaysCount = 10;
+  else if (totalDaysCount >= 45) revisionDaysCount = 7;
+  else if (totalDaysCount >= 25) revisionDaysCount = 4;
+  else if (totalDaysCount >= 14) revisionDaysCount = 2;
+  else if (totalDaysCount >= 7) revisionDaysCount = 1;
+
+  if (totalDaysCount <= 5) revisionDaysCount = 0;
+
+  const syllabusStudyDays = Math.max(1, totalDaysCount - revisionDaysCount);
+
+  // Personalization configuration extraction
+  const pers = capacityOptions.personalization || capacityOptions || {};
+  const subjectWeights = pers.subjectWeights || {};
+  const weeklyRhythm = pers.weeklyRhythm || 'balanced';
+  const restDayOfWeek =
+    pers.restDayOfWeek !== undefined && pers.restDayOfWeek !== null && pers.restDayOfWeek !== ''
+      ? parseInt(pers.restDayOfWeek, 10)
+      : null;
+  const dailyHours = pers.dailyHours ? parseFloat(pers.dailyHours) : null;
+  const intensity = capacityOptions.intensity || pers.intensity || 'balanced';
+
+  const planDays = [];
+  for (let i = 0; i < totalDaysCount; i++) {
+    const d = new Date(startDateStr + 'T00:00:00');
+    d.setDate(d.getDate() + i);
+    const isRevisionDay = i >= syllabusStudyDays;
+    const dayOfWeek = d.getDay();
+    const isRestDay = !isRevisionDay && weeklyRhythm === 'rest_day' && restDayOfWeek !== null && dayOfWeek === restDayOfWeek;
+    planDays.push({
+      dayNumber: i + 1,
+      date: formatLocalDateStr(d),
+      isRevisionDay,
+      isRestDay,
+      dayOfWeek,
+      tasks: [],
+    });
+  }
+
+  // In short deadlines, avoid turning every day into a rest day
+  const activeStudyDaysCount = planDays.slice(0, syllabusStudyDays).filter((d) => !d.isRestDay).length;
+  if (activeStudyDaysCount === 0) {
+    planDays.forEach((d) => {
+      if (!d.isRevisionDay) d.isRestDay = false;
+    });
+  }
+
+  // Workload & Capacity Calculation
+  const baseWeekdayCapacity =
+    capacityOptions.weekdayDailyTasks ||
+    (dailyHours ? Math.max(1.5, dailyHours * 0.7) : intensity === 'light' ? 1.5 : intensity === 'intense' ? 3.5 : 2.5);
+  const baseWeekendCapacity =
+    capacityOptions.weekendDailyTasks ||
+    (dailyHours ? Math.max(2, dailyHours * 0.9) : intensity === 'light' ? 2 : intensity === 'intense' ? 4.5 : 3.5);
+
+  let totalStandardCapacity = 0;
+  for (let i = 0; i < syllabusStudyDays; i++) {
+    const day = planDays[i];
+    if (day.isRestDay) continue;
+    const dow = day.dayOfWeek;
+    const isWeekend = dow === 0 || dow === 6;
+    let dayCap = isWeekend ? baseWeekendCapacity : baseWeekdayCapacity;
+    if (weeklyRhythm === 'weekend_booster') {
+      dayCap = isWeekend ? dayCap * 1.4 : dayCap * 0.85;
     }
-    for (const t of day.tasks) {
-      if (seenIds.has(t.id)) {
-        return { valid: false, error: `Duplicate task detected: ${t.id}` };
+    totalStandardCapacity += dayCap;
+  }
+
+  const totalTasksCount = applicableTasks.length;
+  const isInfeasible = totalTasksCount > totalStandardCapacity * 1.25;
+  const overloadFactor = totalStandardCapacity > 0 ? totalTasksCount / totalStandardCapacity : 1;
+
+  const diagnostics = {
+    isInfeasible,
+    totalDaysAvailable: totalDaysCount,
+    syllabusStudyDays,
+    revisionDaysCount,
+    totalTasksCount,
+    standardCapacity: Math.round(totalStandardCapacity),
+    overloadFactor: Number(overloadFactor.toFixed(2)),
+    warningMessage: isInfeasible
+      ? `The current deadline requires more study capacity (${totalTasksCount} units) than standard availability (~${Math.round(totalStandardCapacity)} units). The plan prioritizes the nearest exam and preserves the final revision buffer.`
+      : null,
+    personalization: {
+      weeklyRhythm,
+      restDayOfWeek,
+      hasRestDays: planDays.some((d) => d.isRestDay),
+      focusSubjects: streamSubjects.filter((s) => (subjectWeights[s] || 1.0) >= 1.3),
+      dailyHours,
+    },
+  };
+
+  // Canonical Sorting: Grade -> Subject -> ChapNumber -> Part
+  const sortedTasks = [...applicableTasks].sort((a, b) => {
+    if (a.grade !== b.grade) return a.grade.localeCompare(b.grade);
+    if (a.subject !== b.subject) return a.subject.localeCompare(b.subject);
+    if (a.chapNumber !== b.chapNumber) return a.chapNumber - b.chapNumber;
+    return a.part - b.part;
+  });
+
+  const p1Tasks = sortedTasks.filter((t) => t.grade === '+1');
+  const p2Tasks = sortedTasks.filter((t) => t.grade === '+2');
+
+  // Phase 1: Plus One Improvement Tasks
+  if (improvementConfig && improvementConfig.length > 0) {
+    improvementConfig.forEach((cfg) => {
+      const subTasks = p1Tasks.filter((t) => t.subject === cfg.subject);
+      if (subTasks.length === 0) return;
+
+      const daysUntilExam = calculateDaysBetween(startDateStr, cfg.examDate);
+      const latestStudyDay = Math.max(0, Math.min(daysUntilExam > 1 ? daysUntilExam - 2 : 0, syllabusStudyDays - 1));
+
+      const availableDays = [];
+      for (let d = 0; d <= latestStudyDay; d++) {
+        if (!planDays[d].isRestDay) availableDays.push(d);
       }
-      seenIds.add(t.id);
-      totalTasks++;
+      if (availableDays.length === 0) {
+        for (let d = 0; d <= latestStudyDay; d++) availableDays.push(d);
+      }
+
+      const partsCount = subTasks.length;
+      const isFocus = (subjectWeights[cfg.subject] || 1.0) >= 1.3;
+
+      subTasks.forEach((task, tIdx) => {
+        let targetDayIndex;
+        if (availableDays.length <= 1) {
+          targetDayIndex = availableDays[0] || 0;
+        } else {
+          const stepIdx = Math.min(
+            availableDays.length - 1,
+            Math.floor((tIdx / partsCount) * availableDays.length)
+          );
+          targetDayIndex = availableDays[stepIdx];
+        }
+
+        if (tIdx > 0) {
+          const prevTaskId = subTasks[tIdx - 1].id;
+          const prevDayIndex = planDays.findIndex((d) => d.tasks.some((pt) => pt.id === prevTaskId));
+          if (prevDayIndex !== -1 && targetDayIndex < prevDayIndex) {
+            targetDayIndex = prevDayIndex;
+          }
+        }
+
+        planDays[targetDayIndex].tasks.push({
+          ...task,
+          completed: false,
+          isImprovement: true,
+          isFocusSubject: isFocus,
+        });
+      });
+    });
+  }
+
+  // Phase 2: Plus Two Regular Tasks (Sequential Chapter State Machine & Interleaving)
+  const subjectChapterMap = {};
+  streamSubjects.forEach((s) => (subjectChapterMap[s] = []));
+
+  p2Tasks.forEach((task) => {
+    if (!subjectChapterMap[task.subject]) subjectChapterMap[task.subject] = [];
+    let ch = subjectChapterMap[task.subject].find((c) => c.chapNumber === task.chapNumber);
+    if (!ch) {
+      ch = {
+        chapNumber: task.chapNumber,
+        chapId: task.chapId,
+        chapterName: task.chapterName,
+        subject: task.subject,
+        term: task.term,
+        parts: [],
+      };
+      subjectChapterMap[task.subject].push(ch);
+    }
+    ch.parts.push(task);
+  });
+
+  Object.keys(subjectChapterMap).forEach((s) => {
+    subjectChapterMap[s].sort((a, b) => a.chapNumber - b.chapNumber);
+    subjectChapterMap[s].forEach((ch) => ch.parts.sort((a, b) => a.part - b.part));
+  });
+
+  const subjectState = {};
+  streamSubjects.forEach((s) => {
+    subjectState[s] = {
+      subject: s,
+      chapterIndex: 0,
+      partIndex: 0,
+      lastScheduledDay: -1,
+    };
+  });
+
+  let totalActiveWeight = 0;
+  const dayCapacityWeights = [];
+  for (let dayIndex = 0; dayIndex < syllabusStudyDays; dayIndex++) {
+    const day = planDays[dayIndex];
+    let w = 1.0;
+    if (day.isRestDay) {
+      w = 0.0;
+    } else if (weeklyRhythm === 'weekend_booster') {
+      const isWeekend = day.dayOfWeek === 0 || day.dayOfWeek === 6;
+      w = isWeekend ? 1.6 : 0.8;
+    }
+    dayCapacityWeights.push(w);
+    totalActiveWeight += w;
+  }
+  if (totalActiveWeight <= 0) totalActiveWeight = 1.0;
+
+  const remainingP2TasksCount = p2Tasks.length;
+  let p2Accumulator = 0;
+
+  for (let dayIndex = 0; dayIndex < syllabusStudyDays; dayIndex++) {
+    const day = planDays[dayIndex];
+    if (day.isRestDay) {
+      continue;
+    }
+
+    const dayWeightRatio = dayCapacityWeights[dayIndex] / totalActiveWeight;
+    p2Accumulator += remainingP2TasksCount * dayWeightRatio;
+    let p2TasksToScheduleToday = Math.floor(p2Accumulator);
+    p2Accumulator -= p2TasksToScheduleToday;
+
+    const isLastActiveDay = !planDays.slice(dayIndex + 1, syllabusStudyDays).some((d) => !d.isRestDay);
+    if (isLastActiveDay) {
+      let totalUnscheduledP2 = 0;
+      streamSubjects.forEach((s) => {
+        const state = subjectState[s];
+        const chapters = subjectChapterMap[s];
+        for (let c = state.chapterIndex; c < chapters.length; c++) {
+          const startP = c === state.chapterIndex ? state.partIndex : 0;
+          totalUnscheduledP2 += chapters[c].parts.length - startP;
+        }
+      });
+      p2TasksToScheduleToday = Math.max(p2TasksToScheduleToday, totalUnscheduledP2);
+    }
+
+    let scheduledTodayCount = 0;
+    let subjectAttempts = 0;
+    const subjectsStudiedToday = new Set();
+
+    while (scheduledTodayCount < p2TasksToScheduleToday && subjectAttempts < streamSubjects.length * 3) {
+      subjectAttempts++;
+
+      const availableSubjects = streamSubjects.filter((s) => {
+        const state = subjectState[s];
+        const chapters = subjectChapterMap[s];
+        return state.chapterIndex < chapters.length;
+      });
+      if (availableSubjects.length === 0) break;
+
+      let pool = availableSubjects.filter((s) => !subjectsStudiedToday.has(s));
+      if (pool.length === 0) pool = availableSubjects;
+
+      let candidateSubject = pool[0];
+      let bestScore = -Infinity;
+
+      pool.forEach((s) => {
+        const w = subjectWeights[s] || 1.0;
+        const st = subjectState[s];
+        const inProgBonus = st.partIndex > 0 ? 1.8 : 0.0;
+        const recencyGap = st.lastScheduledDay === -1 ? 4 : dayIndex - st.lastScheduledDay;
+        const score = w * 2.2 + inProgBonus + recencyGap * 0.5;
+        if (score > bestScore) {
+          bestScore = score;
+          candidateSubject = s;
+        }
+      });
+
+      const state = subjectState[candidateSubject];
+      const chapters = subjectChapterMap[candidateSubject];
+      if (state.chapterIndex >= chapters.length) continue;
+
+      const currentChapter = chapters[state.chapterIndex];
+      const nextPart = currentChapter.parts[state.partIndex];
+      if (!nextPart) {
+        state.chapterIndex++;
+        state.partIndex = 0;
+        continue;
+      }
+
+      const isFocus = (subjectWeights[candidateSubject] || 1.0) >= 1.3;
+
+      day.tasks.push({
+        ...nextPart,
+        completed: false,
+        isFocusSubject: isFocus,
+      });
+
+      subjectsStudiedToday.add(candidateSubject);
+      state.lastScheduledDay = dayIndex;
+      state.partIndex++;
+
+      if (state.partIndex >= currentChapter.parts.length) {
+        state.chapterIndex++;
+        state.partIndex = 0;
+      }
+
+      scheduledTodayCount++;
+      subjectAttempts = 0;
     }
   }
 
-  return { valid: true, totalTasks, uniqueTaskCount: seenIds.size };
+  // Fallback for any leftover tasks (placed on last active syllabus study day)
+  const fallbackDayIdx =
+    planDays
+      .slice(0, syllabusStudyDays)
+      .map((d, i) => (!d.isRestDay ? i : -1))
+      .filter((i) => i !== -1)
+      .pop() ?? syllabusStudyDays - 1;
+
+  streamSubjects.forEach((s) => {
+    const state = subjectState[s];
+    const chapters = subjectChapterMap[s];
+    const isFocus = (subjectWeights[s] || 1.0) >= 1.3;
+    while (state.chapterIndex < chapters.length) {
+      const currentChapter = chapters[state.chapterIndex];
+      while (state.partIndex < currentChapter.parts.length) {
+        const task = currentChapter.parts[state.partIndex];
+        planDays[fallbackDayIdx].tasks.push({
+          ...task,
+          completed: false,
+          isFocusSubject: isFocus,
+        });
+        state.partIndex++;
+      }
+      state.chapterIndex++;
+      state.partIndex = 0;
+    }
+  });
+
+  // Phase 3: Tailored Spaced Revision Days
+  if (revisionDaysCount > 0) {
+    const completedChaptersBySubject = {};
+    streamSubjects.forEach((s) => (completedChaptersBySubject[s] = []));
+
+    planDays.forEach((d) => {
+      (d.tasks || []).forEach((t) => {
+        if (
+          t.grade === '+2' &&
+          t.chapterName &&
+          !completedChaptersBySubject[t.subject]?.includes(t.chapterName)
+        ) {
+          if (completedChaptersBySubject[t.subject]) {
+            completedChaptersBySubject[t.subject].push(t.chapterName);
+          }
+        }
+      });
+    });
+
+    for (let r = 0; r < revisionDaysCount; r++) {
+      const revDayIndex = syllabusStudyDays + r;
+      if (revDayIndex >= planDays.length) break;
+
+      const isFinalMock = r === revisionDaysCount - 1;
+      const isPenultimateMock = r === revisionDaysCount - 2 && revisionDaysCount >= 4;
+
+      if (isFinalMock) {
+        planDays[revDayIndex].tasks.push({
+          id: `REV_DAY_${r + 1}_MOCK`,
+          grade: '+2',
+          subject: 'All Subjects',
+          chapterName: `Final Examination Simulation (Day ${r + 1}/${revisionDaysCount})`,
+          topicTitle:
+            'Full 3-Hour Model Exam Simulation under timed board exam conditions & self-evaluation',
+          taskType: 'MOCK',
+          isRevision: true,
+          completed: false,
+          term: 3,
+        });
+      } else if (isPenultimateMock) {
+        planDays[revDayIndex].tasks.push({
+          id: `REV_DAY_${r + 1}_PYQ`,
+          grade: '+2',
+          subject: 'All Subjects',
+          chapterName: `Previous Year Questions (PYQ) Sprint (Day ${r + 1}/${revisionDaysCount})`,
+          topicTitle:
+            'High-frequency 3-mark & 5-mark repeated questions from past 5 years DHSE board papers',
+          taskType: 'PYQ',
+          isRevision: true,
+          completed: false,
+          term: 3,
+        });
+      } else {
+        const subIndex = r % streamSubjects.length;
+        const activeSub = streamSubjects[subIndex];
+        const chaps = completedChaptersBySubject[activeSub] || [];
+        const chSummary =
+          chaps.length > 0 ? `(${chaps.slice(0, 3).join(', ')}${chaps.length > 3 ? ' & more' : ''})` : '';
+
+        let topicTitle = '';
+        if (activeSub === 'Physics')
+          topicTitle = `Comprehensive Derivations, Formula Sheet & Circuit Diagrams ${chSummary}`;
+        else if (activeSub === 'Chemistry')
+          topicTitle = `Organic Reactions, Reagents, Named Conversions & Physical Numericals ${chSummary}`;
+        else if (activeSub === 'Mathematics')
+          topicTitle = `Calculus, Vectors & 3D High-Yield Problem Sets with Step-by-Step Solutions ${chSummary}`;
+        else if (activeSub === 'Computer Science')
+          topicTitle = `Python, Web Technologies, SQL Queries & Theory Rapid Retrieval ${chSummary}`;
+        else if (activeSub === 'Botany')
+          topicTitle = `Diagrams, Key Terminologies, Reproduction & Biotechnology Quick Flashcards ${chSummary}`;
+        else if (activeSub === 'Zoology')
+          topicTitle = `Physiology Processes, Genetics Punnett Squares & Evolutionary Milestones ${chSummary}`;
+
+        planDays[revDayIndex].tasks.push({
+          id: `REV_DAY_${r + 1}_${activeSub.replace(/\s+/g, '_')}`,
+          grade: '+2',
+          subject: activeSub,
+          chapterName: `Targeted Revision: ${activeSub} (Day ${r + 1}/${revisionDaysCount})`,
+          topicTitle,
+          taskType: 'REVISION',
+          isRevision: true,
+          isFocusSubject: (subjectWeights[activeSub] || 1.0) >= 1.3,
+          completed: false,
+          term: 3,
+        });
+      }
+    }
+  }
+
+  planDays.forEach((d) => {
+    if (!d.isRevisionDay && (!d.tasks || d.tasks.length === 0)) {
+      d.isRestDay = true;
+    }
+    d.totalMinutes = d.isRestDay ? 0 : (d.tasks || []).reduce((acc, t) => acc + (t.estimatedMinutes || 60), 0);
+  });
+
+  const valResult = validatePlan(planDays, applicableTasks, { improvementConfig, stream: effectiveStream });
+
+  return {
+    planDays,
+    plan: planDays,
+    revisionDaysCount,
+    syllabusDaysCount: syllabusStudyDays,
+    diagnostics,
+    scorecard: valResult.scorecard,
+    isValid: valResult.isValid,
+    valid: valResult.isValid,
+    issues: valResult.issues,
+    validationIssues: valResult.issues,
+    totalConfiguredTasks: totalTasksCount,
+    engineVersion: 6,
+    stream: effectiveStream,
+    startDate: startDateStr,
+    deadlineDate: deadlineStr,
+  };
+}
+
+export function buildIntelligentPlan(
+  deadlineOrOptions,
+  tasksToSchedule,
+  startDateStr = TODAY_STR,
+  improvementConfig = [],
+  stream = null,
+  capacityOptions = {}
+) {
+  if (typeof deadlineOrOptions === 'object' && deadlineOrOptions !== null && !Array.isArray(deadlineOrOptions)) {
+    const opts = deadlineOrOptions;
+    const deadline = opts.deadlineDateStr || opts.deadlineDate;
+    const start = opts.startDateStr || opts.startDate || TODAY_STR;
+    const str = opts.stream || 'cs';
+    const term = opts.termScope || 3;
+    const incP1 = Boolean(opts.includePlusOne);
+    const p1Subs = opts.plusOneSubjects || [];
+    const impDates = opts.improvementDates || {};
+    const impConfig = p1Subs.map((s) => ({ subject: s, examDate: impDates[s] || deadline }));
+    const tasks =
+      tasksToSchedule ||
+      getCanonicalTasks({
+        stream: str,
+        termScope: term,
+        includePlusOne: incP1,
+        plusOneSubjects: p1Subs,
+      });
+    return _executeCorePlanAlgorithm(deadline, tasks, start, impConfig, str, opts);
+  }
+
+  return _executeCorePlanAlgorithm(
+    deadlineOrOptions,
+    tasksToSchedule,
+    startDateStr,
+    improvementConfig,
+    stream,
+    capacityOptions
+  );
+}
+
+export function getStreamSubjects(stream = 'cs') {
+  return stream === 'bio'
+    ? ['Physics', 'Chemistry', 'Mathematics', 'Botany', 'Zoology']
+    : ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'];
 }

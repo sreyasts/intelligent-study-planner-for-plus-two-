@@ -1,5 +1,5 @@
-// Mission PlusTwo Service Worker v6.0 (High-performance PWA & Offline Engine)
-const CACHE_NAME = 'plustwo-mission-v6.0';
+// Mission PlusTwo Service Worker v6.2 (Fix authModalTimer reference)
+const CACHE_NAME = 'plustwo-mission-v6.2';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

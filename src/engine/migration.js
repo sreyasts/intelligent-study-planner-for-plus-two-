@@ -1,18 +1,137 @@
 /**
- * Backward-Compatible State Migration Engine
- * Safely upgrades legacy localStorage & Cloud Firestore study plans (v1 through v5) to v6.0.0.
- * Guarantees zero loss of user progress or completed task checkmarks.
+ * Backward-Compatible State Migration Engine (v6.1.0)
+ * Safely upgrades legacy study plans (v1 through v5) to v6.
+ * Guarantees 100% preservation of user checkmarks, progress, and historical completion.
  */
 
-import { ENGINE_VERSION } from './planner.js';
+import { PLANNER_ENGINE_VERSION, ENGINE_VERSION, formatLocalDateStr, buildIntelligentPlan } from './planner.js';
+import { PLUS_TWO_SYLLABUS } from '../data/syllabus-plus-two.js';
+import { PLUS_ONE_SYLLABUS } from '../data/syllabus-plus-one.js';
 
+export const PLAN_MIGRATION_VERSION = 5;
 export const MIGRATION_VERSION = 6;
 
-/**
- * Cleanly migrates any legacy user study plan state into modern v6 structure.
- * @param {Object} rawState
- * @returns {Object}
- */
+export function migrateOldState(oldState) {
+  if (!oldState || !Array.isArray(oldState.plan)) return null;
+
+  const migratedPlan = oldState.plan.map((day, dIdx) => ({
+    dayNumber: day.dayNumber || dIdx + 1,
+    date: day.date,
+    isRevisionDay: Boolean(day.isRevisionDay),
+    tasks: (day.tasks || []).map((t, tIdx) => ({
+      id: t.id || `migrated_${dIdx}_${tIdx}`,
+      chapId: t.chapId || `${t.grade || '+2'}_${(t.subject || '').replace(/\s+/g, '_')}_${tIdx}`,
+      grade: t.grade || '+2',
+      subject: t.subject || 'General',
+      chapterName: t.chapterName || (t.chapter ? t.chapter.replace(/^\d+\.\s*/, '') : 'Chapter Portion'),
+      topicTitle: t.topicTitle || t.topic || 'Concept & Problems',
+      completed: Boolean(t.completed),
+      term: t.term || 1,
+      isRevision: Boolean(t.isRevision),
+      estimatedMinutes: t.estimatedMinutes || 60,
+    })),
+  }));
+
+  const hasBio = migratedPlan.some((d) =>
+    d.tasks.some((t) => t.subject === 'Botany' || t.subject === 'Zoology')
+  );
+
+  return {
+    stream: oldState.stream || (hasBio ? 'bio' : 'cs'),
+    startDate: oldState.startDate || formatLocalDateStr(),
+    deadlineDate: oldState.deadlineDate || '2026-11-30',
+    targetTerm: oldState.targetTerm || 2,
+    completedChaptersOnInit: oldState.completedChapters || [],
+    improvementConfig: oldState.improvementConfig || [],
+    plan: migratedPlan,
+    revisionDaysCount: oldState.revisionDaysCount || 0,
+    totalConfiguredTasks: migratedPlan.reduce((acc, d) => acc + d.tasks.length, 0),
+    _migratedFromV1: true,
+  };
+}
+
+export function migrateLegacyUserPlan(existingState) {
+  if (!existingState || !Array.isArray(existingState.plan)) return null;
+
+  if (existingState.engineVersion && existingState.engineVersion >= PLANNER_ENGINE_VERSION) {
+    return existingState;
+  }
+
+  const completedTaskIds = new Set();
+  const completedChapterIds = new Set(existingState.completedChaptersOnInit || []);
+
+  existingState.plan.forEach((day) => {
+    (day.tasks || []).forEach((t) => {
+      if (t.completed) {
+        completedTaskIds.add(t.id);
+      }
+    });
+  });
+
+  const hasBio =
+    existingState.stream === 'bio' ||
+    existingState.plan.some((d) =>
+      (d.tasks || []).some((t) => t.subject === 'Botany' || t.subject === 'Zoology')
+    );
+  const userStream = existingState.stream || (hasBio ? 'bio' : 'cs');
+  const targetTerm = existingState.targetTerm || 3;
+  const deadlineDate = existingState.deadlineDate || '2026-11-30';
+  const improvementConfig = existingState.improvementConfig || [];
+  const startDate = existingState.startDate || formatLocalDateStr();
+
+  const allowedSubjects =
+    userStream === 'bio'
+      ? ['Physics', 'Chemistry', 'Mathematics', 'Botany', 'Zoology']
+      : ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'];
+
+  const allTasksToPlan = PLUS_TWO_SYLLABUS.filter(
+    (t) =>
+      allowedSubjects.includes(t.subject) &&
+      t.term <= targetTerm &&
+      !completedChapterIds.has(t.chapId)
+  );
+
+  if (improvementConfig.length > 0) {
+    improvementConfig.forEach((cfg) => {
+      const impTasks = PLUS_ONE_SYLLABUS.filter(
+        (t) => t.subject === cfg.subject && !completedChapterIds.has(t.chapId)
+      );
+      allTasksToPlan.push(...impTasks);
+    });
+  }
+
+  const generated = buildIntelligentPlan(
+    deadlineDate,
+    allTasksToPlan,
+    startDate,
+    improvementConfig,
+    userStream,
+    existingState.personalization || {}
+  );
+
+  if (!generated || !generated.planDays) {
+    return existingState;
+  }
+
+  generated.planDays.forEach((day) => {
+    (day.tasks || []).forEach((t) => {
+      if (completedTaskIds.has(t.id)) {
+        t.completed = true;
+      }
+    });
+  });
+
+  return {
+    ...existingState,
+    engineVersion: PLANNER_ENGINE_VERSION,
+    plan: generated.planDays,
+    revisionDaysCount: generated.revisionDaysCount,
+    diagnostics: generated.diagnostics,
+    scorecard: generated.scorecard,
+    migratedAt: new Date().toISOString(),
+  };
+}
+
 export function migrateUserState(rawState) {
   if (!rawState || typeof rawState !== 'object') {
     return null;
@@ -38,7 +157,6 @@ export function migrateUserState(rawState) {
     });
   }
 
-  // Also check if legacy format stored completed tasks in an array or map
   if (Array.isArray(rawState.completedTasks)) {
     rawState.completedTasks.forEach((id) => completedTaskIds.add(id));
   }
@@ -81,7 +199,7 @@ export function migrateUserState(rawState) {
     ...rawState,
     engineVersion: ENGINE_VERSION,
     stream: rawState.stream || 'cs',
-    createdDate: rawState.createdDate || new Date().toISOString().split('T')[0],
+    createdDate: rawState.createdDate || formatLocalDateStr(),
     deadlineDate: rawState.deadlineDate || '2027-02-28',
     termScope: rawState.termScope || 3,
     includePlusOne: Boolean(rawState.includePlusOne),
@@ -90,3 +208,4 @@ export function migrateUserState(rawState) {
     plan: upgradedPlan,
   };
 }
+

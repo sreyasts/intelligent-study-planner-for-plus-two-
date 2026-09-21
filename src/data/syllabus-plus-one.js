@@ -615,3 +615,14 @@ export const PLUS_ONE_CHAPTERS = {
     },
   ],
 };
+
+import { createCanonicalTasks } from './syllabus-plus-two.js';
+
+export const PLUS_ONE_SYLLABUS = [
+  ...createCanonicalTasks('Physics', '+1', PLUS_ONE_CHAPTERS.Physics),
+  ...createCanonicalTasks('Chemistry', '+1', PLUS_ONE_CHAPTERS.Chemistry),
+  ...createCanonicalTasks('Mathematics', '+1', PLUS_ONE_CHAPTERS.Mathematics),
+  ...createCanonicalTasks('Computer Science', '+1', PLUS_ONE_CHAPTERS['Computer Science']),
+  ...createCanonicalTasks('Botany', '+1', PLUS_ONE_CHAPTERS.Botany),
+  ...createCanonicalTasks('Zoology', '+1', PLUS_ONE_CHAPTERS.Zoology),
+];

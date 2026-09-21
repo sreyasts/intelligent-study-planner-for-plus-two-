@@ -4,6 +4,9 @@
  * native WebAudio synthesizer, and accessible dialogs into a cohesive ESM module.
  */
 
+import './style.css';
+import './app.js';
+
 // Planning Engine & Migration
 export {
   PLANNER_ENGINE_VERSION,
@@ -20,13 +23,13 @@ export {
 
 // Canonical Syllabus Data
 export {
-  PLUS_TWO_RAW_SYLLABUS,
-  canonicalPlusTwoTasks,
+  PLUS_TWO_SYLLABUS,
+  PLUS_TWO_CHAPTERS,
 } from './data/syllabus-plus-two.js';
 
 export {
-  PLUS_ONE_IMPROVEMENT_RAW,
-  canonicalPlusOneTasks,
+  PLUS_ONE_SYLLABUS,
+  PLUS_ONE_CHAPTERS,
 } from './data/syllabus-plus-one.js';
 
 export {

@@ -9,12 +9,6 @@ const __dirname = path.dirname(__filename);
 const htmlPath = path.join(__dirname, '..', 'index.html');
 const html = fs.readFileSync(htmlPath, 'utf8');
 
-const scriptMatch = html.match(/<script>([\s\S]*?)<\/script>/);
-if (!scriptMatch) {
-  console.error('FAIL: Could not locate <script> tag in index.html');
-  process.exit(1);
-}
-
 // Set up virtual DOM/browser environment for script execution
 const domElements = {};
 const getOrCreateElement = (id) => {
@@ -77,6 +71,8 @@ const context = {
     addEventListener: () => {},
     removeEventListener: () => {},
     dispatchEvent: () => true,
+    location: { reload: () => {} },
+    scrollTo: () => {},
     matchMedia: (query) => ({
       matches: query.includes('dark') ? true : false,
       addEventListener: () => {}
@@ -100,8 +96,13 @@ const context = {
   }
 };
 
-vm.createContext(context);
-vm.runInContext(scriptMatch[1], context);
+globalThis.window = context.window;
+globalThis.document = context.document;
+globalThis.localStorage = context.localStorage;
+globalThis.CustomEvent = context.CustomEvent;
+
+await import('../src/app.js');
+Object.assign(context, globalThis.window);
 
 // Test theme setting
 console.log('Testing setThemePreference...');
@@ -146,7 +147,9 @@ if (!modal.classList.contains('hidden') || modal.classList.contains('flex')) {
 
 // Test User Dropdown & Unified Profile Header
 console.log('Testing profile dropdown & auth UI states...');
-vm.runInContext('currentUser = null; updateAuthHeaderUI();', context);
+context.currentUser = null;
+globalThis.window.currentUser = null;
+context.updateAuthHeaderUI();
 const guestIcon = context.document.getElementById('guest-avatar-icon');
 const userAvatar = context.document.getElementById('user-avatar-img');
 const guestBlock = context.document.getElementById('dropdown-guest-block');
@@ -166,7 +169,9 @@ if (!signedInBlock.classList.contains('hidden')) {
 }
 
 // Test logged in state
-vm.runInContext("currentUser = { displayName: 'Arjun P', email: 'arjun@example.com', photoURL: 'https://example.com/arjun.jpg' }; updateAuthHeaderUI();", context);
+context.currentUser = { displayName: 'Arjun P', email: 'arjun@example.com', photoURL: 'https://example.com/arjun.jpg' };
+globalThis.window.currentUser = context.currentUser;
+context.updateAuthHeaderUI();
 if (!guestIcon.classList.contains('hidden')) {
   throw new Error('Guest icon should be hidden when signed in!');
 }

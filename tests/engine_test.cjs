@@ -1,104 +1,83 @@
 const fs = require('fs');
 const path = require('path');
-const vm = require('vm');
 
-// Extract script from index.html
 const htmlPath = path.join(__dirname, '..', 'index.html');
 const html = fs.readFileSync(htmlPath, 'utf8');
-const scriptMatch = html.match(/<script>([\s\S]*?)<\/script>/);
-
-if (!scriptMatch) {
-  console.error('FAIL: Could not locate <script> tag in index.html');
-  process.exit(1);
-}
+const cssPath = path.join(__dirname, '..', 'src', 'style.css');
+const css = fs.readFileSync(cssPath, 'utf8');
 
 // Set up virtual DOM/browser environment for script execution
-const context = {
-  console: console,
-  setTimeout: setTimeout,
-  clearTimeout: clearTimeout,
-  setInterval: setInterval,
-  clearInterval: clearInterval,
-  navigator: { onLine: true, serviceWorker: { register: () => Promise.resolve() } },
-  window: {
-    addEventListener: () => {},
-    removeEventListener: () => {}
-  },
-  document: {
-    addEventListener: () => {},
-    removeEventListener: () => {},
-    getElementById: () => null,
-    querySelector: () => null,
-    querySelectorAll: () => [],
-    createElement: () => ({ setAttribute: () => {}, appendChild: () => {}, style: {} }),
-    documentElement: {
-      classList: {
-        _classes: new Set(),
-        add(c) { this._classes.add(c); },
-        remove(c) { this._classes.delete(c); },
-        contains(c) { return this._classes.has(c); }
-      }
-    }
-  },
-  localStorage: {
-    _data: {},
-    getItem(k) { return this._data[k] || null; },
-    setItem(k, v) { this._data[k] = String(v); },
-    removeItem(k) { delete this._data[k]; },
-    clear() { this._data = {}; }
+const docClasses = new Set();
+const docElement = {
+  classList: {
+    _classes: docClasses,
+    add(c) { docClasses.add(c); },
+    remove(c) { docClasses.delete(c); },
+    contains(c) { return docClasses.has(c); }
   }
 };
-const exportSnippet = `
-;Object.assign(window, {
-  PLANNER_ENGINE_VERSION,
-  PLAN_MIGRATION_VERSION,
-  PLUS_TWO_SYLLABUS,
-  PLUS_ONE_SYLLABUS,
-  buildIntelligentPlan,
-  validatePlan,
-  migrateLegacyUserPlan,
-  getLocalDateStr,
-  calculateDaysBetween,
-  TODAY_STR,
-  getTaskChapterTitle,
-  formatTaskTopicTitle,
-  renderTaskGradeBadge,
-  renderTaskPartBadge,
-  getThemePreference,
-  isDarkModeActive,
-  applyTheme,
-  setThemePreference
-});
-`;
 
-vm.createContext(context);
-try {
-  vm.runInContext(scriptMatch[1] + exportSnippet, context);
-  console.log('Script loaded successfully in VM context.');
-} catch (e) {
-  console.error('VM execution error:', e);
-  process.exit(1);
-}
+const localStorageData = {};
+globalThis.localStorage = {
+  getItem(k) { return localStorageData[k] || null; },
+  setItem(k, v) { localStorageData[k] = String(v); },
+  removeItem(k) { delete localStorageData[k]; },
+  clear() { for (const k in localStorageData) delete localStorageData[k]; }
+};
 
-const {
-  PLANNER_ENGINE_VERSION,
-  PLUS_TWO_SYLLABUS,
-  PLUS_ONE_SYLLABUS,
-  buildIntelligentPlan,
-  validatePlan,
-  migrateLegacyUserPlan,
-  getLocalDateStr,
-  calculateDaysBetween,
-  TODAY_STR,
-  getTaskChapterTitle,
-  formatTaskTopicTitle,
-  renderTaskGradeBadge,
-  renderTaskPartBadge,
-  getThemePreference,
-  isDarkModeActive,
-  applyTheme,
-  setThemePreference
-} = context.window;
+globalThis.navigator = { onLine: true, serviceWorker: { register: () => Promise.resolve() } };
+globalThis.window = {
+  addEventListener: () => {},
+  removeEventListener: () => {},
+  matchMedia: () => ({ matches: false, addEventListener: () => {} }),
+  location: { reload: () => {} },
+  scrollTo: () => {}
+};
+globalThis.document = {
+  documentElement: docElement,
+  addEventListener: () => {},
+  removeEventListener: () => {},
+  getElementById: () => null,
+  querySelector: () => null,
+  querySelectorAll: () => []
+};
+
+const context = { document: globalThis.document };
+
+(async function runAllChecks() {
+  const planner = await import('../src/engine/planner.js');
+  const migration = await import('../src/engine/migration.js');
+  const syllabusP2 = await import('../src/data/syllabus-plus-two.js');
+  const syllabusP1 = await import('../src/data/syllabus-plus-one.js');
+  await import('../src/app.js');
+
+  const {
+    PLANNER_ENGINE_VERSION,
+    buildIntelligentPlan,
+    validatePlan,
+    getLocalDateStr,
+    calculateDaysBetween,
+    TODAY_STR,
+  } = planner;
+
+  const {
+    PLAN_MIGRATION_VERSION,
+    migrateLegacyUserPlan,
+  } = migration;
+
+  const { PLUS_TWO_SYLLABUS } = syllabusP2;
+  const { PLUS_ONE_SYLLABUS } = syllabusP1;
+
+  const {
+    getTaskChapterTitle,
+    formatTaskTopicTitle,
+    renderTaskGradeBadge,
+    renderTaskPartBadge,
+    getThemePreference,
+    isDarkModeActive,
+    applyTheme,
+    setThemePreference
+  } = globalThis.window;
 
 let totalChecks = 0;
 let passedChecks = 0;
@@ -603,27 +582,27 @@ assert(getThemePreference() === 'system', 'Test 8.3: Theme preference stored as 
 
 // Test 8.4: Static Inspection of index.html CSS & Tailwind Configuration
 assert(
-  html.indexOf('<script src="https://cdn.tailwindcss.com"></script>') < html.indexOf("darkMode: 'class'"),
-  'Test 8.4: Tailwind CDN loaded BEFORE tailwind.config darkMode: "class" to enforce class-based dark mode'
+  html.includes('/src/style.css'),
+  'Test 8.4: Compiled Tailwind CSS stylesheet linked in index.html'
 );
 
 assert(
-  html.includes('html:not(.dark)'),
+  css.includes('html:not(.dark)'),
   'Test 8.4: html:not(.dark) high-contrast light mode CSS rules exist'
 );
 
 assert(
-  html.includes('html:not(.dark) .today-task-card') && html.includes('html.dark .today-task-card'),
+  css.includes('html:not(.dark) .today-task-card') && css.includes('html.dark .today-task-card'),
   'Test 8.4: Both light and dark mode have explicit card styling'
 );
 
 assert(
-  html.includes('html:not(.dark) .task-text-content') && html.includes('html.dark .task-text-content'),
+  css.includes('html:not(.dark) .task-text-content') && css.includes('html.dark .task-text-content'),
   'Test 8.4: Both light and dark mode have explicit task text styling'
 );
 
 assert(
-  html.includes('html:not(.dark) .text-slate-800') && html.includes('html.dark .text-slate-800'),
+  css.includes('html:not(.dark) .text-slate-800') && css.includes('html.dark .text-slate-800'),
   'Test 8.4: text-slate-800 has explicit contrast overrides for both themes'
 );
 console.log(`TOTAL CHECKS: ${totalChecks}`);
@@ -637,3 +616,7 @@ if (failedChecks > 0) {
   console.log('ALL ENGINE TESTS PASSED WITH ZERO ERRORS!');
   process.exit(0);
 }
+})().catch(err => {
+  console.error('Fatal engine test error:', err);
+  process.exit(1);
+});
