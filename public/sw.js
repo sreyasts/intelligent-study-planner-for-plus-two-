@@ -1,5 +1,5 @@
-// Mission PlusTwo Service Worker v6.2 (Fix authModalTimer reference)
-const CACHE_NAME = 'plustwo-mission-v6.2';
+// Mission PlusTwo Service Worker v6.3 (Intelligent Bilingual Malayalam Support)
+const CACHE_NAME = 'plustwo-mission-v6.3';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
