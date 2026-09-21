@@ -1,5 +1,5 @@
-// Mission PlusTwo Service Worker v4.7 (Streamlined minimal student UI)
-const CACHE_NAME = 'plustwo-mission-v4.7';
+// Mission PlusTwo Service Worker v4.8 (High-conversion clean Google sign-in modal)
+const CACHE_NAME = 'plustwo-mission-v4.8';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
