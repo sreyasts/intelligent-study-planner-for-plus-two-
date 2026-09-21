@@ -1,5 +1,5 @@
-// Mission PlusTwo Service Worker v4.0 (Planner Engine v3.0 Upgrade)
-const CACHE_NAME = 'plustwo-mission-v4.0';
+// Mission PlusTwo Service Worker v4.2 (Guest-to-Cloud Sync & Fresh Signout Lifecycle)
+const CACHE_NAME = 'plustwo-mission-v4.2';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

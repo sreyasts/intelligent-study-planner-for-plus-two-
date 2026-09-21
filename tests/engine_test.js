@@ -90,43 +90,87 @@ function assert(condition, message) {
   }
 }
 
-console.log('\n--- 1. CANONICAL SYLLABUS AUDIT ---');
-assert(PLANNER_ENGINE_VERSION === 3, 'PLANNER_ENGINE_VERSION is 3');
+console.log('\n--- 1. CANONICAL SYLLABUS AUDIT (HSSLIVE SCERT SCHEME OF WORK) ---');
+assert(PLANNER_ENGINE_VERSION === 4, 'PLANNER_ENGINE_VERSION is 4');
 
-// Chemistry Class 12: 10 chapters
+// Chemistry Class 12: 10 chapters (Alcohols & Aldehydes in Term 2, Amines & Biomolecules in Term 3)
 const chem12 = PLUS_TWO_SYLLABUS.filter(t => t.subject === 'Chemistry');
 const chem12Chapters = [...new Set(chem12.map(t => t.chapterName))];
 assert(chem12Chapters.length === 10, `Class 12 Chemistry has 10 chapters (found ${chem12Chapters.length})`);
-assert(chem12Chapters.some(c => c.toLowerCase().includes('amines')), 'Class 12 Chemistry includes Amines (missing in old version)');
+assert(chem12Chapters.some(c => c.toLowerCase().includes('amines')), 'Class 12 Chemistry includes Amines');
 assert(chem12Chapters.some(c => c.toLowerCase().includes('biomolecules')), 'Class 12 Chemistry includes Biomolecules');
+const alcTerm = chem12.find(t => t.chapterName.includes('Alcohols'))?.term;
+assert(alcTerm === 2, `Class 12 Chemistry Alcohols is Term 2 (found Term ${alcTerm})`);
 
 // Physics Class 12: 14 chapters
 const phys12 = PLUS_TWO_SYLLABUS.filter(t => t.subject === 'Physics');
 const phys12Chapters = [...new Set(phys12.map(t => t.chapterName))];
 assert(phys12Chapters.length === 14, `Class 12 Physics has 14 chapters (found ${phys12Chapters.length})`);
 
-// Maths Class 12: 13 chapters
+// Maths Class 12: 13 chapters (Vector Algebra & 3D Geometry in Term 2)
 const maths12 = PLUS_TWO_SYLLABUS.filter(t => t.subject === 'Mathematics');
 const maths12Chapters = [...new Set(maths12.map(t => t.chapterName))];
 assert(maths12Chapters.length === 13, `Class 12 Maths has 13 chapters (found ${maths12Chapters.length})`);
+const vecTerm = maths12.find(t => t.chapterName.includes('Vector Algebra'))?.term;
+assert(vecTerm === 2, `Class 12 Maths Vector Algebra is Term 2 (found Term ${vecTerm})`);
 
-// CS Class 12: 10 chapters
+// CS Class 12: 12 chapters (Official HSSLive: includes Advances in Computing & ICT and Society)
 const cs12 = PLUS_TWO_SYLLABUS.filter(t => t.subject === 'Computer Science');
 const cs12Chapters = [...new Set(cs12.map(t => t.chapterName))];
-assert(cs12Chapters.length === 10, `Class 12 CS has 10 chapters (found ${cs12Chapters.length})`);
+assert(cs12Chapters.length === 12, `Class 12 CS has 12 chapters (found ${cs12Chapters.length})`);
+assert(cs12Chapters.some(c => c.includes('Advances in Computing')), 'Class 12 CS includes Advances in Computing');
+assert(cs12Chapters.some(c => c.includes('ICT and Society')), 'Class 12 CS includes ICT and Society');
 
-// Botany Class 12: 6 chapters
+// Botany Class 12: 5 chapters (Official HSSLive: Ecosystem is Ch 5)
 const bot12 = PLUS_TWO_SYLLABUS.filter(t => t.subject === 'Botany');
 const bot12Chapters = [...new Set(bot12.map(t => t.chapterName))];
-assert(bot12Chapters.length === 6, `Class 12 Botany has 6 chapters (found ${bot12Chapters.length})`);
+assert(bot12Chapters.length === 5, `Class 12 Botany has 5 chapters (found ${bot12Chapters.length})`);
 
-// Zoology Class 12: 7 chapters
+// Zoology Class 12: 8 chapters (Official HSSLive: includes Biodiversity and Conservation)
 const zoo12 = PLUS_TWO_SYLLABUS.filter(t => t.subject === 'Zoology');
 const zoo12Chapters = [...new Set(zoo12.map(t => t.chapterName))];
-assert(zoo12Chapters.length === 7, `Class 12 Zoology has 7 chapters (found ${zoo12Chapters.length})`);
+assert(zoo12Chapters.length === 8, `Class 12 Zoology has 8 chapters (found ${zoo12Chapters.length})`);
+assert(zoo12Chapters.some(c => c.includes('Biodiversity and Conservation')), 'Class 12 Zoology includes Biodiversity and Conservation');
+
+// Plus One Computer Science: 13 chapters (Python Curriculum 2026-27)
+const cs11 = PLUS_ONE_SYLLABUS.filter(t => t.subject === 'Computer Science');
+const cs11Chapters = [...new Set(cs11.map(t => t.chapterName))];
+assert(cs11Chapters.length === 13, `Class 11 CS has 13 chapters (found ${cs11Chapters.length})`);
+assert(cs11Chapters.some(c => c.includes('Getting Started with Python')), 'Class 11 CS includes Getting Started with Python');
+assert(cs11Chapters.some(c => c.includes('Computers and Society')), 'Class 11 CS includes Computers and Society');
+
+// Plus One Physics: 14 chapters
+const phys11 = PLUS_ONE_SYLLABUS.filter(t => t.subject === 'Physics');
+const phys11Chapters = [...new Set(phys11.map(t => t.chapterName))];
+assert(phys11Chapters.length === 14, `Class 11 Physics has 14 chapters (found ${phys11Chapters.length})`);
+
+// Plus One Chemistry: 9 chapters
+const chem11 = PLUS_ONE_SYLLABUS.filter(t => t.subject === 'Chemistry');
+const chem11Chapters = [...new Set(chem11.map(t => t.chapterName))];
+assert(chem11Chapters.length === 9, `Class 11 Chemistry has 9 chapters (found ${chem11Chapters.length})`);
+
+// Plus One Maths: 14 chapters
+const maths11 = PLUS_ONE_SYLLABUS.filter(t => t.subject === 'Mathematics');
+const maths11Chapters = [...new Set(maths11.map(t => t.chapterName))];
+assert(maths11Chapters.length === 14, `Class 11 Maths has 14 chapters (found ${maths11Chapters.length})`);
+
+// Plus One Botany: 9 chapters
+const bot11 = PLUS_ONE_SYLLABUS.filter(t => t.subject === 'Botany');
+const bot11Chapters = [...new Set(bot11.map(t => t.chapterName))];
+assert(bot11Chapters.length === 9, `Class 11 Botany has 9 chapters (found ${bot11Chapters.length})`);
+
+// Plus One Zoology: 10 chapters
+const zoo11 = PLUS_ONE_SYLLABUS.filter(t => t.subject === 'Zoology');
+const zoo11Chapters = [...new Set(zoo11.map(t => t.chapterName))];
+assert(zoo11Chapters.length === 10, `Class 11 Zoology has 10 chapters (found ${zoo11Chapters.length})`);
 
 // Check prerequisites on canonical tasks
 PLUS_TWO_SYLLABUS.forEach(task => {
+  if (task.part > 1) {
+    assert(task.prerequisiteId !== null, `Task ${task.id} has a prerequisite`);
+  }
+});
+PLUS_ONE_SYLLABUS.forEach(task => {
   if (task.part > 1) {
     assert(task.prerequisiteId !== null, `Task ${task.id} has a prerequisite`);
   }
@@ -306,7 +350,7 @@ const legacyState = {
 };
 
 const migrated = migrateLegacyUserPlan(legacyState);
-assert(migrated.engineVersion === 3, 'Migrated state has engineVersion 3');
+assert(migrated.engineVersion === 4, 'Migrated state has engineVersion 4');
 assert(migrated.plan.length > 0, 'Migrated state has new generated study plan');
 assert(migrated.diagnostics !== null, 'Migrated state has diagnostics');
 

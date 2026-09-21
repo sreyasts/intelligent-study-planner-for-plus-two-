@@ -526,14 +526,14 @@
     <!-- Application JavaScript Logic -->
     <script>
         /* ==========================================================================
-           1. CANONICAL KERALA DHSE SCHEME OF WORK & SYLLABUS DATA (v3.0)
-           Audited against official Kerala DHSE/SCERT rationalized curriculum:
-           - Plus Two: Physics (14 ch), Chemistry (10 ch with Amines & Biomolecules), Maths (13 ch), CS (10 ch), Botany (6 ch), Zoology (7 ch)
-           - Plus One: Physics (13 ch), Chemistry (9 ch), Maths (14 ch), CS (10 ch), Botany (9 ch), Zoology (10 ch)
+           1. CANONICAL KERALA DHSE SCHEME OF WORK & SYLLABUS DATA (v4.0)
+           Audited against official Kerala DHSE/SCERT Scheme of Work (HSSLive):
+           - Plus Two: Physics (14 ch), Chemistry (10 ch), Maths (13 ch), CS (12 ch with Advances in Computing & ICT), Botany (5 ch), Zoology (8 ch with Biodiversity)
+           - Plus One: Physics (14 ch), Chemistry (9 ch), Maths (14 ch), CS (13 ch - Python Curriculum 2026-27), Botany (9 ch), Zoology (10 ch)
            ========================================================================== */
 
-        const PLANNER_ENGINE_VERSION = 3;
-        const PLAN_MIGRATION_VERSION = 3;
+        const PLANNER_ENGINE_VERSION = 4;
+        const PLAN_MIGRATION_VERSION = 4;
 
         const createCanonicalTasks = (subject, grade, chapters) => {
             let list = [];
@@ -586,7 +586,7 @@
         // Backward compatibility alias
         const createTasks = createCanonicalTasks;
 
-        // Official Plus Two (+2) DHSE Rationalized Syllabus
+        // Official Plus Two (+2) DHSE Rationalized Syllabus (HSSLive Scheme of Work)
         const PLUS_TWO_SYLLABUS = [
             // Physics: 14 Chapters
             ...createCanonicalTasks('Physics', '+2', [
@@ -606,7 +606,7 @@
                 { name: 'Semiconductor Electronics: Materials, Devices and Simple Circuits', parts: 3, term: 3, effort: 'HIGH' }
             ]),
 
-            // Chemistry: 10 Chapters (Restored official Chapter 9: Amines & Chapter 10: Biomolecules)
+            // Chemistry: 10 Chapters (Official DHSE Term-wise distribution)
             ...createCanonicalTasks('Chemistry', '+2', [
                 { name: 'Solutions', parts: 3, term: 1, effort: 'HIGH' },
                 { name: 'Electrochemistry', parts: 3, term: 1, effort: 'HIGH' },
@@ -614,13 +614,13 @@
                 { name: 'The d- and f-Block Elements', parts: 2, term: 2, effort: 'MEDIUM' },
                 { name: 'Coordination Compounds', parts: 2, term: 2, effort: 'HIGH' },
                 { name: 'Haloalkanes and Haloarenes', parts: 3, term: 2, effort: 'HIGH' },
-                { name: 'Alcohols, Phenols and Ethers', parts: 3, term: 3, effort: 'HIGH' },
-                { name: 'Aldehydes, Ketones and Carboxylic Acids', parts: 3, term: 3, effort: 'VERY_HIGH' },
+                { name: 'Alcohols, Phenols and Ethers', parts: 3, term: 2, effort: 'HIGH' },
+                { name: 'Aldehydes, Ketones and Carboxylic Acids', parts: 3, term: 2, effort: 'VERY_HIGH' },
                 { name: 'Amines', parts: 2, term: 3, effort: 'MEDIUM' },
                 { name: 'Biomolecules', parts: 2, term: 3, effort: 'MEDIUM' }
             ]),
 
-            // Mathematics: 13 Chapters
+            // Mathematics: 13 Chapters (Official DHSE Term-wise distribution)
             ...createCanonicalTasks('Mathematics', '+2', [
                 { name: 'Relations and Functions', parts: 2, term: 1, effort: 'MEDIUM' },
                 { name: 'Inverse Trigonometric Functions', parts: 1, term: 1, effort: 'LOW' },
@@ -631,13 +631,13 @@
                 { name: 'Integrals', parts: 4, term: 2, effort: 'VERY_HIGH' },
                 { name: 'Application of Integrals', parts: 1, term: 2, effort: 'MEDIUM' },
                 { name: 'Differential Equations', parts: 2, term: 2, effort: 'HIGH' },
-                { name: 'Vector Algebra', parts: 2, term: 3, effort: 'MEDIUM' },
-                { name: 'Three Dimensional Geometry', parts: 2, term: 3, effort: 'HIGH' },
+                { name: 'Vector Algebra', parts: 2, term: 2, effort: 'MEDIUM' },
+                { name: 'Three Dimensional Geometry', parts: 2, term: 2, effort: 'HIGH' },
                 { name: 'Linear Programming', parts: 1, term: 3, effort: 'LOW' },
                 { name: 'Probability', parts: 3, term: 3, effort: 'HIGH' }
             ]),
 
-            // Computer Science: 10 Chapters
+            // Computer Science: 12 Chapters (Official HSSLive Scheme of Work)
             ...createCanonicalTasks('Computer Science', '+2', [
                 { name: 'Structures and Pointers', parts: 2, term: 1, effort: 'MEDIUM' },
                 { name: 'Concepts of Object-Oriented Programming', parts: 1, term: 1, effort: 'LOW' },
@@ -647,21 +647,22 @@
                 { name: 'Client Side Scripting using JavaScript', parts: 3, term: 2, effort: 'HIGH' },
                 { name: 'Web Hosting', parts: 1, term: 2, effort: 'LOW' },
                 { name: 'Database Management System', parts: 2, term: 2, effort: 'MEDIUM' },
-                { name: 'Structured Query Language (SQL)', parts: 3, term: 3, effort: 'HIGH' },
-                { name: 'Server Side Scripting using PHP', parts: 3, term: 3, effort: 'HIGH' }
+                { name: 'Structured Query Language (SQL)', parts: 3, term: 2, effort: 'HIGH' },
+                { name: 'Server Side Scripting using PHP', parts: 3, term: 2, effort: 'HIGH' },
+                { name: 'Advances in Computing', parts: 1, term: 3, effort: 'LOW' },
+                { name: 'ICT and Society', parts: 1, term: 3, effort: 'LOW' }
             ]),
 
-            // Botany: 6 Chapters
+            // Botany: 5 Chapters (Official HSSLive Scheme of Work)
             ...createCanonicalTasks('Botany', '+2', [
                 { name: 'Sexual Reproduction in Flowering Plants', parts: 3, term: 1, effort: 'HIGH' },
                 { name: 'Biotechnology: Principles and Processes', parts: 2, term: 1, effort: 'MEDIUM' },
                 { name: 'Biotechnology and its Applications', parts: 2, term: 2, effort: 'MEDIUM' },
                 { name: 'Organisms and Populations', parts: 2, term: 2, effort: 'MEDIUM' },
-                { name: 'Ecosystem', parts: 2, term: 3, effort: 'LOW' },
-                { name: 'Biodiversity and Conservation', parts: 2, term: 3, effort: 'LOW' }
+                { name: 'Ecosystem', parts: 2, term: 3, effort: 'LOW' }
             ]),
 
-            // Zoology: 7 Chapters
+            // Zoology: 8 Chapters (Official HSSLive Scheme of Work including Biodiversity and Conservation)
             ...createCanonicalTasks('Zoology', '+2', [
                 { name: 'Human Reproduction', parts: 3, term: 1, effort: 'HIGH' },
                 { name: 'Reproductive Health', parts: 2, term: 1, effort: 'LOW' },
@@ -669,13 +670,14 @@
                 { name: 'Molecular Basis of Inheritance', parts: 3, term: 2, effort: 'VERY_HIGH' },
                 { name: 'Evolution', parts: 2, term: 2, effort: 'MEDIUM' },
                 { name: 'Human Health and Disease', parts: 3, term: 2, effort: 'HIGH' },
-                { name: 'Microbes in Human Welfare', parts: 2, term: 3, effort: 'LOW' }
+                { name: 'Microbes in Human Welfare', parts: 2, term: 3, effort: 'LOW' },
+                { name: 'Biodiversity and Conservation', parts: 2, term: 3, effort: 'LOW' }
             ])
         ];
 
-        // Official Plus One (+1) DHSE Rationalized Syllabus for Improvement Exams
+        // Official Plus One (+1) DHSE Rationalized Syllabus for Improvement Exams (HSSLive Scheme of Work)
         const PLUS_ONE_SYLLABUS = [
-            // Physics: 13 Chapters (Units and Measurements to Waves)
+            // Physics: 14 Chapters (Units and Measurements to Waves)
             ...createCanonicalTasks('Physics', '+1', [
                 { name: 'Units and Measurements', parts: 1, effort: 'LOW' },
                 { name: 'Motion in a Straight Line', parts: 2, effort: 'MEDIUM' },
@@ -724,18 +726,21 @@
                 { name: 'Probability', parts: 2, effort: 'MEDIUM' }
             ]),
 
-            // Computer Science: 10 Chapters
+            // Computer Science: 13 Chapters (Official Python Curriculum 2026-27 Scheme of Work)
             ...createCanonicalTasks('Computer Science', '+1', [
-                { name: 'The Discipline of Computing', parts: 1, effort: 'LOW' },
-                { name: 'Data Representation and Boolean Logic', parts: 2, effort: 'MEDIUM' },
-                { name: 'Components of the Computer System', parts: 2, effort: 'LOW' },
-                { name: 'Principles of Programming & Problem Solving', parts: 2, effort: 'HIGH' },
-                { name: 'Introduction to C++ Programming', parts: 2, effort: 'MEDIUM' },
-                { name: 'Data Types and Operators', parts: 2, effort: 'MEDIUM' },
-                { name: 'Control Statements', parts: 2, effort: 'HIGH' },
-                { name: 'Arrays', parts: 2, effort: 'HIGH' },
+                { name: 'Introduction to Computing', parts: 1, effort: 'LOW' },
+                { name: 'Data Representation and Boolean Algebra', parts: 2, effort: 'MEDIUM' },
+                { name: 'Computer System Organisation', parts: 2, effort: 'LOW' },
+                { name: 'Getting Started with Python', parts: 2, effort: 'MEDIUM' },
+                { name: 'Python Fundamentals', parts: 2, effort: 'MEDIUM' },
+                { name: 'Control Statements', parts: 3, effort: 'HIGH' },
                 { name: 'Functions', parts: 2, effort: 'HIGH' },
-                { name: 'Computer Networks', parts: 2, effort: 'MEDIUM' }
+                { name: 'Strings', parts: 2, effort: 'MEDIUM' },
+                { name: 'Lists', parts: 2, effort: 'MEDIUM' },
+                { name: 'Tuples', parts: 1, effort: 'LOW' },
+                { name: 'Dictionary and Set', parts: 2, effort: 'MEDIUM' },
+                { name: 'Sorting and Searching', parts: 2, effort: 'HIGH' },
+                { name: 'Computers and Society', parts: 1, effort: 'LOW' }
             ]),
 
             // Botany: 9 Chapters
@@ -1011,55 +1016,116 @@
                 if (docSnap.exists) {
                     let cloudData = docSnap.data();
                     if (cloudData && Array.isArray(cloudData.plan) && cloudData.plan.length > 0) {
-                        // Reconcile and upgrade cloud data to v3 if needed
+                        // Reconcile and upgrade cloud data to current engine version if needed
                         if (!cloudData.engineVersion || cloudData.engineVersion < PLANNER_ENGINE_VERSION) {
                             cloudData = migrateLegacyUserPlan(cloudData);
                         }
 
-                        // If local also has a plan, merge completed items bidirectionally
-                        if (appState && Array.isArray(appState.plan) && appState.plan.length > 0) {
-                            let localHasNewerTicks = false;
-                            cloudData.plan.forEach(cloudDay => {
-                                const localDay = appState.plan.find(d => d.date === cloudDay.date);
-                                if (localDay) {
-                                    cloudDay.tasks.forEach(ct => {
-                                        const lt = localDay.tasks.find(t => t.id === ct.id);
-                                        if (lt) {
-                                            if (lt.completed && !ct.completed) {
-                                                ct.completed = true;
-                                                localHasNewerTicks = true;
-                                            } else if (ct.completed && !lt.completed) {
-                                                lt.completed = true;
-                                            }
-                                        }
-                                    });
-                                }
-                            });
+                        // Case A: Local device had no plan (e.g. freshly opened or after clean sign-out)
+                        // Directly restore the student's saved plan and progress from their Google Account!
+                        if (!appState || !Array.isArray(appState.plan) || appState.plan.length === 0) {
                             appState = cloudData;
                             saveAppStateLocally();
-                            if (localHasNewerTicks) {
-                                await userDocRef.set(getFirestoreCleanData(appState));
-                            }
-                        } else {
-                            // Local was empty (e.g. freshly opened on PC!)
-                            appState = cloudData;
-                            saveAppStateLocally();
+                            renderApp();
+                            updateAuthHeaderUI();
+                            showToastMessage("Welcome back! Your study progress has been restored from your Google Account.", "fa-circle-check text-emerald-400");
+                            return;
                         }
-                        renderApp();
-                        updateAuthHeaderUI();
-                        if (explicitTrigger) showToastMessage("✓ Cloud sync complete!", "fa-circle-check text-emerald-400");
+
+                        // Case B: Student was using the app as a guest and has active progress locally!
+                        if (cloudData.stream === appState.stream) {
+                            // Collect completed task IDs from both local and cloud
+                            const localCompletedTaskIds = new Set();
+                            appState.plan.forEach(day => {
+                                day.tasks.forEach(t => {
+                                    if (t.completed) localCompletedTaskIds.add(t.id);
+                                });
+                            });
+
+                            const cloudCompletedTaskIds = new Set();
+                            cloudData.plan.forEach(day => {
+                                day.tasks.forEach(t => {
+                                    if (t.completed) cloudCompletedTaskIds.add(t.id);
+                                });
+                            });
+
+                            // Determine which schedule structure to use
+                            const localIsNewer = appState.deadlineDate !== cloudData.deadlineDate || 
+                                (appState.createdAt && cloudData.createdAt && new Date(appState.createdAt) > new Date(cloudData.createdAt));
+                            let targetPlan = localIsNewer ? appState : cloudData;
+
+                            // Merge all completed tasks into targetPlan so no tick mark is ever lost
+                            let newTicksFound = false;
+                            targetPlan.plan.forEach(day => {
+                                day.tasks.forEach(t => {
+                                    if (localCompletedTaskIds.has(t.id) || cloudCompletedTaskIds.has(t.id)) {
+                                        if (!t.completed) newTicksFound = true;
+                                        t.completed = true;
+                                    }
+                                });
+                            });
+
+                            appState = targetPlan;
+                            appState.userEmail = user.email;
+                            appState.ownerUid = user.uid;
+                            saveAppStateLocally();
+                            await userDocRef.set(getFirestoreCleanData(appState));
+                            renderApp();
+                            updateAuthHeaderUI();
+                            showToastMessage("Signed in! Your guest progress has been saved to your Google Account.", "fa-circle-check text-emerald-400");
+                        } else {
+                            // Different streams between cloud and local guest session (e.g. Bio vs CS)
+                            const cloudStreamName = cloudData.stream === 'bio' ? 'Biology Science' : 'Computer Science';
+                            const localStreamName = appState.stream === 'bio' ? 'Biology Science' : 'Computer Science';
+                            const restoreCloud = confirm(
+                                `We found a saved ${cloudStreamName} study plan in your Google Account.\n` +
+                                `Your current unsaved guest plan is for ${localStreamName}.\n\n` +
+                                `Click "OK" to load your saved ${cloudStreamName} plan from your account.\n` +
+                                `Click "Cancel" to keep your current ${localStreamName} plan and save it to your account.`
+                            );
+
+                            if (restoreCloud) {
+                                appState = cloudData;
+                                saveAppStateLocally();
+                                showToastMessage(`Loaded saved ${cloudStreamName} plan from your account.`, "fa-cloud-arrow-down text-blue-400");
+                            } else {
+                                appState.userEmail = user.email;
+                                appState.ownerUid = user.uid;
+                                saveAppStateLocally();
+                                await userDocRef.set(getFirestoreCleanData(appState));
+                                showToastMessage(`Current ${localStreamName} plan saved to your Google Account!`, "fa-cloud-arrow-up text-emerald-400");
+                            }
+                            renderApp();
+                            updateAuthHeaderUI();
+                        }
+                    } else {
+                        // Cloud doc exists but has empty plan: upload local guest plan
+                        if (appState && Array.isArray(appState.plan) && appState.plan.length > 0) {
+                            appState.userEmail = user.email;
+                            appState.ownerUid = user.uid;
+                            await userDocRef.set(getFirestoreCleanData(appState));
+                            saveAppStateLocally();
+                            renderApp();
+                            updateAuthHeaderUI();
+                            showToastMessage("Signed in! Your progress has been saved to your Google Account.", "fa-cloud-arrow-up text-emerald-400");
+                        }
                     }
                 } else {
                     // Document doesn't exist on server yet!
-                    // If local has progress (e.g. Phone with existing study plan), upload it now!
+                    // If local has progress (e.g. Guest who started without sign-in), upload it now!
                     if (appState && Array.isArray(appState.plan) && appState.plan.length > 0) {
+                        appState.userEmail = user.email;
+                        appState.ownerUid = user.uid;
                         const payload = getFirestoreCleanData({
                             ...appState,
                             userEmail: user.email,
                             displayName: user.displayName || 'Student'
                         });
                         await userDocRef.set(payload);
-                        showToastMessage("☁️ Progress backed up to Google Cloud!", "fa-cloud-arrow-up text-emerald-400");
+                        saveAppStateLocally();
+                        renderApp();
+                        updateAuthHeaderUI();
+                        showToastMessage("Signed in with Google! Your progress has been saved to your account.", "fa-cloud-arrow-up text-emerald-400");
                     }
                 }
             } catch(err) {
@@ -1072,7 +1138,9 @@
 
         // Handle user authentication and real-time syncing
         if (auth) {
+            let isInitialAuthCheck = true;
             auth.onAuthStateChanged(async (user) => {
+                const wasSignedIn = !!currentUser;
                 currentUser = user;
                 updateAuthHeaderUI();
 
@@ -1091,22 +1159,36 @@
                                 if (!cloudData.engineVersion || cloudData.engineVersion < PLANNER_ENGINE_VERSION) {
                                     cloudData = migrateLegacyUserPlan(cloudData);
                                 }
-                                appState = cloudData;
-                                saveAppStateLocally();
-                                renderApp();
-                                updateAuthHeaderUI();
+                                const cloudLastSynced = cloudData.lastSynced || '';
+                                const localLastSynced = (appState && appState.lastSynced) || '';
+                                if (!appState || cloudLastSynced !== localLastSynced) {
+                                    appState = cloudData;
+                                    saveAppStateLocally();
+                                    renderApp();
+                                    updateAuthHeaderUI();
+                                }
                             }
                         }
                     }, (err) => {
                         console.warn("Firestore listener note:", err);
                     });
                 } else {
+                    // User is not signed in (Guest or signed out)
                     if (cloudSyncUnsubscribe) {
                         cloudSyncUnsubscribe();
                         cloudSyncUnsubscribe = null;
                     }
+                    // If user was signed in and signed out externally (e.g. token revocation)
+                    if (wasSignedIn && !isInitialAuthCheck) {
+                        localStorage.removeItem('plusTwoMissionState_v2');
+                        localStorage.removeItem('plusTwoPlanState');
+                        appState = null;
+                        selectedCompletedChapters.clear();
+                        currentView = 'today';
+                    }
+                    renderApp();
                 }
-                renderApp();
+                isInitialAuthCheck = false;
             });
         }
 
@@ -1175,7 +1257,7 @@
                 const provider = new firebase.auth.GoogleAuthProvider();
                 provider.setCustomParameters({ prompt: 'select_account' });
                 await auth.signInWithPopup(provider);
-                showToastMessage("Signed in with Google! Cloud sync active.", "fa-circle-check text-emerald-400");
+                // onAuthStateChanged will handle performCloudSync and UI updates
             } catch(err) {
                 console.error("Sign-in error:", err);
                 if (err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-user') {
@@ -1195,13 +1277,42 @@
 
         async function signOutUser() {
             if (!auth) return;
-            if (confirm("Sign out of your Google account? (Your progress remains safely saved in the cloud).")) {
-                await auth.signOut();
-                currentUser = null;
-                closeUserDropdown();
-                showToastMessage("Signed out of Google Account.");
-                renderApp();
+            if (!confirm("Sign out of your Google account? Your study progress is safely saved in your account, and you will get a fresh start on this device.")) {
+                return;
             }
+
+            // 1. Immediately unsubscribe real-time listener so no incoming events trigger during sign-out
+            if (cloudSyncUnsubscribe) {
+                cloudSyncUnsubscribe();
+                cloudSyncUnsubscribe = null;
+            }
+
+            // 2. Sign out of Firebase Auth
+            try {
+                await auth.signOut();
+            } catch(e) {
+                console.warn("Sign-out note:", e);
+            }
+
+            // 3. Clear local storage so this device starts completely fresh
+            localStorage.removeItem('plusTwoMissionState_v2');
+            localStorage.removeItem('plusTwoPlanState');
+
+            // 4. Reset in-memory state variables to initial setup defaults
+            currentUser = null;
+            appState = null;
+            selectedCompletedChapters.clear();
+            currentView = 'today';
+            selectedStream = 'bio';
+            activeSetupSubjectTab = 'Physics';
+            activeSetupGradeTab = '+2';
+
+            // 5. Update UI, close dropdown, and render the fresh Setup view (View 0)
+            closeUserDropdown();
+            updateAuthHeaderUI();
+            renderApp();
+            showToastMessage("Signed out. Your progress is saved in your Google Account. Fresh start ready!", "fa-circle-check text-emerald-400");
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         const getLocalDateStr = (d = new Date()) => {
@@ -1841,7 +1952,7 @@
                         if (activeSub === 'Physics') topicTitle = `Comprehensive Derivations, Formula Sheet & Circuit Diagrams ${chSummary}`;
                         else if (activeSub === 'Chemistry') topicTitle = `Organic Reactions, Reagents, Named Conversions & Physical Numericals ${chSummary}`;
                         else if (activeSub === 'Mathematics') topicTitle = `Calculus, Vectors & 3D High-Yield Problem Sets with Step-by-Step Solutions ${chSummary}`;
-                        else if (activeSub === 'Computer Science') topicTitle = `C++ Programs, Pointers, SQL Queries & Theory Rapid Retrieval ${chSummary}`;
+                        else if (activeSub === 'Computer Science') topicTitle = `Python, Web Technologies, SQL Queries & Theory Rapid Retrieval ${chSummary}`;
                         else if (activeSub === 'Botany') topicTitle = `Diagrams, Key Terminologies, Reproduction & Biotechnology Quick Flashcards ${chSummary}`;
                         else if (activeSub === 'Zoology') topicTitle = `Physiology Processes, Genetics Punnett Squares & Evolutionary Milestones ${chSummary}`;
 
@@ -1897,6 +2008,7 @@
 
             // Toggle state
             targetTask.completed = !targetTask.completed;
+            if (appState) appState.lastModified = new Date().toISOString();
             saveAppState();
 
             // Update UI elements in DOM
@@ -2472,7 +2584,9 @@
                     plan: planResult.planDays,
                     revisionDaysCount: planResult.revisionDaysCount,
                     totalConfiguredTasks: tasksToPlan.length,
-                    diagnostics: planResult.diagnostics
+                    diagnostics: planResult.diagnostics,
+                    createdAt: new Date().toISOString(),
+                    lastModified: new Date().toISOString()
                 };
                 saveAppState();
                 goToDashboard();
@@ -2578,6 +2692,7 @@
                 appState.revisionDaysCount = result.revisionDaysCount;
                 appState.diagnostics = result.diagnostics;
                 appState.engineVersion = PLANNER_ENGINE_VERSION;
+                appState.lastModified = new Date().toISOString();
                 saveAppState();
 
                 closeRegenerateModal();
