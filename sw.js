@@ -1,5 +1,5 @@
-// Mission PlusTwo Service Worker v4.2 (Guest-to-Cloud Sync & Fresh Signout Lifecycle)
-const CACHE_NAME = 'plustwo-mission-v4.2';
+// Mission PlusTwo Service Worker v4.3 (Prominent Google Auth Modal & Guest Continuity)
+const CACHE_NAME = 'plustwo-mission-v4.3';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
