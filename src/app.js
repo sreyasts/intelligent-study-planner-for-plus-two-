@@ -195,17 +195,7 @@ function loadInitialState() {
         let currentUser = null;
         let cloudSyncUnsubscribe = null;
         let authModalTimer = null;
-
-        try {
-            if (window.firebase) {
-                firebase.initializeApp(firebaseConfig);
-                auth = firebase.auth();
-                db = firebase.firestore();
-                db.enablePersistence().catch(() => {});
-            }
-        } catch(err) {
-            console.warn("Firebase initialization note:", err);
-        }
+        let authListenerAttached = false;
 
         function getFirestoreCleanData(state) {
             if (!state) return null;
@@ -262,9 +252,26 @@ function loadInitialState() {
                             cloudData = migrateLegacyUserPlan(cloudData);
                         }
 
-                        // Case A: Local device had no plan (e.g. freshly opened or after clean sign-out)
-                        // Directly restore the student's saved plan and progress from their Google Account!
-                        if (!appState || !Array.isArray(appState.plan) || appState.plan.length === 0) {
+                        // Count completed tasks in local vs cloud
+                        const localCompletedTaskIds = new Set();
+                        if (appState && Array.isArray(appState.plan)) {
+                            appState.plan.forEach(day => {
+                                (day.tasks || []).forEach(t => {
+                                    if (t.completed) localCompletedTaskIds.add(t.id);
+                                });
+                            });
+                        }
+
+                        const cloudCompletedTaskIds = new Set();
+                        cloudData.plan.forEach(day => {
+                            (day.tasks || []).forEach(t => {
+                                if (t.completed) cloudCompletedTaskIds.add(t.id);
+                            });
+                        });
+
+                        // Case A: Local device had no plan OR local has 0 completed tasks
+                        // NEVER overwrite cloud data with an empty/unstarted guest plan!
+                        if (!appState || !Array.isArray(appState.plan) || appState.plan.length === 0 || localCompletedTaskIds.size === 0) {
                             appState = cloudData;
                             saveAppStateLocally();
                             renderApp();
@@ -273,34 +280,14 @@ function loadInitialState() {
                             return;
                         }
 
-                        // Case B: Student was using the app as a guest and has active progress locally!
+                        // Case B: Both have completed tasks and the same stream
                         if (cloudData.stream === appState.stream) {
-                            // Collect completed task IDs from both local and cloud
-                            const localCompletedTaskIds = new Set();
-                            appState.plan.forEach(day => {
-                                day.tasks.forEach(t => {
-                                    if (t.completed) localCompletedTaskIds.add(t.id);
-                                });
-                            });
-
-                            const cloudCompletedTaskIds = new Set();
-                            cloudData.plan.forEach(day => {
-                                day.tasks.forEach(t => {
-                                    if (t.completed) cloudCompletedTaskIds.add(t.id);
-                                });
-                            });
-
-                            // Determine which schedule structure to use
-                            const localIsNewer = appState.deadlineDate !== cloudData.deadlineDate || 
-                                (appState.createdAt && cloudData.createdAt && new Date(appState.createdAt) > new Date(cloudData.createdAt));
-                            let targetPlan = localIsNewer ? appState : cloudData;
+                            let targetPlan = (cloudCompletedTaskIds.size >= localCompletedTaskIds.size) ? cloudData : appState;
 
                             // Merge all completed tasks into targetPlan so no tick mark is ever lost
-                            let newTicksFound = false;
                             targetPlan.plan.forEach(day => {
-                                day.tasks.forEach(t => {
+                                (day.tasks || []).forEach(t => {
                                     if (localCompletedTaskIds.has(t.id) || cloudCompletedTaskIds.has(t.id)) {
-                                        if (!t.completed) newTicksFound = true;
                                         t.completed = true;
                                     }
                                 });
@@ -313,11 +300,11 @@ function loadInitialState() {
                             await userDocRef.set(getFirestoreCleanData(appState));
                             renderApp();
                             updateAuthHeaderUI();
-                            showToastMessage("Signed in! Your guest progress has been saved to your Google Account.", "fa-circle-check text-emerald-400");
+                            showToastMessage("Signed in! Your progress has been synced to your Google Account.", "fa-circle-check text-emerald-400");
                         } else {
-                            // Different streams between cloud and local guest session (e.g. Bio vs CS)
-                            const cloudStreamName = cloudData.stream === 'bio' ? 'Biology Science' : 'Computer Science';
-                            const localStreamName = appState.stream === 'bio' ? 'Biology Science' : 'Computer Science';
+                            // Different streams between cloud and local session (e.g. Bio vs CS)
+                            const cloudStreamName = cloudData.stream === 'bio' ? 'Biology Science' : (cloudData.stream === 'imp_only' ? '+1 Improvement Only' : 'Computer Science');
+                            const localStreamName = appState.stream === 'bio' ? 'Biology Science' : (appState.stream === 'imp_only' ? '+1 Improvement Only' : 'Computer Science');
                             const restoreCloud = await showAppConfirm({
                                 title: "Cloud Backup Found",
                                 message: `We found a saved <strong>${cloudStreamName}</strong> study plan in your Google Account.<br><br>Your current unsaved guest plan is for <strong>${localStreamName}</strong>.<br><br>Do you want to load your saved ${cloudStreamName} plan, or keep your current ${localStreamName} plan?`,
@@ -382,8 +369,11 @@ function loadInitialState() {
             }
         }
 
-        // Handle user authentication and real-time syncing
-        if (auth) {
+        // Attach user authentication listener and setup real-time Firestore synchronization
+        function attachAuthListener() {
+            if (!auth || authListenerAttached) return;
+            authListenerAttached = true;
+
             // Handle redirect result if redirected on mobile
             if (typeof auth.getRedirectResult === 'function') {
                 auth.getRedirectResult().then((result) => {
@@ -461,6 +451,28 @@ function loadInitialState() {
                 }
                 isInitialAuthCheck = false;
             });
+        }
+
+        async function initFirebaseAuth() {
+            try {
+                await loadFirebaseCompat();
+                if (window.firebase) {
+                    if (!window.firebase.apps || !window.firebase.apps.length) {
+                        window.firebase.initializeApp(firebaseConfig);
+                    }
+                    auth = window.firebase.auth();
+                    db = window.firebase.firestore();
+                    db.enablePersistence().catch(() => {});
+                    attachAuthListener();
+                }
+            } catch(err) {
+                console.warn("Firebase initialization note:", err);
+            }
+        }
+
+        // Initialize Firebase Auth on app start so existing sessions are detected immediately
+        if (typeof window !== 'undefined' && typeof document !== 'undefined' && typeof document.createElement === 'function') {
+            initFirebaseAuth();
         }
 
         /* Milestone-Triggered Google Auth Modal (Zero Friction - Triggered only after first milestone) */
@@ -570,14 +582,14 @@ function loadInitialState() {
         });
 
         async function signInWithGoogle() {
+            const modalBtn = document.getElementById('auth-modal-google-btn');
+            const headerBtn = document.getElementById('auth-signin-btn');
+            const originalModalBtnHTML = modalBtn ? modalBtn.innerHTML : '';
+            const originalHeaderBtnHTML = headerBtn ? headerBtn.innerHTML : '';
+
             if (!auth || !window.firebase) {
                 try {
-                    await loadFirebaseCompat();
-                    if (!window.firebase.apps.length) {
-                        window.firebase.initializeApp(firebaseConfig);
-                    }
-                    auth = window.firebase.auth();
-                    db = window.firebase.firestore();
+                    await initFirebaseAuth();
                 } catch(err) {
                     console.warn("Lazy Firebase initialization note:", err);
                 }
@@ -586,10 +598,6 @@ function loadInitialState() {
                 showToastMessage("Firebase could not be loaded. Check internet connection.", "triangleExclamation");
                 return;
             }
-            const modalBtn = document.getElementById('auth-modal-google-btn');
-            const headerBtn = document.getElementById('auth-signin-btn');
-            const originalModalBtnHTML = modalBtn ? modalBtn.innerHTML : '';
-            const originalHeaderBtnHTML = headerBtn ? headerBtn.innerHTML : '';
 
             try {
                 if (modalBtn) {
@@ -620,7 +628,12 @@ function loadInitialState() {
                 localStorage.setItem('mpt_was_logged_in', 'true');
 
                 // Trigger Google Sign-In Popup directly
-                await auth.signInWithPopup(provider);
+                const result = await auth.signInWithPopup(provider);
+                if (result && result.user) {
+                    currentUser = result.user;
+                    updateAuthHeaderUI();
+                    await performCloudSync(currentUser, true);
+                }
 
                 closeAuthModal();
                 showToastMessage("Signed in with Google! Cloud sync active.", "fa-circle-check text-emerald-400");
@@ -1215,21 +1228,19 @@ function showToastMessage(text, icon = 'checkCircle') {
             const weights = {};
             const subs = getStreamSubjects(selectedStream);
             subs.forEach(s => {
-                const conf = setupPersonalization.subjectConfidence[s] || 'standard';
-                // Gentle priority calibration: slight increase for focus (+15%), slight decrease for strong (-10%), no dominance
-                weights[s] = (conf === 'focus') ? 1.15 : (conf === 'strong' ? 0.90 : 1.0);
+                weights[s] = 1.0;
             });
 
             return {
                 subjectWeights: weights,
-                subjectConfidence: { ...setupPersonalization.subjectConfidence },
+                subjectConfidence: {},
                 weeklyRhythm: setupPersonalization.weeklyRhythm || 'balanced',
                 restDayOfWeek: (setupPersonalization.weeklyRhythm === 'rest_day') ? (setupPersonalization.restDayOfWeek ?? 0) : null,
                 dailyHours: setupPersonalization.dailyHours || 3.5
             };
         }
 
-        let selectedStream = 'cs'; // default: 'cs' (Computer Science preset)
+        let selectedStream = 'cs'; // default: 'cs' (Computer Science preset), 'bio', or 'imp_only'
         let activeSetupSubjectTab = 'Physics';
         let activeSetupGradeTab = '+2'; // '+2' or '+1'
         const selectedCompletedChapters = new Set();
@@ -1238,72 +1249,17 @@ function showToastMessage(text, icon = 'checkCircle') {
 
         function setStreamSelection(stream) {
             selectedStream = stream;
-
-            // Update Stream Card UI
-            const cardBio = document.getElementById('stream-card-bio');
-            const cardCs = document.getElementById('stream-card-cs');
-            if (cardBio && cardCs) {
-                if (stream === 'bio') {
-                    cardBio.className = 'cursor-pointer p-3.5 sm:p-4 rounded-2xl border-2 border-emerald-600 dark:border-emerald-500 bg-emerald-50/60 dark:bg-emerald-950/40 ring-2 ring-emerald-500/20 transition text-left flex flex-col justify-between relative shadow-sm';
-                    const checkBio = cardBio.querySelector('.stream-check');
-                    if (checkBio) {
-                        checkBio.className = 'w-5 h-5 rounded-full bg-emerald-600 dark:bg-emerald-500 text-white flex items-center justify-center text-xs stream-check';
-                        checkBio.innerHTML = '<i class="fa-solid fa-check"></i>';
-                    }
-                    cardCs.className = 'cursor-pointer p-3.5 sm:p-4 rounded-2xl border-2 border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#0e1526] hover:border-slate-300 dark:hover:border-slate-600 transition text-left flex flex-col justify-between relative';
-                    const checkCs = cardCs.querySelector('.stream-check');
-                    if (checkCs) {
-                        checkCs.className = 'w-5 h-5 rounded-full border border-slate-300 dark:border-slate-600 flex items-center justify-center stream-check';
-                        checkCs.innerHTML = '';
-                    }
-                } else {
-                    cardCs.className = 'cursor-pointer p-3.5 sm:p-4 rounded-2xl border-2 border-blue-600 dark:border-blue-500 bg-blue-50/60 dark:bg-blue-950/40 ring-2 ring-blue-500/20 transition text-left flex flex-col justify-between relative shadow-sm';
-                    const checkCs = cardCs.querySelector('.stream-check');
-                    if (checkCs) {
-                        checkCs.className = 'w-5 h-5 rounded-full bg-blue-600 dark:bg-blue-500 text-white flex items-center justify-center text-xs stream-check';
-                        checkCs.innerHTML = '<i class="fa-solid fa-check"></i>';
-                    }
-                    cardBio.className = 'cursor-pointer p-3.5 sm:p-4 rounded-2xl border-2 border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#0e1526] hover:border-slate-300 dark:hover:border-slate-600 transition text-left flex flex-col justify-between relative';
-                    const checkBio = cardBio.querySelector('.stream-check');
-                    if (checkBio) {
-                        checkBio.className = 'w-5 h-5 rounded-full border border-slate-300 dark:border-slate-600 flex items-center justify-center stream-check';
-                        checkBio.innerHTML = '';
-                    }
-                }
-            }
-
-            // If activeSetupSubjectTab is not part of this stream, fallback to 'Physics'
-            const validSubs = getStreamSubjects(stream);
-            if (!validSubs.includes(activeSetupSubjectTab)) {
+            if (stream === 'imp_only') {
+                activeSetupGradeTab = '+1';
+                activeSetupSubjectTab = 'Physics';
+                const cb = document.getElementById('has-improvement');
+                if (cb) cb.checked = true;
+            } else {
+                activeSetupGradeTab = '+2';
                 activeSetupSubjectTab = 'Physics';
             }
-
-            // Re-render Personalization Subjects container
-            const persContainer = document.getElementById('personalization-subjects-container');
-            if (persContainer) {
-                persContainer.innerHTML = renderPersonalizationSubjectRows();
-            }
-
-            // Re-render Subject Tabs in Exclude Chapters section
-            const tabsContainer = document.getElementById('setup-subject-tabs-container');
-            if (tabsContainer) {
-                tabsContainer.innerHTML = renderSetupSubjectTabs();
-            }
-
-            // Re-render Chapter List in Exclude Chapters section
-            const chapsContainer = document.getElementById('setup-subject-chapters-list');
-            if (chapsContainer) {
-                chapsContainer.innerHTML = renderSetupSubjectChapters(activeSetupSubjectTab, activeSetupGradeTab);
-            }
-
-            // Re-render Improvement Options in Step 3
-            const impContainer = document.getElementById('improvement-subject-items-container');
-            if (impContainer) {
-                impContainer.innerHTML = renderImprovementSubjectItems();
-            }
-
-            // Update Term 1 / 2 / 3 chapter counts in Step 2
-            updateTermCardsDescriptions();
+            renderApp();
+            goToSetupStep(1);
         }
 
         function updateTermCardsDescriptions() {
@@ -1329,7 +1285,20 @@ function showToastMessage(text, icon = 'checkCircle') {
         }
 
         function renderSetupSubjectTabs() {
-            const subs = getStreamSubjects(selectedStream);
+            let subs = getStreamSubjects(selectedStream);
+            if (selectedStream === 'imp_only') {
+                const checkedSubs = subs.filter(sub => {
+                    const subId = sub.replace(/\s+/g, '-').toLowerCase();
+                    const cb = document.getElementById(`imp-${subId}`);
+                    return cb && cb.checked;
+                });
+                if (checkedSubs.length > 0) {
+                    subs = checkedSubs;
+                }
+            }
+            if (!subs.includes(activeSetupSubjectTab) && subs.length > 0) {
+                activeSetupSubjectTab = subs[0];
+            }
             return subs.map(sub => `
                 <button type="button" id="setup-tab-${sub.replace(/\s+/g, '-')}" onclick="switchSetupSubject('${sub}')" class="py-1.5 px-3 text-xs font-bold rounded-xl ${sub === activeSetupSubjectTab ? 'bg-slate-800 dark:bg-slate-700 text-white shadow-sm' : 'bg-slate-100 dark:bg-[#162137] text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#1e2d4a]'} transition">
                     ${sub}
@@ -1668,17 +1637,22 @@ function showToastMessage(text, icon = 'checkCircle') {
             // Collect excluded / already completed chapters (both +2 and +1)
             const checkedCompletedBoxes = Array.from(selectedCompletedChapters);
 
-            // Filter Plus Two tasks: only include tasks of the chosen stream, up to targetTerm, and not marked completed
+            const isImpOnly = selectedStream === 'imp_only';
             const allowedSubjects = getStreamSubjects(selectedStream);
-            let tasksToPlan = PLUS_TWO_SYLLABUS.filter(t => 
-                allowedSubjects.includes(t.subject) && 
-                t.term <= targetTerm && 
-                !checkedCompletedBoxes.includes(t.chapId)
-            );
+            let tasksToPlan = [];
+
+            if (!isImpOnly) {
+                // Filter Plus Two tasks: only include tasks of the chosen stream, up to targetTerm, and not marked completed
+                tasksToPlan = PLUS_TWO_SYLLABUS.filter(t => 
+                    allowedSubjects.includes(t.subject) && 
+                    t.term <= targetTerm && 
+                    !checkedCompletedBoxes.includes(t.chapId)
+                );
+            }
 
             // Plus One Improvement Config (Strictly Stream Isolated)
             let improvementConfig = [];
-            const hasImp = document.getElementById('has-improvement')?.checked;
+            const hasImp = isImpOnly || document.getElementById('has-improvement')?.checked;
 
             if (hasImp) {
                 let hasError = false;
@@ -1703,12 +1677,21 @@ function showToastMessage(text, icon = 'checkCircle') {
                     }
                 });
                 if (hasError) return;
+
+                if (isImpOnly && improvementConfig.length === 0) {
+                    showAppAlert({
+                        title: "Subjects Required",
+                        message: "Please select at least one +1 Improvement subject to create your schedule.",
+                        icon: "fa-list-check text-amber-500"
+                    });
+                    return;
+                }
             }
 
             if (tasksToPlan.length === 0) {
                 showAppAlert({
                     title: "All Chapters Excluded",
-                    message: "All chapters in the selected term/improvement were marked finished! Please select a higher term or uncheck some chapters.",
+                    message: "All chapters in the selected scope were marked finished! Please uncheck some chapters or select additional subjects.",
                     icon: "fa-circle-info text-blue-500"
                 });
                 return;
@@ -1717,18 +1700,20 @@ function showToastMessage(text, icon = 'checkCircle') {
             const personalization = getPersonalizationConfig();
             const planResult = buildIntelligentPlan(deadlineInput, tasksToPlan, TODAY_STR, improvementConfig, selectedStream, {
                 intensity: studyIntensity,
-                personalization: personalization
+                personalization: personalization,
+                improvementOnly: isImpOnly
             });
 
             if (planResult && planResult.planDays) {
                 appState = {
                     engineVersion: PLANNER_ENGINE_VERSION,
                     stream: selectedStream,
+                    improvementOnly: isImpOnly,
                     studyIntensity: studyIntensity,
                     personalization: personalization,
                     startDate: TODAY_STR,
                     deadlineDate: deadlineInput,
-                    targetTerm: targetTerm,
+                    targetTerm: isImpOnly ? 1 : targetTerm,
                     completedChaptersOnInit: checkedCompletedBoxes,
                     improvementConfig: improvementConfig,
                     plan: planResult.planDays,
@@ -1958,6 +1943,14 @@ function showToastMessage(text, icon = 'checkCircle') {
                 }
             }
 
+            if (stepNum === 3) {
+                updateCompletedChaptersCountBadge();
+                const tabsContainer = document.getElementById('setup-subject-tabs-container');
+                if (tabsContainer) tabsContainer.innerHTML = renderSetupSubjectTabs();
+                const chapsContainer = document.getElementById('setup-subject-chapters-list');
+                if (chapsContainer) chapsContainer.innerHTML = renderSetupSubjectChapters(activeSetupSubjectTab, activeSetupGradeTab);
+            }
+
             if (stepNum === 4) {
                 updateDeadlinePreview();
             }
@@ -2023,24 +2016,24 @@ function showToastMessage(text, icon = 'checkCircle') {
 
                         <!-- Form state inputs preserved for engine compatibility -->
                         <input type="hidden" id="target-term" value="2">
-                        <input type="checkbox" id="has-improvement" class="hidden">
+                        <input type="checkbox" id="has-improvement" class="hidden" ${selectedStream === 'imp_only' ? 'checked' : ''}>
 
                         <!-- ==========================================================================
-                             STEP 1: Stream Selection
+                             STEP 1: Stream Selection (3 Distinct Choices)
                              ========================================================================== -->
                         <div id="setup-step-1" class="${setupCurrentStep === 1 ? '' : 'hidden'} space-y-5 animate-fade-in-up">
                             <div class="text-left">
                                 <span class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">${isML ? 'ചോദ്യം 1' : 'Question 1'}</span>
                                 <h3 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-0.5">
-                                    ${isML ? ML_I18N.setup.step1Question : 'What is your Science stream?'}
+                                    ${isML ? ML_I18N.setup.step1Question : 'What is your Study Target?'}
                                 </h3>
                                 <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-300 mt-1">
-                                    ${isML ? 'നിങ്ങൾ പഠിക്കുന്ന വിഷയം തിരഞ്ഞെടുക്കുക. സിലബസ് കൃത്യമായി ക്രമീകരിക്കും.' : 'Choose your Higher Secondary combination to load official DHSE chapters.'}
+                                    ${isML ? 'നിങ്ങൾ പഠിക്കുന്ന വിഷയം തിരഞ്ഞെടുക്കുക. സിലബസ് കൃത്യമായി ക്രമീകരിക്കും.' : 'Choose your academic target. Official Kerala DHSE syllabus will be loaded.'}
                                 </p>
                             </div>
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                                <!-- Option 1: Computer Science (Preset) -->
+                                <!-- Option 1: Computer Science (Plus Two) -->
                                 <div id="stream-card-cs" onclick="setStreamSelection('cs')" class="cursor-pointer p-4 rounded-2xl border-2 ${selectedStream === 'cs' ? 'border-blue-600 dark:border-blue-500 bg-blue-50/60 dark:bg-blue-950/40 ring-2 ring-blue-500/20 shadow-sm' : 'border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#0e1526] hover:border-slate-300 dark:hover:border-slate-600'} transition text-left flex flex-col justify-between relative group">
                                     <div class="flex items-start justify-between">
                                         <div class="flex items-center gap-3">
@@ -2048,7 +2041,7 @@ function showToastMessage(text, icon = 'checkCircle') {
                                                 <i class="fa-solid fa-laptop-code"></i>
                                             </div>
                                             <div>
-                                                <h4 class="font-black text-slate-900 dark:text-white text-base">${isML ? ML_I18N.setup.csTitle : 'Computer Science'}</h4>
+                                                <h4 class="font-black text-slate-900 dark:text-white text-base">${isML ? ML_I18N.setup.csTitle : 'Computer Science (+2)'}</h4>
                                                 <span class="text-xs font-semibold text-blue-700 dark:text-blue-300">Physics • Chem • Maths • CS</span>
                                             </div>
                                         </div>
@@ -2061,7 +2054,7 @@ function showToastMessage(text, icon = 'checkCircle') {
                                     </p>
                                 </div>
 
-                                <!-- Option 2: Biology Science -->
+                                <!-- Option 2: Biology Science (Plus Two) -->
                                 <div id="stream-card-bio" onclick="setStreamSelection('bio')" class="cursor-pointer p-4 rounded-2xl border-2 ${selectedStream === 'bio' ? 'border-emerald-600 dark:border-emerald-500 bg-emerald-50/60 dark:bg-emerald-950/40 ring-2 ring-emerald-500/20 shadow-sm' : 'border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#0e1526] hover:border-slate-300 dark:hover:border-slate-600'} transition text-left flex flex-col justify-between relative group">
                                     <div class="flex items-start justify-between">
                                         <div class="flex items-center gap-3">
@@ -2069,7 +2062,7 @@ function showToastMessage(text, icon = 'checkCircle') {
                                                 <i class="fa-solid fa-seedling"></i>
                                             </div>
                                             <div>
-                                                <h4 class="font-black text-slate-900 dark:text-white text-base">${isML ? ML_I18N.setup.bioTitle : 'Biology Science'}</h4>
+                                                <h4 class="font-black text-slate-900 dark:text-white text-base">${isML ? ML_I18N.setup.bioTitle : 'Biology Science (+2)'}</h4>
                                                 <span class="text-xs font-semibold text-emerald-700 dark:text-emerald-300">Physics • Chem • Maths • Bio</span>
                                             </div>
                                         </div>
@@ -2081,79 +2074,160 @@ function showToastMessage(text, icon = 'checkCircle') {
                                         Total <strong class="text-slate-900 dark:text-white">49 chapters</strong> (Botany & Zoology separated).
                                     </p>
                                 </div>
+
+                                <!-- Option 3: Plus One (+1) Improvement Only -->
+                                <div id="stream-card-imp" onclick="setStreamSelection('imp_only')" class="cursor-pointer p-4 rounded-2xl border-2 ${selectedStream === 'imp_only' ? 'border-amber-500 dark:border-amber-400 bg-amber-50/70 dark:bg-amber-950/40 ring-2 ring-amber-400/25 shadow-sm' : 'border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#0e1526] hover:border-slate-300 dark:hover:border-slate-600'} transition text-left flex flex-col justify-between relative group sm:col-span-2">
+                                    <div class="flex items-start justify-between">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 flex items-center justify-center text-lg font-bold shrink-0">
+                                                <i class="fa-solid fa-graduation-cap"></i>
+                                            </div>
+                                            <div>
+                                                <div class="flex items-center gap-2">
+                                                    <h4 class="font-black text-slate-900 dark:text-white text-base">${isML ? ML_I18N.setup.impOnlyTitle : 'Plus One (+1) Improvement Only'}</h4>
+                                                    <span class="text-[11px] font-black bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-200 px-2 py-0.5 rounded-full uppercase tracking-wider">Improvement</span>
+                                                </div>
+                                                <span class="text-xs font-semibold text-amber-700 dark:text-amber-300">${isML ? ML_I18N.setup.impOnlySub : 'Physics • Chem • Maths • Bio • CS (+1 Syllabus Only)'}</span>
+                                            </div>
+                                        </div>
+                                        <span class="w-6 h-6 rounded-full ${selectedStream === 'imp_only' ? 'bg-amber-600 dark:bg-amber-500 text-white' : 'border-2 border-slate-300 dark:border-slate-600'} flex items-center justify-center text-xs stream-check">
+                                            ${selectedStream === 'imp_only' ? '<i class="fa-solid fa-check"></i>' : ''}
+                                        </span>
+                                    </div>
+                                    <p class="text-xs text-slate-500 dark:text-slate-300 mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 font-medium">
+                                        ${isML ? ML_I18N.setup.impOnlyDesc : 'Dedicated timetable specifically for +1 Improvement papers. Zero +2 syllabus scheduled.'}
+                                    </p>
+                                </div>
                             </div>
 
                             <!-- Step 1 Navigation -->
                             <div class="pt-4 flex justify-end">
                                 <button type="button" onclick="nextSetupStep()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-sm py-3 px-6 rounded-2xl shadow-md shadow-blue-500/20 transition flex items-center justify-center gap-2 active:scale-95">
-                                    <span>${isML ? 'തുടരുക: സിലബസ് ലക്ഷ്യം' : 'Next: Syllabus Goal'}</span>
+                                    <span>${selectedStream === 'imp_only' ? (isML ? 'തുടരുക: +1 വിഷയങ്ങൾ' : 'Next: +1 Subjects') : (isML ? 'തുടരുക: സിലബസ് ലക്ഷ്യം' : 'Next: Syllabus Goal')}</span>
                                     <i class="fa-solid fa-arrow-right"></i>
                                 </button>
                             </div>
                         </div>
 
                         <!-- ==========================================================================
-                             STEP 2: Target Syllabus Scope
+                             STEP 2: Target Syllabus Scope / +1 Subjects
                              ========================================================================== -->
                         <div id="setup-step-2" class="${setupCurrentStep === 2 ? '' : 'hidden'} space-y-5 animate-fade-in-up">
-                            <div class="text-left">
-                                <span class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">${isML ? 'ചോദ്യം 2' : 'Question 2'}</span>
-                                <h3 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-0.5">
-                                    ${isML ? ML_I18N.setup.step2Question : 'Which exams are you preparing for?'}
-                                </h3>
-                                <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-300 mt-1">
-                                    ${isML ? 'നിങ്ങളുടെ ലക്ഷ്യത്തിനനുസരിച്ചുള്ള ടേം തിരഞ്ഞെടുക്കുക.' : 'Choose how much syllabus to schedule in your daily timetable.'}
-                                </p>
-                            </div>
+                            ${selectedStream === 'imp_only' ? `
+                                <div class="text-left">
+                                    <span class="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">${isML ? 'ചോദ്യം 2' : 'Question 2'}</span>
+                                    <h3 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-0.5">
+                                        ${isML ? ML_I18N.setup.impSubHeading : 'Select Your +1 Improvement Subjects & Exam Dates'}
+                                    </h3>
+                                    <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-300 mt-1">
+                                        ${isML ? 'നിങ്ങൾ എഴുതുന്ന +1 വിഷയങ്ങളും അവയുടെ പരീക്ഷാ തീയതിയും തിരഞ്ഞെടുക്കുക.' : 'Choose which +1 improvement papers you are appearing for and their respective exam dates.'}
+                                    </p>
+                                </div>
 
-                            <div class="grid grid-cols-1 gap-3">
-                                <!-- Card 2: Term 1 & 2 (Recommended / Popular) -->
-                                <div id="term-card-2" onclick="setTermSelection(2)" class="cursor-pointer p-4 rounded-2xl border-2 border-blue-600 dark:border-blue-500 bg-blue-50/60 dark:bg-blue-950/40 ring-2 ring-blue-500/20 transition text-left flex flex-col justify-between relative shadow-sm">
-                                    <div class="absolute -top-2.5 right-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-black px-2.5 py-0.5 rounded-full shadow-sm uppercase tracking-wider">
-                                        ${isML ? ML_I18N.setup.term2Popular : '★ Recommended for Half-Yearly'}
+                                <div class="p-4 bg-white dark:bg-[#101726] rounded-2xl border border-amber-300 dark:border-amber-500/40 shadow-xs space-y-3">
+                                    <div id="improvement-subject-items-container" class="space-y-2">
+                                        ${renderImprovementSubjectItems()}
                                     </div>
-                                    <div class="flex items-start justify-between gap-3">
-                                        <div>
-                                            <span class="text-xs font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider block mb-0.5">${isML ? ML_I18N.setup.term2Badge : 'Terms 1 & 2'}</span>
-                                            <h4 class="font-black text-slate-900 dark:text-white text-base">${isML ? ML_I18N.setup.term2Title : 'Term 1 & Term 2 Portions'}</h4>
-                                            <p id="term-desc-2" class="text-xs text-slate-600 dark:text-slate-200 mt-1 font-medium">
-                                                ${selectedStream === 'bio' ? 'Christmas exam syllabus (~35 chapters). Conquers majority portions before model exams.' : 'Christmas exam syllabus (~31 chapters). Conquers majority portions before model exams.'}
-                                            </p>
+                                    <p class="text-xs text-slate-500 dark:text-slate-300 pt-1">
+                                        <i class="fa-solid fa-circle-info text-blue-500 dark:text-blue-400 mr-1"></i>
+                                        ${isML ? ML_I18N.setup.impSubHint : 'The planner will automatically prioritize these +1 chapters and finish them well in advance of each subject\'s exam date!'}
+                                    </p>
+                                </div>
+                            ` : `
+                                <div class="text-left">
+                                    <span class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">${isML ? 'ചോദ്യം 2' : 'Question 2'}</span>
+                                    <h3 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-0.5">
+                                        ${isML ? ML_I18N.setup.step2Question : 'Which exams are you preparing for?'}
+                                    </h3>
+                                    <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-300 mt-1">
+                                        ${isML ? 'നിങ്ങളുടെ ലക്ഷ്യത്തിനനുസരിച്ചുള്ള ടേം തിരഞ്ഞെടുക്കുക.' : 'Choose how much syllabus to schedule in your daily timetable.'}
+                                    </p>
+                                </div>
+
+                                <div class="grid grid-cols-1 gap-3">
+                                    <!-- Card 2: Term 1 & 2 (Recommended / Popular) -->
+                                    <div id="term-card-2" onclick="setTermSelection(2)" class="cursor-pointer p-4 rounded-2xl border-2 border-blue-600 dark:border-blue-500 bg-blue-50/60 dark:bg-blue-950/40 ring-2 ring-blue-500/20 transition text-left flex flex-col justify-between relative shadow-sm">
+                                        <div class="absolute -top-2.5 right-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-black px-2.5 py-0.5 rounded-full shadow-sm uppercase tracking-wider">
+                                            ${isML ? ML_I18N.setup.term2Popular : '★ Recommended for Half-Yearly'}
                                         </div>
-                                        <span class="w-6 h-6 rounded-full bg-blue-600 dark:bg-blue-500 text-white flex items-center justify-center text-xs check-indicator shrink-0 mt-1">
-                                            <i class="fa-solid fa-check"></i>
+                                        <div class="flex items-start justify-between gap-3">
+                                            <div>
+                                                <span class="text-xs font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider block mb-0.5">${isML ? ML_I18N.setup.term2Badge : 'Terms 1 & 2'}</span>
+                                                <h4 class="font-black text-slate-900 dark:text-white text-base">${isML ? ML_I18N.setup.term2Title : 'Term 1 & Term 2 Portions'}</h4>
+                                                <p id="term-desc-2" class="text-xs text-slate-600 dark:text-slate-200 mt-1 font-medium">
+                                                    ${selectedStream === 'bio' ? 'Christmas exam syllabus (~35 chapters). Conquers majority portions before model exams.' : 'Christmas exam syllabus (~31 chapters). Conquers majority portions before model exams.'}
+                                                </p>
+                                            </div>
+                                            <span class="w-6 h-6 rounded-full bg-blue-600 dark:bg-blue-500 text-white flex items-center justify-center text-xs check-indicator shrink-0 mt-1">
+                                                <i class="fa-solid fa-check"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Card 3: Full Syllabus -->
+                                    <div id="term-card-3" onclick="setTermSelection(3)" class="cursor-pointer p-4 rounded-2xl border-2 border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#0e1526] hover:border-slate-300 dark:hover:border-slate-600 transition text-left flex flex-col justify-between">
+                                        <div class="flex items-start justify-between gap-3">
+                                            <div>
+                                                <span class="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider block mb-0.5">${isML ? ML_I18N.setup.term3Badge : 'Full Year'}</span>
+                                                <h4 class="font-black text-slate-900 dark:text-white text-base">${isML ? ML_I18N.setup.term3Title : 'Complete Public Exam Syllabus (Term 1, 2 & 3)'}</h4>
+                                                <p id="term-desc-3" class="text-xs text-slate-500 dark:text-slate-300 mt-1 font-medium">
+                                                    ${selectedStream === 'bio' ? 'All 49 chapters across all terms for March Board Examinations.' : 'All 46 chapters across all terms for March Board Examinations.'}
+                                                </p>
+                                            </div>
+                                            <span class="w-6 h-6 rounded-full border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center text-xs check-indicator shrink-0 mt-1"></span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Card 1: Term 1 Only -->
+                                    <div id="term-card-1" onclick="setTermSelection(1)" class="cursor-pointer p-4 rounded-2xl border-2 border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#0e1526] hover:border-slate-300 dark:hover:border-slate-600 transition text-left flex flex-col justify-between">
+                                        <div class="flex items-start justify-between gap-3">
+                                            <div>
+                                                <span class="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block mb-0.5">${isML ? ML_I18N.setup.term1Badge : 'First Terminal'}</span>
+                                                <h4 class="font-black text-slate-900 dark:text-white text-base">${isML ? ML_I18N.setup.term1Title : 'Term 1 Only'}</h4>
+                                                <p id="term-desc-1" class="text-xs text-slate-500 dark:text-slate-300 mt-1 font-medium">
+                                                    ${selectedStream === 'bio' ? 'Onam exam portion (~18 chapters). Quick sprint target.' : 'Onam exam portion (~17 chapters). Quick sprint target.'}
+                                                </p>
+                                            </div>
+                                            <span class="w-6 h-6 rounded-full border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center text-xs check-indicator shrink-0 mt-1"></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Optional +1 Improvement Checkbox/Toggle for +2 students -->
+                                <div class="pt-3 border-t border-slate-100 dark:border-slate-800">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                                            <i class="fa-solid fa-file-pen text-amber-600 dark:text-amber-400"></i>
+                                            <span>${isML ? 'പ്ലസ് വൺ (+1) ഇംപ്രൂവ്മെന്റ് പേപ്പറുകൾ കൂടി ഉണ്ടോ?' : 'Also appearing for Plus One (+1) Improvement papers?'}</span>
                                         </span>
                                     </div>
-                                </div>
-
-                                <!-- Card 3: Full Syllabus -->
-                                <div id="term-card-3" onclick="setTermSelection(3)" class="cursor-pointer p-4 rounded-2xl border-2 border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#0e1526] hover:border-slate-300 dark:hover:border-slate-600 transition text-left flex flex-col justify-between">
-                                    <div class="flex items-start justify-between gap-3">
-                                        <div>
-                                            <span class="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider block mb-0.5">${isML ? ML_I18N.setup.term3Badge : 'Full Year'}</span>
-                                            <h4 class="font-black text-slate-900 dark:text-white text-base">${isML ? ML_I18N.setup.term3Title : 'Complete Public Exam Syllabus (Term 1, 2 & 3)'}</h4>
-                                            <p id="term-desc-3" class="text-xs text-slate-500 dark:text-slate-300 mt-1 font-medium">
-                                                ${selectedStream === 'bio' ? 'All 49 chapters across all terms for March Board Examinations.' : 'All 46 chapters across all terms for March Board Examinations.'}
-                                            </p>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <!-- Option A: No -->
+                                        <div id="imp-choice-no" onclick="setImprovementToggle(false)" class="cursor-pointer p-3 sm:p-3.5 rounded-2xl border-2 border-slate-700 dark:border-slate-500 bg-slate-50 dark:bg-[#141d30] ring-2 ring-slate-400/20 transition text-left flex items-center justify-between shadow-xs">
+                                            <div>
+                                                <h4 class="font-black text-slate-900 dark:text-white text-xs sm:text-sm">${isML ? ML_I18N.setup.impNo : 'No, Plus Two Only'}</h4>
+                                            </div>
+                                            <span class="w-5 h-5 rounded-full bg-slate-700 dark:bg-slate-500 flex items-center justify-center text-xs choice-check shrink-0">
+                                                <i class="fa-solid fa-check text-white"></i>
+                                            </span>
                                         </div>
-                                        <span class="w-6 h-6 rounded-full border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center text-xs check-indicator shrink-0 mt-1"></span>
+                                        <!-- Option B: Yes -->
+                                        <div id="imp-choice-yes" onclick="setImprovementToggle(true)" class="cursor-pointer p-3 sm:p-3.5 rounded-2xl border-2 border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#0e1526] hover:border-amber-400 transition text-left flex items-center justify-between">
+                                            <div>
+                                                <h4 class="font-black text-slate-900 dark:text-white text-xs sm:text-sm">${isML ? ML_I18N.setup.impYes : 'Yes, I Have +1 Papers!'}</h4>
+                                            </div>
+                                            <span class="w-5 h-5 rounded-full border border-slate-300 dark:border-slate-600 flex items-center justify-center text-xs choice-check shrink-0"></span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Subject & Exam Date List (when toggled yes) -->
+                                    <div id="improvement-options" class="hidden mt-3 p-3.5 bg-white dark:bg-[#101726] rounded-2xl border border-amber-300 dark:border-amber-500/40 shadow-xs space-y-2.5">
+                                        <div id="improvement-subject-items-container" class="space-y-2">
+                                            ${renderImprovementSubjectItems()}
+                                        </div>
                                     </div>
                                 </div>
-
-                                <!-- Card 1: Term 1 Only -->
-                                <div id="term-card-1" onclick="setTermSelection(1)" class="cursor-pointer p-4 rounded-2xl border-2 border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#0e1526] hover:border-slate-300 dark:hover:border-slate-600 transition text-left flex flex-col justify-between">
-                                    <div class="flex items-start justify-between gap-3">
-                                        <div>
-                                            <span class="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block mb-0.5">${isML ? ML_I18N.setup.term1Badge : 'First Terminal'}</span>
-                                            <h4 class="font-black text-slate-900 dark:text-white text-base">${isML ? ML_I18N.setup.term1Title : 'Term 1 Only'}</h4>
-                                            <p id="term-desc-1" class="text-xs text-slate-500 dark:text-slate-300 mt-1 font-medium">
-                                                ${selectedStream === 'bio' ? 'Onam exam portion (~18 chapters). Quick sprint target.' : 'Onam exam portion (~17 chapters). Quick sprint target.'}
-                                            </p>
-                                        </div>
-                                        <span class="w-6 h-6 rounded-full border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center text-xs check-indicator shrink-0 mt-1"></span>
-                                    </div>
-                                </div>
-                            </div>
+                            `}
 
                             <!-- Step 2 Navigation -->
                             <div class="pt-4 flex items-center justify-between gap-3">
@@ -2162,75 +2236,68 @@ function showToastMessage(text, icon = 'checkCircle') {
                                     <span>${isML ? ML_I18N.setup.backBtn : 'Back'}</span>
                                 </button>
                                 <button type="button" onclick="nextSetupStep()" class="bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs sm:text-sm py-3 px-6 rounded-2xl shadow-md shadow-blue-500/20 transition flex items-center gap-2 active:scale-95">
-                                    <span>${isML ? 'തുടരുക: +1 ഇംപ്രൂവ്മെന്റ്' : 'Next: +1 Improvement'}</span>
+                                    <span>${isML ? 'തുടരുക: പഠിച്ചു കഴിഞ്ഞവ' : 'Next: Finished Chapters'}</span>
                                     <i class="fa-solid fa-arrow-right"></i>
                                 </button>
                             </div>
                         </div>
 
                         <!-- ==========================================================================
-                             STEP 3: Plus One Improvement Papers
+                             STEP 3: Finished Chapters Selection First (Dedicated Prominent Step)
                              ========================================================================== -->
                         <div id="setup-step-3" class="${setupCurrentStep === 3 ? '' : 'hidden'} space-y-5 animate-fade-in-up">
                             <div class="text-left">
-                                <span class="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">${isML ? 'ചോദ്യം 3' : 'Question 3'}</span>
+                                <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">${isML ? 'ഘട്ടം 3' : 'Question 3'}</span>
                                 <h3 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-0.5">
-                                    ${isML ? ML_I18N.setup.step3Question : 'Are you writing Plus One (+1) Improvement?'}
+                                    ${isML ? ML_I18N.setup.step3Question : 'Mark Already Finished Chapters'}
                                 </h3>
                                 <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-300 mt-1">
-                                    ${isML ? '+1 പേപ്പറുകൾ ഉണ്ടെങ്കിൽ അവ പരീക്ഷാ തീയതിക്ക് മുൻപായി ക്രമീകരിക്കും.' : 'If you are appearing for +1 improvement/supplementary papers, we weave them in seamlessly before each exam.'}
+                                    ${isML ? 'സ്കൂളിലോ ട്യൂഷനിലോ ഇതിനകം പഠിച്ച അധ്യായങ്ങൾ ഇവിടെ തിരഞ്ഞെടുക്കുക. അവ ഒഴിവാക്കി ബാക്കിയുള്ളവ മാത്രം പ്ലാൻ ചെയ്യും.' : 'Select chapters you already finished in school or tuition. We will exclude them and schedule only your remaining syllabus. If starting fresh, simply click next!'}
                                 </p>
                             </div>
 
-                            <!-- Choice Cards -->
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                                <!-- Option A: No Improvement -->
-                                <div id="imp-choice-no" onclick="setImprovementToggle(false)" class="cursor-pointer p-4 rounded-2xl border-2 border-slate-700 dark:border-slate-500 bg-slate-50 dark:bg-[#141d30] ring-2 ring-slate-400/20 transition text-left flex items-center justify-between shadow-xs">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center text-base font-bold shrink-0">
-                                            <i class="fa-solid fa-graduation-cap"></i>
+                            <div class="p-4 bg-white dark:bg-[#0e1422] rounded-2xl border border-slate-200 dark:border-slate-700/80 shadow-xs space-y-3">
+                                <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 flex items-center justify-center text-sm font-bold shrink-0">
+                                            <i class="fa-solid fa-check-double"></i>
                                         </div>
-                                        <div>
-                                            <h4 class="font-black text-slate-900 dark:text-white text-sm sm:text-base">${isML ? ML_I18N.setup.impNo : 'No, Plus Two (+2) Only'}</h4>
-                                            <p class="text-xs text-slate-500 dark:text-slate-300">${isML ? ML_I18N.setup.impNoDesc : 'I am only focusing on 12th standard'}</p>
-                                        </div>
+                                        <span class="text-xs font-bold text-slate-800 dark:text-white">${isML ? 'പഠിച്ചു കഴിഞ്ഞ അധ്യായങ്ങൾ' : 'Finished Chapters Selection'}</span>
                                     </div>
-                                    <span class="w-6 h-6 rounded-full bg-slate-700 dark:bg-slate-500 flex items-center justify-center text-xs choice-check shrink-0">
-                                        <i class="fa-solid fa-check text-white"></i>
-                                    </span>
+                                    <span id="completed-chaps-badge" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-[#162137] text-slate-500 dark:text-slate-300">0 excluded</span>
                                 </div>
 
-                                <!-- Option B: Yes, Has Improvement Papers -->
-                                <div id="imp-choice-yes" onclick="setImprovementToggle(true)" class="cursor-pointer p-4 rounded-2xl border-2 border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#0e1526] hover:border-amber-400 hover:bg-amber-50/40 dark:hover:bg-amber-950/20 transition text-left flex items-center justify-between">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 flex items-center justify-center text-base font-bold shrink-0">
-                                            <i class="fa-solid fa-file-pen"></i>
-                                        </div>
-                                        <div>
-                                            <h4 class="font-black text-slate-900 dark:text-white text-sm sm:text-base">${isML ? ML_I18N.setup.impYes : 'Yes, I Have +1 Papers!'}</h4>
-                                            <p class="text-xs text-amber-700 dark:text-amber-300 font-semibold">${isML ? ML_I18N.setup.impYesDesc : 'Weave +1 portions before exam dates'}</p>
-                                        </div>
+                                ${selectedStream === 'imp_only' ? `
+                                    <!-- Improvement Only: +1 Syllabus Indicator -->
+                                    <div class="p-1 mb-1">
+                                        <span class="text-xs font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 px-2.5 py-1 rounded-lg border border-amber-200/60 dark:border-amber-700/60 inline-flex items-center gap-1.5">
+                                            <i class="fa-solid fa-star text-xs"></i>
+                                            <span>📙 +1 Improvement Chapters</span>
+                                        </span>
                                     </div>
-                                    <span class="w-6 h-6 rounded-full border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center text-xs choice-check shrink-0"></span>
-                                </div>
-                            </div>
+                                ` : `
+                                    <!-- Grade Switcher (+2 vs +1) -->
+                                    <div class="flex bg-slate-100 dark:bg-[#162137] p-1 rounded-xl gap-1">
+                                        <button type="button" id="grade-tab-p2" onclick="switchSetupGrade('+2')" class="flex-1 py-1.5 px-3 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-sm transition flex items-center justify-center gap-1.5">
+                                            <i class="fa-solid fa-book-bookmark text-xs"></i>
+                                            <span>📘 Plus Two (+2)</span>
+                                        </button>
+                                        <button type="button" id="grade-tab-p1" onclick="switchSetupGrade('+1')" class="flex-1 py-1.5 px-3 text-xs font-bold rounded-lg bg-slate-100 dark:bg-[#121a2c] text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#1a253c] transition flex items-center justify-center gap-1.5">
+                                            <i class="fa-solid fa-star text-xs"></i>
+                                            <span>📙 +1 Improvement</span>
+                                        </button>
+                                    </div>
+                                `}
 
-                            <!-- Improvement Subjects & Exam Dates Panel (Toggled via setImprovementToggle) -->
-                            <div id="improvement-options" class="hidden p-4 bg-white dark:bg-[#101726] rounded-2xl border border-amber-300 dark:border-amber-500/40 shadow-xs space-y-3 animate-fade-in-up">
-                                <div class="flex items-center justify-between border-b border-amber-100 dark:border-amber-900/40 pb-2">
-                                    <span class="text-xs font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
-                                        <i class="fa-solid fa-list-check text-amber-600 dark:text-amber-400"></i>
-                                        <span>${isML ? ML_I18N.setup.impSubHeading : 'Select Your +1 Improvement Subjects & Exam Dates'}</span>
-                                    </span>
-                                    <span class="text-xs font-semibold text-slate-400 dark:text-slate-400">${isML ? ML_I18N.setup.strictSyllabus : 'Strictly 2025–26 syllabus'}</span>
+                                <!-- Subject Tabs Switcher -->
+                                <div id="setup-subject-tabs-container" class="flex flex-wrap gap-1.5 pt-1">
+                                    ${renderSetupSubjectTabs()}
                                 </div>
-                                <div id="improvement-subject-items-container" class="space-y-2">
-                                    ${renderImprovementSubjectItems()}
+
+                                <!-- Chapter List Container -->
+                                <div id="setup-subject-chapters-list" class="bg-slate-50/70 dark:bg-[#101726] p-3 rounded-xl border border-slate-200/80 dark:border-slate-700/80">
+                                    ${renderSetupSubjectChapters(activeSetupSubjectTab, activeSetupGradeTab)}
                                 </div>
-                                <p class="text-xs text-slate-500 dark:text-slate-300 pt-1">
-                                    <i class="fa-solid fa-circle-info text-blue-500 dark:text-blue-400 mr-1"></i>
-                                    ${isML ? ML_I18N.setup.impSubHint : 'The planner will automatically prioritize these +1 chapters and finish them well in advance of each subject\'s exam date!'}
-                                </p>
                             </div>
 
                             <!-- Step 3 Navigation -->
@@ -2299,7 +2366,7 @@ function showToastMessage(text, icon = 'checkCircle') {
                         </div>
 
                         <!-- ==========================================================================
-                             STEP 5: Personalize Study Routine & Generate Plan
+                             STEP 5: Personalize Study Routine & Generate Plan (Confidence Ratings Removed)
                              ========================================================================== -->
                         <div id="setup-step-5" class="${setupCurrentStep === 5 ? '' : 'hidden'} space-y-5 animate-fade-in-up">
                             <div class="text-left">
@@ -2308,27 +2375,11 @@ function showToastMessage(text, icon = 'checkCircle') {
                                     ${isML ? ML_I18N.setup.step5Question : 'Personalize Your Study Routine'}
                                 </h3>
                                 <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-300 mt-1">
-                                    ${isML ? 'വിഷയങ്ങളുടെ മുൻഗണനയും പഠന സമയവും ക്രമീകരിക്കുക. സന്തുലിതമായ രീതിയിൽ പ്ലാൻ തയ്യാറാക്കും.' : 'Select focus subjects, weekly rhythm, and study hours. We balance gently without dominating your schedule.'}
+                                    ${isML ? 'പഠന സമയവും ആഴ്ചയിലെ രീതിയും ക്രമീകരിക്കുക. സന്തുലിതമായ രീതിയിൽ പ്ലാൻ തയ്യാറാക്കും.' : 'Select your weekly rhythm, daily study hours, and pacing intensity. We balance gently across your available time.'}
                                 </p>
                             </div>
 
-                            <!-- 5.1 Subject Confidence & Priority -->
-                            <div class="p-4 bg-slate-50 dark:bg-[#101726] rounded-2xl border border-slate-200/80 dark:border-slate-700/80 space-y-2.5">
-                                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                                    <span class="text-xs font-extrabold text-slate-800 dark:text-white flex items-center gap-1.5">
-                                        <i class="fa-solid fa-bullseye text-indigo-600 dark:text-indigo-400"></i>
-                                        <span>${isML ? ML_I18N.setup.confidenceTitle : 'Subject Confidence & Priority'}</span>
-                                    </span>
-                                    <span class="text-[11px] text-slate-500 dark:text-slate-400">
-                                        🎯 Focus: Slightly more practice • 🌟 Strong: Slightly lighter
-                                    </span>
-                                </div>
-                                <div id="personalization-subjects-container" class="space-y-1.5">
-                                    ${renderPersonalizationSubjectRows()}
-                                </div>
-                            </div>
-
-                            <!-- 5.2 Weekly Study Rhythm -->
+                            <!-- 5.1 Weekly Study Rhythm -->
                             <div>
                                 <span class="text-xs font-extrabold text-slate-700 dark:text-slate-200 block mb-2 flex items-center gap-1.5">
                                     <i class="fa-regular fa-calendar-days text-indigo-600 dark:text-indigo-400"></i>
@@ -2370,7 +2421,7 @@ function showToastMessage(text, icon = 'checkCircle') {
                                 </div>
                             </div>
 
-                            <!-- 5.3 Daily Self-Study Budget -->
+                            <!-- 5.2 Daily Self-Study Budget -->
                             <div>
                                 <div class="flex items-center justify-between mb-1.5">
                                     <span class="text-xs font-extrabold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
@@ -2394,77 +2445,21 @@ function showToastMessage(text, icon = 'checkCircle') {
                                 </div>
                             </div>
 
-                            <!-- Optional: Skip Finished Chapters & Intensity Accordion -->
-                            <details class="group setup-accordion border border-slate-200 dark:border-slate-700/80 rounded-2xl bg-slate-50/50 dark:bg-[#101726] overflow-hidden">
-                                <summary class="p-3.5 sm:p-4 flex items-center justify-between cursor-pointer font-bold text-xs sm:text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100/60 dark:hover:bg-[#162137] transition list-none select-none">
-                                    <div class="flex items-center gap-2.5">
-                                        <i class="fa-solid fa-sliders text-blue-600 dark:text-blue-400"></i>
-                                        <span>${isML ? ML_I18N.setup.moreOptions : 'More Options (Skip finished chapters, daily pace)'}</span>
-                                    </div>
-                                    <i class="fa-solid fa-chevron-down text-slate-400 dark:text-slate-400 text-xs transition duration-200 group-open:rotate-180"></i>
-                                </summary>
-
-                                <div class="p-4 pt-2 border-t border-slate-200/80 dark:border-slate-700/80 space-y-4 bg-white dark:bg-[#0e1422]">
-                                    <!-- Daily Study Pace / Capacity Selector -->
-                                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-slate-50 dark:bg-[#121a2c] rounded-xl border border-slate-200/70 dark:border-slate-700/80">
-                                        <div>
-                                            <label for="study-intensity" class="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
-                                                <i class="fa-solid fa-gauge-high text-blue-600 dark:text-blue-400"></i>
-                                                <span>${isML ? ML_I18N.setup.intensityLabel : 'Daily Study Intensity'}</span>
-                                            </label>
-                                            <p class="text-xs text-slate-500 dark:text-slate-300">${isML ? ML_I18N.setup.intensitySub : 'Adapts daily task pacing to your capacity'}</p>
-                                        </div>
-                                        <select id="study-intensity" class="text-xs font-bold bg-white dark:bg-[#101726] border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-800 dark:text-white outline-none focus:border-blue-600 transition cursor-pointer">
-                                            <option value="balanced" selected>${isML ? ML_I18N.setup.intensityBalanced : 'Standard (2-3 parts/day)'}</option>
-                                            <option value="intense">${isML ? ML_I18N.setup.intensityIntense : 'Intensive (3-4+ parts/day)'}</option>
-                                            <option value="light">${isML ? ML_I18N.setup.intensityLight : 'Relaxed (1-2 parts/day)'}</option>
-                                        </select>
-                                    </div>
-
-                                    <!-- Exclude Finished Chapters (+2 & +1 Improvement) -->
-                                    <div class="border border-slate-200 dark:border-slate-700/80 rounded-xl overflow-hidden bg-slate-50/40 dark:bg-[#121a2c]">
-                                        <button type="button" onclick="const w = document.getElementById('setup-chaps-wrapper'); w.classList.toggle('hidden'); const chv = document.getElementById('chaps-chevron'); chv.classList.toggle('rotate-180');" class="w-full p-3.5 flex items-center justify-between text-left hover:bg-slate-100/60 dark:hover:bg-[#162137] transition">
-                                            <div class="flex items-center gap-2.5">
-                                                <div class="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 flex items-center justify-center text-xs font-bold shrink-0">
-                                                    <i class="fa-solid fa-check-double"></i>
-                                                </div>
-                                                <div>
-                                                    <div class="flex items-center gap-2">
-                                                        <span class="text-xs font-bold text-slate-800 dark:text-white">${isML ? ML_I18N.setup.skipFinishedTitle : 'Skip Already Finished Chapters'}</span>
-                                                        <span id="completed-chaps-badge" class="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-[#162137] text-slate-500 dark:text-slate-300">0 ${isML ? ML_I18N.setup.excludedBadge : 'excluded'}</span>
-                                                    </div>
-                                                    <span class="text-xs text-slate-500 dark:text-slate-300 block">${isML ? ML_I18N.setup.skipFinishedSub : 'Mark chapters completed in school or tuition to omit them from the plan.'}</span>
-                                                </div>
-                                            </div>
-                                            <i id="chaps-chevron" class="fa-solid fa-chevron-down text-slate-400 dark:text-slate-400 text-xs transition duration-200 shrink-0"></i>
-                                        </button>
-
-                                        <div id="setup-chaps-wrapper" class="hidden p-3.5 bg-white dark:bg-[#0e1422] border-t border-slate-200 dark:border-slate-700/80">
-                                            <!-- Grade Tabs Switcher (+2 vs +1) -->
-                                            <div class="flex bg-slate-200/80 dark:bg-[#162137] p-1 rounded-xl mb-3 gap-1">
-                                                <button type="button" id="grade-tab-p2" onclick="switchSetupGrade('+2')" class="flex-1 py-1.5 px-3 text-xs font-bold rounded-lg bg-blue-600 dark:bg-blue-500 text-white shadow-sm transition flex items-center justify-center gap-1.5">
-                                                    <i class="fa-solid fa-book-bookmark text-xs"></i>
-                                                    <span>📘 Plus Two (+2)</span>
-                                                </button>
-                                                <button type="button" id="grade-tab-p1" onclick="switchSetupGrade('+1')" class="flex-1 py-1.5 px-3 text-xs font-bold rounded-lg bg-slate-100 dark:bg-[#121a2c] text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#1a253c] transition flex items-center justify-center gap-1.5">
-                                                    <i class="fa-solid fa-star text-xs"></i>
-                                                    <span>📙 +1 Improvement</span>
-                                                </button>
-                                            </div>
-
-                                            <!-- Subject Tabs Switcher (Strictly Stream Isolated) -->
-                                            <div id="setup-subject-tabs-container" class="flex flex-wrap gap-1.5 mb-3">
-                                                ${renderSetupSubjectTabs()}
-                                            </div>
-
-                                            <!-- Active Chapter List Container -->
-                                            <div id="setup-subject-chapters-list" class="bg-slate-50/50 dark:bg-[#101726] p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700/80">
-                                                ${renderSetupSubjectChapters(activeSetupSubjectTab, activeSetupGradeTab)}
-                                            </div>
-                                        </div>
-                                    </div>
+                            <!-- 5.3 Daily Study Pace / Capacity Selector -->
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3.5 bg-slate-50 dark:bg-[#121a2c] rounded-2xl border border-slate-200/80 dark:border-slate-700/80">
+                                <div>
+                                    <label for="study-intensity" class="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
+                                        <i class="fa-solid fa-gauge-high text-blue-600 dark:text-blue-400"></i>
+                                        <span>${isML ? ML_I18N.setup.intensityLabel : 'Daily Study Pacing'}</span>
+                                    </label>
+                                    <p class="text-xs text-slate-500 dark:text-slate-300">${isML ? ML_I18N.setup.intensitySub : 'Adapts daily task pacing to your capacity'}</p>
                                 </div>
-                            </details>
+                                <select id="study-intensity" class="text-xs font-bold bg-white dark:bg-[#101726] border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-800 dark:text-white outline-none focus:border-blue-600 transition cursor-pointer">
+                                    <option value="balanced" selected>${isML ? ML_I18N.setup.intensityBalanced : 'Standard (2-3 parts/day)'}</option>
+                                    <option value="intense">${isML ? ML_I18N.setup.intensityIntense : 'Intensive (3-4+ parts/day)'}</option>
+                                    <option value="light">${isML ? ML_I18N.setup.intensityLight : 'Relaxed (1-2 parts/day)'}</option>
+                                </select>
+                            </div>
 
                             <!-- Step 5 Navigation & Submit Button -->
                             <div class="pt-4 flex items-center justify-between gap-3">
@@ -2490,21 +2485,16 @@ function showToastMessage(text, icon = 'checkCircle') {
             // View 1: Today's Target View (Default First Attention Screen)
             if (currentView === 'today') {
                 const calendarToday = appState.plan.find(d => d.date === TODAY_STR);
-                const firstIncompleteDay = appState.plan.find(d => (d.tasks || []).some(t => !t.completed));
+                const firstDay = appState.plan[0];
 
-                let activeMissionDay = null;
-                if (selectedMissionDayNumber) {
-                    activeMissionDay = appState.plan.find(d => d.dayNumber === selectedMissionDayNumber);
-                }
-                if (!activeMissionDay) {
-                    if (firstIncompleteDay && calendarToday && firstIncompleteDay.dayNumber < calendarToday.dayNumber) {
-                        activeMissionDay = firstIncompleteDay;
+                let todayPlan = calendarToday;
+                if (!todayPlan) {
+                    if (firstDay && new Date(TODAY_STR) < new Date(firstDay.date)) {
+                        todayPlan = firstDay;
                     } else {
-                        activeMissionDay = calendarToday || appState.plan[0];
+                        todayPlan = null;
                     }
                 }
-                const todayPlan = activeMissionDay;
-                const isCatchUpDay = Boolean(calendarToday && todayPlan && (todayPlan.dayNumber < calendarToday.dayNumber));
                 const overallStats = getOverallStats();
 
                 let todayTasksHTML;
@@ -2568,49 +2558,26 @@ function showToastMessage(text, icon = 'checkCircle') {
                         </div>
                     ` : '';
 
-                    const catchUpBannerHTML = isCatchUpDay ? `
-                        <div class="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-2xl p-3.5 sm:p-4 mb-4 text-xs text-amber-900 dark:text-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
-                            <div class="flex items-start gap-2.5">
-                                <span class="text-base mt-0.5">⚡</span>
-                                <div>
-                                    <strong class="font-bold block">${isML ? `ദിവസം ${todayPlan.dayNumber}-ലെ പാഠഭാഗങ്ങൾ` : `Focusing on Day ${todayPlan.dayNumber} Portions`}</strong>
-                                    <span class="text-amber-700 dark:text-amber-300">${isML ? `ദിവസം ${todayPlan.dayNumber}-ൽ ബാക്കിയുള്ള പാഠങ്ങൾ പൂർത്തിയാക്കി മുന്നേറുക!` : `You have active portions remaining in Day ${todayPlan.dayNumber}. Completing them keeps your prerequisite chain unbroken!`}</span>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-2 flex-wrap shrink-0">
-                                <button onclick="shiftPlanToToday()" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs transition whitespace-nowrap shadow-xs" title="${isML ? 'ഇന്നത്തെ ദിവസം ഒന്ന് ആക്കി മാറ്റുക' : 'Synchronize schedule so Day 1 starts today'}">
-                                    ${isML ? 'ഇന്ന് ദിവസം 1 ആക്കുക' : 'Make Today Day 1'}
-                                </button>
-                                <button onclick="changeMissionDay(${calendarToday.dayNumber})" class="px-3 py-1.5 bg-white dark:bg-slate-800 border border-amber-300 dark:border-amber-700 font-bold rounded-xl text-xs text-amber-900 dark:text-amber-200 hover:bg-amber-100 dark:hover:bg-slate-700 transition whitespace-nowrap">
-                                    ${isML ? `കലണ്ടർ ദിവസം ${calendarToday.dayNumber}` : `Calendar Day ${calendarToday.dayNumber}`}
-                                </button>
-                            </div>
-                        </div>
-                    ` : '';
-
                     todayTasksHTML = `
                         ${warningBannerHTML}
-                        ${catchUpBannerHTML}
                         ${milestoneCardHTML}
 
                         <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
                             <div>
                                 <h3 class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2 flex-wrap">
                                     <span>${isML ? ML_I18N.dashboard.todaysMission : "Today's Mission"}</span>
-                                    <span class="text-xs font-bold bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 py-0.5 px-2.5 rounded-full">${isML ? `ദിവസം ${todayPlan.dayNumber}` : `Day ${todayPlan.dayNumber}`}</span>
-                                    ${isCatchUpDay ? `<span class="text-xs font-bold bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 py-0.5 px-2.5 rounded-full">${isML ? 'തുടരുന്നു' : 'In Progress'}</span>` : ''}
+                                    <span class="text-xs font-black bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 py-0.5 px-2.5 rounded-full border border-blue-200 dark:border-blue-700/60">
+                                        ${isML ? `ദിവസം ${todayPlan.dayNumber} / ${appState.plan.length}` : `Day ${todayPlan.dayNumber} of ${appState.plan.length}`}
+                                    </span>
                                     ${todayPlan.isRevisionDay ? `<span class="text-xs font-bold bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 py-0.5 px-2.5 rounded-full">${isML ? ML_I18N.dashboard.revisionPhase : 'Revision Phase'}</span>` : ''}
                                 </h3>
                                 <p class="text-xs text-slate-400 mt-0.5">${isML ? `${totalToday}-ൽ ${doneToday} ടാസ്കുകൾ പൂർത്തിയായി` : `${doneToday}/${totalToday} tasks completed today`}</p>
                             </div>
-                            <div class="flex items-center gap-1.5">
-                                <button onclick="changeMissionDay(${todayPlan.dayNumber - 1})" ${todayPlan.dayNumber <= 1 ? 'disabled class="opacity-30 cursor-not-allowed p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-400"' : 'class="p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"'} title="Previous Day">
-                                    ${getSvgIcon('chevronLeft', 'w-4 h-4')}
-                                </button>
-                                <span class="text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-xl">${todayPlan.date}</span>
-                                <button onclick="changeMissionDay(${todayPlan.dayNumber + 1})" ${todayPlan.dayNumber >= appState.plan.length ? 'disabled class="opacity-30 cursor-not-allowed p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-400"' : 'class="p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"'} title="Next Day">
-                                    ${getSvgIcon('chevronRight', 'w-4 h-4')}
-                                </button>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700/80 flex items-center gap-1.5">
+                                    <i class="fa-regular fa-calendar text-blue-600 dark:text-blue-400"></i>
+                                    <span>${todayPlan.date}</span>
+                                </span>
                             </div>
                         </div>
 

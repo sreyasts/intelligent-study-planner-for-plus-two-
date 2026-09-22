@@ -41,17 +41,21 @@ export function getCanonicalTasks({
   termScope = 3,
   includePlusOne = false,
   plusOneSubjects = [],
+  improvementOnly = false,
 } = {}) {
-  const allowedSubjects = stream === 'bio'
+  const isBio = stream === 'bio' || plusOneSubjects.some((s) => s === 'Botany' || s === 'Zoology');
+  const allowedSubjects = isBio
     ? ['Physics', 'Chemistry', 'Mathematics', 'Botany', 'Zoology']
     : ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'];
 
-  const p2Tasks = PLUS_TWO_SYLLABUS.filter((t) =>
-    allowedSubjects.includes(t.subject) && (t.term || 1) <= termScope
-  );
+  const p2Tasks = improvementOnly
+    ? []
+    : PLUS_TWO_SYLLABUS.filter((t) =>
+        allowedSubjects.includes(t.subject) && (t.term || 1) <= termScope
+      );
 
   let p1Tasks = [];
-  if (includePlusOne && plusOneSubjects.length > 0) {
+  if ((includePlusOne || improvementOnly) && plusOneSubjects.length > 0) {
     p1Tasks = PLUS_ONE_SYLLABUS.filter((t) =>
       plusOneSubjects.includes(t.subject)
     );
@@ -124,6 +128,8 @@ export function validatePlan(planOrDays, originalTasks, options = {}) {
       ? originalTasks.filter((t) =>
           options.stream === 'cs'
             ? t.subject !== 'Botany' && t.subject !== 'Zoology'
+            : options.stream === 'imp_only'
+            ? true
             : t.subject !== 'Computer Science'
         )
       : originalTasks
@@ -208,12 +214,16 @@ function _executeCorePlanAlgorithm(
     throw new Error('Target deadline must be in the future');
   }
 
-  const effectiveStream =
-    stream ||
-    (tasksToSchedule.some((t) => t.subject === 'Botany' || t.subject === 'Zoology') ? 'bio' : 'cs');
+  const isImpOnly = stream === 'imp_only' || (tasksToSchedule.length > 0 && tasksToSchedule.every((t) => t.grade === '+1'));
+  const hasBio = tasksToSchedule.some((t) => t.subject === 'Botany' || t.subject === 'Zoology');
+  const effectiveStream = isImpOnly
+    ? 'imp_only'
+    : (stream || (hasBio ? 'bio' : 'cs'));
   const streamSubjects =
     effectiveStream === 'bio'
       ? ['Physics', 'Chemistry', 'Mathematics', 'Botany', 'Zoology']
+      : effectiveStream === 'imp_only'
+      ? (hasBio ? ['Physics', 'Chemistry', 'Mathematics', 'Botany', 'Zoology'] : ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'])
       : ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'];
 
   const applicableTasks = tasksToSchedule.filter((t) => streamSubjects.includes(t.subject));
@@ -575,7 +585,7 @@ function _executeCorePlanAlgorithm(
       if (isFinalMock) {
         planDays[revDayIndex].tasks.push({
           id: `REV_DAY_${r + 1}_MOCK`,
-          grade: '+2',
+          grade: isImpOnly ? '+1' : '+2',
           subject: 'All Subjects',
           chapterName: `Final Examination Simulation (Day ${r + 1}/${revisionDaysCount})`,
           topicTitle:
@@ -588,7 +598,7 @@ function _executeCorePlanAlgorithm(
       } else if (isPenultimateMock) {
         planDays[revDayIndex].tasks.push({
           id: `REV_DAY_${r + 1}_PYQ`,
-          grade: '+2',
+          grade: isImpOnly ? '+1' : '+2',
           subject: 'All Subjects',
           chapterName: `Previous Year Questions (PYQ) Sprint (Day ${r + 1}/${revisionDaysCount})`,
           topicTitle:
@@ -621,7 +631,7 @@ function _executeCorePlanAlgorithm(
 
         planDays[revDayIndex].tasks.push({
           id: `REV_DAY_${r + 1}_${activeSub.replace(/\s+/g, '_')}`,
-          grade: '+2',
+          grade: isImpOnly ? '+1' : '+2',
           subject: activeSub,
           chapterName: `Targeted Revision: ${activeSub} (Day ${r + 1}/${revisionDaysCount})`,
           topicTitle,
@@ -675,9 +685,10 @@ export function buildIntelligentPlan(
     const opts = deadlineOrOptions;
     const deadline = opts.deadlineDateStr || opts.deadlineDate;
     const start = opts.startDateStr || opts.startDate || TODAY_STR;
-    const str = opts.stream || 'cs';
+    const impOnly = Boolean(opts.improvementOnly || opts.stream === 'imp_only');
+    const str = opts.stream === 'imp_only' ? (opts.plusOneSubjects?.some((s) => s === 'Botany' || s === 'Zoology') ? 'bio' : 'cs') : (opts.stream || 'cs');
     const term = opts.termScope || 3;
-    const incP1 = Boolean(opts.includePlusOne);
+    const incP1 = Boolean(opts.includePlusOne || impOnly);
     const p1Subs = opts.plusOneSubjects || [];
     const impDates = opts.improvementDates || {};
     const impConfig = p1Subs.map((s) => ({ subject: s, examDate: impDates[s] || deadline }));
@@ -688,8 +699,9 @@ export function buildIntelligentPlan(
         termScope: term,
         includePlusOne: incP1,
         plusOneSubjects: p1Subs,
+        improvementOnly: impOnly,
       });
-    return _executeCorePlanAlgorithm(deadline, tasks, start, impConfig, str, opts);
+    return _executeCorePlanAlgorithm(deadline, tasks, start, impConfig, impOnly ? 'imp_only' : str, opts);
   }
 
   return _executeCorePlanAlgorithm(
@@ -703,6 +715,9 @@ export function buildIntelligentPlan(
 }
 
 export function getStreamSubjects(stream = 'cs') {
+  if (stream === 'imp_only') {
+    return ['Physics', 'Chemistry', 'Mathematics', 'Botany', 'Zoology', 'Computer Science'];
+  }
   return stream === 'bio'
     ? ['Physics', 'Chemistry', 'Mathematics', 'Botany', 'Zoology']
     : ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'];
