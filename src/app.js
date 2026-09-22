@@ -75,13 +75,11 @@ function getTaskDeepLinksHtml(task) {
     if (!res) return '';
     const textbook = res.textbookUrl || res.textbook;
     const pyq = res.pyqUrl || res.pyq;
-    const video = res.videoPlaylistUrl || res.video;
     return `
         <div class="flex flex-wrap items-center gap-2 mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
             <span class="text-slate-400 dark:text-slate-500 font-semibold text-xs">Portals:</span>
             ${textbook ? `<a href="${textbook}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:underline font-semibold" title="Official SCERT Textbook">${getSvgIcon('book', 'w-3.5 h-3.5')} SCERT</a>` : ''}
             ${pyq ? `<a href="${pyq}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-purple-600 dark:text-purple-400 hover:underline font-semibold" title="${res.pyqTitle || 'Previous Year Questions'}">${getSvgIcon('fileText', 'w-3.5 h-3.5')} PYQs</a>` : ''}
-            ${video ? `<a href="${video}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-rose-600 dark:text-rose-400 hover:underline font-semibold" title="${res.videoTitle || 'KITE Victers Video Classes'}">${getSvgIcon('video', 'w-3.5 h-3.5')} Victers</a>` : ''}
         </div>
     `;
 }
@@ -2909,7 +2907,6 @@ function showToastMessage(text, icon = 'checkCircle') {
                                     <span class="text-slate-400 font-medium">${isML ? 'പഠന സാമഗ്രികൾ:' : 'Study Portals:'}</span>
                                     ${subTextbook ? `<a href="${subTextbook}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-blue-600 hover:underline font-semibold">${getSvgIcon('book', 'w-3.5 h-3.5')} SCERT</a>` : ''}
                                     ${subPyq ? `<a href="${subPyq}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-purple-600 hover:underline font-semibold">${getSvgIcon('fileText', 'w-3.5 h-3.5')} PYQs</a>` : ''}
-                                    ${subVideo ? `<a href="${subVideo}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-rose-600 hover:underline font-semibold">${getSvgIcon('video', 'w-3.5 h-3.5')} Victers</a>` : ''}
                                 </div>` : ''}
                             </div>
 
