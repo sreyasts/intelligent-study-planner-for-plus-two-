@@ -6,7 +6,25 @@
       "**/.*",
       "**/node_modules/**"
     ],
-    "cleanUrls": true,
+    "cleanUrls": false,
+    "rewrites": [
+      {
+        "source": "/pages/terms",
+        "destination": "/pages/terms.html"
+      },
+      {
+        "source": "/pages/privacy",
+        "destination": "/pages/privacy.html"
+      },
+      {
+        "source": "/pages/syllabus-plus-two",
+        "destination": "/pages/syllabus-plus-two.html"
+      },
+      {
+        "source": "/pages/plus-one-improvement-guide",
+        "destination": "/pages/plus-one-improvement-guide.html"
+      }
+    ],
     "headers": [
       {
         "source": "sw.js",

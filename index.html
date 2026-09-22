@@ -30,7 +30,7 @@
                 }
 
                 var cleanPath = window.location.pathname.replace(/^\/intelligent-study-planner-for-plus-two-?/, '');
-                if (!cleanPath || cleanPath === '') cleanPath = '/';
+                if (!cleanPath || cleanPath === '' || cleanPath === '/index.html') cleanPath = '/';
                 var target = 'https://' + CANONICAL_HOST + cleanPath + window.location.search + (syncPayload ? '#mpt_sync=' + syncPayload : window.location.hash);
                 window.location.replace(target);
             }
@@ -214,7 +214,7 @@
                             <svg class="w-4 h-4 inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                         </div>
                         <!-- User Google Avatar (Shown when logged in) -->
-                        <img id="user-avatar-img" src="" alt="User" class="hidden w-7 h-7 rounded-lg object-cover border border-slate-200 dark:border-slate-700 bg-slate-200 dark:bg-slate-700">
+                        <img id="user-avatar-img" src="" alt="User" referrerpolicy="no-referrer" class="hidden w-7 h-7 rounded-lg object-cover border border-slate-200 dark:border-slate-700 bg-slate-200 dark:bg-slate-700" onerror="this.onerror=null; this.src='icon.png';">
                         <span id="user-name-short" class="text-xs font-bold text-slate-700 dark:text-slate-200 hidden md:inline max-w-[85px] truncate">Guest</span>
                         <svg class="w-3.5 h-3.5 inline-block text-xs text-slate-400 dark:text-slate-500 mr-0.5 transition group-hover:text-slate-700 dark:group-hover:text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
                     </button>
@@ -224,7 +224,7 @@
                         <!-- Profile Details: Logged In State -->
                         <div id="dropdown-signed-in-block" class="hidden pb-3 border-b border-slate-100 dark:border-slate-800 mb-3">
                             <div class="flex items-center gap-2.5 mb-2.5">
-                                <img id="dropdown-avatar-img" src="" alt="Avatar" class="w-10 h-10 rounded-xl object-cover bg-slate-200 dark:bg-slate-700">
+                                <img id="dropdown-avatar-img" src="" alt="Avatar" referrerpolicy="no-referrer" class="w-10 h-10 rounded-xl object-cover bg-slate-200 dark:bg-slate-700" onerror="this.onerror=null; this.src='icon.png';">
                                 <div class="truncate">
                                     <span id="dropdown-user-name" class="font-bold text-slate-800 dark:text-white block truncate text-sm"></span>
                                     <span id="dropdown-user-email" class="text-xs text-slate-400 block truncate"></span>

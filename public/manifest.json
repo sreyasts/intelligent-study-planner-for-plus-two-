@@ -3,7 +3,7 @@
   "name": "Mission PlusTwo",
   "short_name": "Mission PlusTwo",
   "description": "Adaptive daily study timetable & revision engine for Kerala DHSE Plus Two and Plus One Improvement students.",
-  "start_url": "./index.html?source=pwa",
+  "start_url": "./?source=pwa",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",

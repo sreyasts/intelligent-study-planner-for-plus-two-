@@ -389,6 +389,7 @@ function loadInitialState() {
             auth.onAuthStateChanged(async (user) => {
                 const wasSignedIn = !!currentUser;
                 currentUser = user;
+                if (typeof window !== 'undefined') window.currentUser = user;
                 updateAuthHeaderUI();
 
                 if (user) {
@@ -471,7 +472,7 @@ function loadInitialState() {
         }
 
         // Initialize Firebase Auth on app start so existing sessions are detected immediately
-        if (typeof window !== 'undefined' && typeof document !== 'undefined' && typeof document.createElement === 'function') {
+        if (typeof window !== 'undefined' && typeof document !== 'undefined' && typeof document.createElement === 'function' && document.head && typeof document.head.appendChild === 'function') {
             initFirebaseAuth();
         }
 
@@ -532,7 +533,7 @@ function loadInitialState() {
             const dropdownUserEmail = document.getElementById('dropdown-user-email');
             const signoutBlock = document.getElementById('dropdown-signout-block');
 
-            const activeUser = (typeof window !== 'undefined' && window.currentUser !== undefined) ? window.currentUser : currentUser;
+            const activeUser = currentUser || (typeof window !== 'undefined' ? window.currentUser : null);
 
             if (activeUser) {
                 userAvatarImg?.classList.remove('hidden');
@@ -540,8 +541,14 @@ function loadInitialState() {
                 const photoUrl = activeUser.photoURL || 'icon.png';
                 const displayName = activeUser.displayName || activeUser.email?.split('@')[0] || 'Student';
 
-                if (userAvatarImg) userAvatarImg.src = photoUrl;
-                if (dropdownAvatarImg) dropdownAvatarImg.src = photoUrl;
+                if (userAvatarImg) {
+                    userAvatarImg.src = photoUrl;
+                    userAvatarImg.referrerPolicy = 'no-referrer';
+                }
+                if (dropdownAvatarImg) {
+                    dropdownAvatarImg.src = photoUrl;
+                    dropdownAvatarImg.referrerPolicy = 'no-referrer';
+                }
                 if (userNameShort) userNameShort.innerText = displayName;
                 if (dropdownUserName) dropdownUserName.innerText = displayName;
                 if (dropdownUserEmail) dropdownUserEmail.innerText = activeUser.email || '';
@@ -631,6 +638,7 @@ function loadInitialState() {
                 const result = await auth.signInWithPopup(provider);
                 if (result && result.user) {
                     currentUser = result.user;
+                    if (typeof window !== 'undefined') window.currentUser = result.user;
                     updateAuthHeaderUI();
                     await performCloudSync(currentUser, true);
                 }
@@ -720,6 +728,7 @@ function loadInitialState() {
 
             // 4. Reset in-memory state variables to initial setup defaults
             currentUser = null;
+            if (typeof window !== 'undefined') window.currentUser = null;
             appState = null;
             selectedCompletedChapters.clear();
             currentView = 'today';
