@@ -25,7 +25,15 @@
 
 Most students download static PDF timetables from Telegram or HSSLive, try to follow them for 3 days, miss a day, fall behind, and give up. 
 
-**Mission PlusTwo** is an adaptive, dynamic daily timetable generator designed specifically for Kerala State Board (DHSE) Higher Secondary students. It calculates your exact deadline, balances subjects across school days and weekends, and guarantees dedicated revision buffers for mock exams and PYQ practice.
+**Mission PlusTwo** is a **deterministic adaptive planner and constraint-aware scheduling engine** designed specifically for Kerala State Board (DHSE) Higher Secondary students. It calculates your exact deadline runway, balances subjects across school days and weekends, enforces strict chapter-part dependency ordering, prioritizes Class 11 improvement exams before their respective test dates, and guarantees dedicated revision buffers for mock exams and PYQ practice.
+
+---
+
+## 📚 Technical Documentation
+
+- **[System Architecture](docs/ARCHITECTURE.md)**: Deep dive into the local-first PWA design, canonical syllabus schema, state machine lifecycle, and offline persistence.
+- **[Algorithm Specification](docs/ALGORITHM.md)**: Mathematical inputs, constraints, capacity accumulator model, candidate subject interleaving heuristics, and \(O(N \log N + D \cdot S)\) complexity bounds.
+- **[Empirical Benchmarks](docs/BENCHMARKS.md)**: Reproducible comparative benchmark evaluating Mission PlusTwo against naive sequential and round-robin baselines across coverage, deadline violations, ordering integrity, and workload variance.
 
 ---
 
