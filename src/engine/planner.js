@@ -7,6 +7,8 @@
 import { PLUS_TWO_SYLLABUS, PLUS_TWO_CHAPTERS } from '../data/syllabus-plus-two.js';
 import { PLUS_ONE_SYLLABUS, PLUS_ONE_CHAPTERS } from '../data/syllabus-plus-one.js';
 
+export { PLUS_TWO_CHAPTERS, PLUS_ONE_CHAPTERS };
+
 export const PLANNER_ENGINE_VERSION = 5;
 export const ENGINE_VERSION = 6;
 
@@ -30,10 +32,14 @@ export const getLocalDateStr = formatLocalDateStr;
 export const TODAY_STR = formatLocalDateStr(new Date());
 
 export function calculateDaysBetween(startDateStr, endDateStr) {
+  if (!startDateStr || !endDateStr) return NaN;
   const s = new Date(String(startDateStr).split('T')[0] + 'T00:00:00');
   const e = new Date(String(endDateStr).split('T')[0] + 'T00:00:00');
+  if (Number.isNaN(s.getTime()) || Number.isNaN(e.getTime())) {
+    return NaN;
+  }
   const diffMs = e.getTime() - s.getTime();
-  return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  return Math.round(diffMs / (1000 * 60 * 60 * 24));
 }
 
 export function getCanonicalTasks({
@@ -210,12 +216,22 @@ function _executeCorePlanAlgorithm(
   capacityOptions = {}
 ) {
   const totalDaysCount = calculateDaysBetween(startDateStr, deadlineStr) + 1;
-  if (totalDaysCount <= 1) {
+  if (Number.isNaN(totalDaysCount) || totalDaysCount <= 1) {
     throw new Error('Target deadline must be in the future');
   }
 
-  const isImpOnly = stream === 'imp_only' || (tasksToSchedule.length > 0 && tasksToSchedule.every((t) => t.grade === '+1'));
-  const hasBio = tasksToSchedule.some((t) => t.subject === 'Botany' || t.subject === 'Zoology');
+  // Deduplicate input tasks to prevent duplicate scheduling from malformed callers
+  const seenTaskIds = new Set();
+  const dedupedTasks = [];
+  (tasksToSchedule || []).forEach((t) => {
+    if (t && t.id && !seenTaskIds.has(t.id)) {
+      seenTaskIds.add(t.id);
+      dedupedTasks.push(t);
+    }
+  });
+
+  const isImpOnly = stream === 'imp_only' || (dedupedTasks.length > 0 && dedupedTasks.every((t) => t.grade === '+1'));
+  const hasBio = dedupedTasks.some((t) => t.subject === 'Botany' || t.subject === 'Zoology');
   const effectiveStream = isImpOnly
     ? 'imp_only'
     : (stream || (hasBio ? 'bio' : 'cs'));
@@ -226,7 +242,7 @@ function _executeCorePlanAlgorithm(
       ? (hasBio ? ['Physics', 'Chemistry', 'Mathematics', 'Botany', 'Zoology'] : ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'])
       : ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'];
 
-  const applicableTasks = tasksToSchedule.filter((t) => streamSubjects.includes(t.subject));
+  const applicableTasks = dedupedTasks.filter((t) => streamSubjects.includes(t.subject));
 
   let revisionDaysCount = 0;
   if (totalDaysCount >= 75) revisionDaysCount = 10;
@@ -247,7 +263,8 @@ function _executeCorePlanAlgorithm(
     pers.restDayOfWeek !== undefined && pers.restDayOfWeek !== null && pers.restDayOfWeek !== ''
       ? parseInt(pers.restDayOfWeek, 10)
       : null;
-  const dailyHours = pers.dailyHours ? parseFloat(pers.dailyHours) : null;
+  const rawHours = pers.dailyHours !== undefined && pers.dailyHours !== null ? parseFloat(pers.dailyHours) : null;
+  const dailyHours = Number.isFinite(rawHours) && rawHours > 0 ? Math.min(16, Math.max(0.5, rawHours)) : null;
   const intensity = capacityOptions.intensity || pers.intensity || 'balanced';
 
   const planDays = [];
@@ -275,13 +292,35 @@ function _executeCorePlanAlgorithm(
     });
   }
 
-  // Workload & Capacity Calculation
+  // Workload & Capacity Calculation with resilient bounds
+  const rawWdCap = capacityOptions.weekdayDailyTasks !== undefined && capacityOptions.weekdayDailyTasks !== null
+    ? Number(capacityOptions.weekdayDailyTasks)
+    : null;
+  const rawWeCap = capacityOptions.weekendDailyTasks !== undefined && capacityOptions.weekendDailyTasks !== null
+    ? Number(capacityOptions.weekendDailyTasks)
+    : null;
+
   const baseWeekdayCapacity =
-    capacityOptions.weekdayDailyTasks ||
-    (dailyHours ? Math.max(1.5, dailyHours * 0.7) : intensity === 'light' ? 1.5 : intensity === 'intense' ? 3.5 : 2.5);
+    Number.isFinite(rawWdCap) && rawWdCap > 0
+      ? rawWdCap
+      : dailyHours
+      ? Math.max(1.5, dailyHours * 0.7)
+      : intensity === 'light'
+      ? 1.5
+      : intensity === 'intense'
+      ? 3.5
+      : 2.5;
+
   const baseWeekendCapacity =
-    capacityOptions.weekendDailyTasks ||
-    (dailyHours ? Math.max(2, dailyHours * 0.9) : intensity === 'light' ? 2 : intensity === 'intense' ? 4.5 : 3.5);
+    Number.isFinite(rawWeCap) && rawWeCap > 0
+      ? rawWeCap
+      : dailyHours
+      ? Math.max(2, dailyHours * 0.9)
+      : intensity === 'light'
+      ? 2
+      : intensity === 'intense'
+      ? 4.5
+      : 3.5;
 
   let totalStandardCapacity = 0;
   for (let i = 0; i < syllabusStudyDays; i++) {
@@ -482,7 +521,8 @@ function _executeCorePlanAlgorithm(
       let bestScore = -Infinity;
 
       pool.forEach((s) => {
-        const w = subjectWeights[s] || 1.0;
+        const rawW = subjectWeights[s];
+        const w = Number.isFinite(Number(rawW)) && Number(rawW) > 0 ? Number(rawW) : 1.0;
         const st = subjectState[s];
         const inProgBonus = st.partIndex > 0 ? 1.8 : 0.0;
         const recencyGap = st.lastScheduledDay === -1 ? 4 : dayIndex - st.lastScheduledDay;
