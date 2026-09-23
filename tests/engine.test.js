@@ -232,3 +232,197 @@ describe('State Migration Engine', () => {
     expect(activeDay.date).toBe('2026-09-20');
   });
 });
+
+describe('Edge Cases, Boundary Conditions & Invariant Hardening', () => {
+  it('handles very short deadlines (2 days) without crashing or invalid states', () => {
+    const planState = buildIntelligentPlan({
+      stream: 'cs',
+      startDateStr: '2026-10-01',
+      deadlineDateStr: '2026-10-02',
+      termScope: 1,
+    });
+
+    expect(planState.plan.length).toBe(2);
+    expect(planState.revisionDaysCount).toBe(0); // Short runway reserves 0 revision days
+    expect(planState.plan[0].tasks.length).toBeGreaterThan(0);
+    expect(planState.diagnostics.isInfeasible).toBe(true); // Flagged as overloaded
+    const validation = validatePlan(planState);
+    expect(validation.scorecard.duplicateTasks).toBe(0);
+    expect(validation.scorecard.orderingViolations).toBe(0);
+  });
+
+  it('rejects invalid or malformed date inputs with explicit errors', () => {
+    expect(() =>
+      buildIntelligentPlan({
+        stream: 'cs',
+        startDateStr: 'invalid-date',
+        deadlineDateStr: '2026-10-20',
+      })
+    ).toThrow('Target deadline must be in the future');
+
+    expect(calculateDaysBetween('invalid-date', '2026-10-20')).toBeNaN();
+  });
+
+  it('resiliently handles rest-day configurations even when saturated', () => {
+    // If user sets Sunday as rest day on a 1-day Sunday runway, it must preserve at least one active study day
+    const planState = buildIntelligentPlan({
+      stream: 'cs',
+      startDateStr: '2026-10-04', // Sunday
+      deadlineDateStr: '2026-10-05',
+      capacityOptions: {
+        personalization: {
+          weeklyRhythm: 'rest_day',
+          restDayOfWeek: 0, // Sunday
+        },
+      },
+    });
+
+    expect(planState.plan.length).toBe(2);
+    // Active study day count must be > 0 (rest day reset safety kicks in)
+    const activeDays = planState.plan.filter((d) => !d.isRestDay);
+    expect(activeDays.length).toBeGreaterThan(0);
+  });
+
+  it('safely tolerates zero or negative capacity and personalization values', () => {
+    const planState = buildIntelligentPlan({
+      stream: 'cs',
+      startDateStr: '2026-10-01',
+      deadlineDateStr: '2026-10-31',
+      capacityOptions: {
+        weekdayDailyTasks: -5,
+        weekendDailyTasks: 0,
+        personalization: {
+          dailyHours: -2,
+          subjectWeights: { Physics: -1, Chemistry: 0, Mathematics: 'invalid' },
+        },
+      },
+    });
+
+    expect(planState.valid).toBe(true);
+    expect(planState.scorecard.duplicateTasks).toBe(0);
+    expect(planState.scorecard.orderingViolations).toBe(0);
+  });
+
+  it('deduplicates duplicate tasks provided in caller task lists', () => {
+    const canonical = getCanonicalTasks({ stream: 'cs', termScope: 1 });
+    // Duplicate the task list
+    const duplicatedInput = [...canonical, ...canonical];
+
+    const planState = buildIntelligentPlan(
+      '2026-11-01',
+      duplicatedInput,
+      '2026-10-01',
+      [],
+      'cs'
+    );
+
+    const validation = validatePlan(planState);
+    expect(validation.scorecard.duplicateTasks).toBe(0);
+    expect(validation.uniqueTaskCount).toBe(canonical.length + planState.revisionDaysCount);
+  });
+
+  it('handles empty input task lists gracefully without exceptions', () => {
+    const planState = buildIntelligentPlan(
+      '2026-10-15',
+      [],
+      '2026-10-01',
+      [],
+      'cs'
+    );
+
+    expect(planState.plan.length).toBe(15);
+    expect(planState.totalConfiguredTasks).toBe(0);
+    const validation = validatePlan(planState);
+    expect(validation.valid).toBe(true);
+  });
+
+  it('schedules multiple improvement exams prior to respective individual deadlines', () => {
+    const planState = buildIntelligentPlan({
+      stream: 'cs',
+      startDateStr: '2026-10-01',
+      deadlineDateStr: '2027-02-28',
+      includePlusOne: true,
+      plusOneSubjects: ['Physics', 'Chemistry', 'Mathematics'],
+      improvementDates: {
+        Physics: '2026-10-20',
+        Chemistry: '2026-10-25',
+        Mathematics: '2026-11-05',
+      },
+    });
+
+    const validation = validatePlan(planState, undefined, {
+      stream: 'cs',
+      improvementConfig: [
+        { subject: 'Physics', examDate: '2026-10-20' },
+        { subject: 'Chemistry', examDate: '2026-10-25' },
+        { subject: 'Mathematics', examDate: '2026-11-05' },
+      ],
+    });
+
+    expect(validation.scorecard.deadlineViolations).toBe(0);
+    expect(validation.scorecard.orderingViolations).toBe(0);
+    expect(validation.scorecard.duplicateTasks).toBe(0);
+  });
+
+  it('supports improvement-only stream mode for repeating students', () => {
+    const planState = buildIntelligentPlan({
+      stream: 'imp_only',
+      startDateStr: '2026-10-01',
+      deadlineDateStr: '2026-11-15',
+      improvementOnly: true,
+      plusOneSubjects: ['Physics', 'Chemistry'],
+      improvementDates: {
+        Physics: '2026-11-10',
+        Chemistry: '2026-11-12',
+      },
+    });
+
+    expect(planState.stream).toBe('imp_only');
+    const allTasks = planState.plan.flatMap((d) => d.tasks);
+    expect(allTasks.every((t) => t.grade === '+1' || t.isRevision)).toBe(true);
+    const validation = validatePlan(planState);
+    expect(validation.scorecard.orderingViolations).toBe(0);
+  });
+
+  it('correctly handles month and leap year date transitions', () => {
+    // Leap year boundary: Feb 2028
+    const leapPlan = buildIntelligentPlan({
+      stream: 'cs',
+      startDateStr: '2028-02-27',
+      deadlineDateStr: '2028-03-03',
+      termScope: 1,
+    });
+
+    // 2028-02-27, 28, 29, 03-01, 02, 03 -> 6 days
+    expect(leapPlan.plan.length).toBe(6);
+    expect(leapPlan.plan[2].date).toBe('2028-02-29');
+    expect(leapPlan.plan[3].date).toBe('2028-03-01');
+  });
+
+  it('property test: maintains invariant ordering under randomly shuffled task inputs', () => {
+    const canonical = getCanonicalTasks({ stream: 'cs', termScope: 2 });
+
+    for (let iteration = 0; iteration < 5; iteration++) {
+      // Fisher-Yates shuffle
+      const shuffled = [...canonical];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+
+      const planState = buildIntelligentPlan(
+        '2026-12-15',
+        shuffled,
+        '2026-10-01',
+        [],
+        'cs'
+      );
+
+      const validation = validatePlan(planState, canonical, { stream: 'cs' });
+      expect(validation.scorecard.orderingViolations).toBe(0);
+      expect(validation.scorecard.duplicateTasks).toBe(0);
+      expect(validation.scorecard.omittedTasks).toBe(0);
+    }
+  });
+});
+
