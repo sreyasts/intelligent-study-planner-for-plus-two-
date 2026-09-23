@@ -73,13 +73,11 @@ function getTaskDeepLinksHtml(task) {
     if (!task || task.isRevision) return '';
     const res = CHAPTER_RESOURCES?.subjects?.[task.subject] || CHAPTER_RESOURCES?.[task.subject];
     if (!res) return '';
-    const textbook = res.textbookUrl || res.textbook;
     const pyq = res.pyqUrl || res.pyq;
+    if (!pyq) return '';
     return `
         <div class="flex flex-wrap items-center gap-2 mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
-            <span class="text-slate-400 dark:text-slate-500 font-semibold text-xs">Portals:</span>
-            ${textbook ? `<a href="${textbook}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:underline font-semibold" title="Official SCERT Textbook">${getSvgIcon('book', 'w-3.5 h-3.5')} SCERT</a>` : ''}
-            ${pyq ? `<a href="${pyq}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-purple-600 dark:text-purple-400 hover:underline font-semibold" title="${res.pyqTitle || 'Previous Year Questions'}">${getSvgIcon('fileText', 'w-3.5 h-3.5')} PYQs</a>` : ''}
+            <a href="${pyq}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-purple-600 dark:text-purple-400 hover:underline font-semibold" title="${res.pyqTitle || 'Previous Year Questions'}">${getSvgIcon('fileText', 'w-3.5 h-3.5')} PYQs</a>
         </div>
     `;
 }
@@ -2902,11 +2900,9 @@ function showToastMessage(text, icon = 'checkCircle') {
                                     <span>${sub} <span class="text-xs text-slate-400 font-normal">(${uniqueP2.length} ${isML ? ML_I18N.syllabus.chaptersCount : 'Official Chapters'})</span></span>
                                     <span class="text-xs font-extrabold text-blue-700 bg-blue-50 border border-blue-200/60 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800/60 px-2.5 py-0.5 rounded-lg"><i class="fa-solid fa-graduation-cap mr-1"></i> ${isML ? ML_I18N.syllabus.plusTwoDhse : 'Plus Two (+2) DHSE'}</span>
                                 </h3>
-                                ${subRes ? `
+                                ${subRes && subPyq ? `
                                 <div class="flex flex-wrap items-center gap-3 text-xs pt-1">
-                                    <span class="text-slate-400 font-medium">${isML ? 'പഠന സാമഗ്രികൾ:' : 'Study Portals:'}</span>
-                                    ${subTextbook ? `<a href="${subTextbook}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-blue-600 hover:underline font-semibold">${getSvgIcon('book', 'w-3.5 h-3.5')} SCERT</a>` : ''}
-                                    ${subPyq ? `<a href="${subPyq}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-purple-600 hover:underline font-semibold">${getSvgIcon('fileText', 'w-3.5 h-3.5')} PYQs</a>` : ''}
+                                    <a href="${subPyq}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-purple-600 hover:underline font-semibold">${getSvgIcon('fileText', 'w-3.5 h-3.5')} PYQs</a>
                                 </div>` : ''}
                             </div>
 
