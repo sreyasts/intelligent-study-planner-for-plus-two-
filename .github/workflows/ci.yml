@@ -29,5 +29,11 @@ jobs:
       - name: Run Invariant Regression Suite
         run: npm run test:legacy
 
+      - name: Run Linter
+        run: npm run lint
+
+      - name: Run Planner Benchmark Verification
+        run: node scripts/benchmark-planner.js
+
       - name: Build Production Bundle (Vite)
         run: npm run build
