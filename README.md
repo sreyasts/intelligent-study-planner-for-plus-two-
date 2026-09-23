@@ -165,10 +165,10 @@ npm run deploy
 
 | Milestone | Target | Focus Area | Status |
 | :--- | :--- | :--- | :--- |
-| **v6.0** | Sep 2026 | ESM modular rewrite, Dual-stream (Bio/CS), WebAPK PWA, Cloud sync | ✅ Released |
-| **v6.1** | Sep 2026 | Algorithm formalization, Empirical benchmarks, DPDP telemetry, Zero lint warnings | ✅ Current |
-| **v6.2** | Oct 2026 | Full Malayalam localization switch, Commerce stream syllabus scaffolding | 🔄 In Progress |
-| **v6.3** | Nov 2026 | Shareable progress summary cards for WhatsApp & Telegram study groups | 📋 Planned |
+| **v6.0** | Sep 21 2026 | ESM modular rewrite, Dual-stream (Bio/CS), WebAPK PWA, Cloud sync | ✅ Released |
+| **v6.1** | Sep 23 2026 | Algorithm formalization, Empirical benchmarks, DPDP telemetry, Zero lint warnings | ✅ Current |
+| **v6.2** | Sep 24 2026 | Full Malayalam localization switch, Commerce stream syllabus scaffolding | 🔄 In Progress |
+| **v6.3** | Sep 26 2026 | Shareable progress summary cards for WhatsApp & Telegram study groups | 📋 Planned |
 | **v6.4** | Dec 2026 | Model examination countdown widget & live DHSE notification banner | 📋 Planned |
 
 ---
