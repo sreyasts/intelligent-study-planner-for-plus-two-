@@ -14,7 +14,6 @@ import {
 } from './data/chapter-resources.js';
 import {
   PLANNER_ENGINE_VERSION,
-  ENGINE_VERSION,
   getLocalDateStr,
   formatLocalDateStr,
   TODAY_STR,
@@ -27,7 +26,6 @@ import {
   PLAN_MIGRATION_VERSION,
   migrateOldState,
   migrateLegacyUserPlan,
-  migrateUserState,
 } from './engine/migration.js';
 import {
   playTaskCompleteSound,
@@ -41,21 +39,16 @@ import {
 } from './ui/dialogs.js';
 import {
   getSvgIcon,
-  ICONS,
 } from './ui/icons.js';
 import {
   trackEvent,
-  trackTaskChecked,
   ensureFirebaseAnalytics,
-  FUNNEL_STAGES,
 } from './analytics/tracker.js';
 import {
   ML_STRINGS,
 } from './i18n/ml.js';
 import {
-  detectMalayalamEnvironment,
   getCurrentLanguage,
-  setLanguagePreference,
   STORAGE_KEY_LANG,
 } from './i18n/detector.js';
 import {
@@ -893,13 +886,11 @@ function showToastMessage(text, icon = 'checkCircle') {
             if (!appState || !appState.plan) return;
 
             let targetTask = null;
-            let dayObj = null;
 
             for (const d of appState.plan) {
                 const found = d.tasks.find(t => t.id === taskId);
                 if (found) {
                     targetTask = found;
-                    dayObj = d;
                     break;
                 }
             }
@@ -936,7 +927,6 @@ function showToastMessage(text, icon = 'checkCircle') {
                 } catch(e) {}
 
                 updateStreakOnCompletion();
-                playMilestoneCelebrationSound();
 
                 // Calculate today's status
                 const todayPlan = appState.plan.find(d => d.date === TODAY_STR);
@@ -949,16 +939,19 @@ function showToastMessage(text, icon = 'checkCircle') {
                                 confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
                             }
                         } catch(e) {}
+                        playCelebrationSound();
                         showAppToast("🎉 Awesome! All of today's targets completed!", "fa-trophy text-amber-300");
                         if (currentView === 'today') {
                             renderApp();
                             return;
                         }
                     } else {
+                        playTaskTickSound();
                         const remaining = totalToday - completedToday;
                         showAppToast(`🎯 Good job! ${remaining} more to finish today's goal.`, "fa-fire text-amber-400");
                     }
                 } else {
+                    playTaskTickSound();
                     showAppToast("Target checked off! Keep the streak alive!");
                 }
 
@@ -974,7 +967,9 @@ function showToastMessage(text, icon = 'checkCircle') {
                     }
                 }
             } else {
-                playUntickSound();
+                if (getUserSetting('sound', true)) {
+                    playUntickSound();
+                }
             }
 
             updateProgressHeader();
@@ -2492,7 +2487,7 @@ function showToastMessage(text, icon = 'checkCircle') {
                 const calendarToday = appState.plan.find(d => d.date === TODAY_STR);
                 const firstDay = appState.plan[0];
 
-                let todayPlan = calendarToday;
+                let todayPlan = (selectedMissionDayNumber && appState.plan.find(d => d.dayNumber === selectedMissionDayNumber)) || calendarToday;
                 if (!todayPlan) {
                     if (firstDay && new Date(TODAY_STR) < new Date(firstDay.date)) {
                         todayPlan = firstDay;
@@ -2588,7 +2583,7 @@ function showToastMessage(text, icon = 'checkCircle') {
 
                         <!-- Task Cards -->
                         <div class="space-y-3">
-                            ${todayPlan.tasks.map((task, idx) => {
+                            ${todayPlan.tasks.map((task) => {
                                 const subjectBadgeClass = getSubjectColorBadge(task.subject);
                                 return `
                                     <div class="task-item-container today-task-card ${task.completed ? 'task-done bg-slate-50/70 border-slate-200' : 'bg-white border-slate-200/90 shadow-sm'} border rounded-2xl p-4 transition-all duration-200 flex items-start gap-3.5 hover:shadow-md">
@@ -2711,11 +2706,9 @@ function showToastMessage(text, icon = 'checkCircle') {
             // View 2: Detailed Full Plan View (With subject filters & printable PDF export)
             if (currentView === 'plan') {
                 let planDaysHTML = '';
-                let matchingDaysCount = 0;
 
                 appState.plan.forEach(day => {
                     const isToday = (day.date === TODAY_STR);
-                    const isPast = (new Date(day.date) < new Date(TODAY_STR));
 
                     let displayedTasks = day.tasks;
                     if (currentPlanSubjectFilter === '+1 Improvement') {
@@ -2730,7 +2723,6 @@ function showToastMessage(text, icon = 'checkCircle') {
                     if (currentPlanSubjectFilter !== 'All' && displayedTasks.length === 0) {
                         return;
                     }
-                    matchingDaysCount++;
 
                     planDaysHTML += `
                         <div class="bg-white rounded-2xl border ${isToday ? 'border-blue-300 ring-2 ring-blue-100' : 'border-slate-200'} shadow-sm overflow-hidden mb-4 transition-all print-avoid-break">
@@ -2889,9 +2881,7 @@ function showToastMessage(text, icon = 'checkCircle') {
                     const p2Chaps = PLUS_TWO_SYLLABUS.filter(t => t.subject === sub);
                     const uniqueP2 = [...new Map(p2Chaps.map(item => [item.chapId, item])).values()];
                     const subRes = CHAPTER_RESOURCES?.subjects?.[sub] || CHAPTER_RESOURCES?.[sub];
-                    const subTextbook = subRes?.textbookUrl || subRes?.textbook;
                     const subPyq = subRes?.pyqUrl || subRes?.pyq;
-                    const subVideo = subRes?.videoPlaylistUrl || subRes?.video;
 
                     syllabusHTML += `
                         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5 mb-4">
@@ -3049,7 +3039,7 @@ function showToastMessage(text, icon = 'checkCircle') {
         }
 
         function updateProgressHeader() {
-            const stats = getOverallStats();
+            getOverallStats();
             // In case there are quick summary elements
         }
 
@@ -3522,7 +3512,7 @@ function showToastMessage(text, icon = 'checkCircle') {
         // Register Service Worker for PWA
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js').then((reg) => {
+                navigator.serviceWorker.register('sw.js').then((_reg) => {
                     // Service worker active
                 }).catch((err) => {
                     console.log('SW registration note:', err);
