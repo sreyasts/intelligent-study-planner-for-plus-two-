@@ -49,10 +49,7 @@ export function getCanonicalTasks({
   plusOneSubjects = [],
   improvementOnly = false,
 } = {}) {
-  const isBio = stream === 'bio' || plusOneSubjects.some((s) => s === 'Botany' || s === 'Zoology');
-  const allowedSubjects = isBio
-    ? ['Physics', 'Chemistry', 'Mathematics', 'Botany', 'Zoology']
-    : ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'];
+  const allowedSubjects = getStreamSubjects(stream);
 
   const p2Tasks = improvementOnly
     ? []
@@ -63,7 +60,7 @@ export function getCanonicalTasks({
   let p1Tasks = [];
   if ((includePlusOne || improvementOnly) && plusOneSubjects.length > 0) {
     p1Tasks = PLUS_ONE_SYLLABUS.filter((t) =>
-      plusOneSubjects.includes(t.subject)
+      plusOneSubjects.includes(t.subject) && (stream === 'imp_only' || allowedSubjects.includes(t.subject))
     );
   }
 
@@ -131,13 +128,11 @@ export function validatePlan(planOrDays, originalTasks, options = {}) {
   let omittedTasks = 0;
   const applicableTasks = Array.isArray(originalTasks)
     ? options.stream
-      ? originalTasks.filter((t) =>
-          options.stream === 'cs'
-            ? t.subject !== 'Botany' && t.subject !== 'Zoology'
-            : options.stream === 'imp_only'
-            ? true
-            : t.subject !== 'Computer Science'
-        )
+      ? originalTasks.filter((t) => {
+          if (options.stream === 'imp_only') return true;
+          const allowed = getStreamSubjects(options.stream);
+          return allowed.includes(t.subject);
+        })
       : originalTasks
     : [];
 
@@ -231,16 +226,27 @@ function _executeCorePlanAlgorithm(
   });
 
   const isImpOnly = stream === 'imp_only' || (dedupedTasks.length > 0 && dedupedTasks.every((t) => t.grade === '+1'));
-  const hasBio = dedupedTasks.some((t) => t.subject === 'Botany' || t.subject === 'Zoology');
-  const effectiveStream = isImpOnly
-    ? 'imp_only'
-    : (stream || (hasBio ? 'bio' : 'cs'));
-  const streamSubjects =
-    effectiveStream === 'bio'
-      ? ['Physics', 'Chemistry', 'Mathematics', 'Botany', 'Zoology']
-      : effectiveStream === 'imp_only'
-      ? (hasBio ? ['Physics', 'Chemistry', 'Mathematics', 'Botany', 'Zoology'] : ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'])
-      : ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'];
+  let effectiveStream = stream;
+  if (!effectiveStream) {
+    if (isImpOnly) {
+      effectiveStream = 'imp_only';
+    } else {
+      const taskSubjects = new Set(dedupedTasks.map((t) => t.subject));
+      if (['Accountancy', 'Business Studies'].some((s) => taskSubjects.has(s))) {
+        effectiveStream = 'commerce';
+      } else if (['History', 'Political Science', 'Sociology'].some((s) => taskSubjects.has(s))) {
+        effectiveStream = 'humanities';
+      } else if (['Botany', 'Zoology'].some((s) => taskSubjects.has(s))) {
+        effectiveStream = 'bio';
+      } else {
+        effectiveStream = 'cs';
+      }
+    }
+  }
+
+  const streamSubjects = effectiveStream === 'imp_only'
+    ? Array.from(new Set(dedupedTasks.map((t) => t.subject)))
+    : getStreamSubjects(effectiveStream);
 
   const applicableTasks = dedupedTasks.filter((t) => streamSubjects.includes(t.subject));
 
@@ -668,6 +674,20 @@ function _executeCorePlanAlgorithm(
           topicTitle = `Diagrams, Key Terminologies, Reproduction & Biotechnology Quick Flashcards ${chSummary}`;
         else if (activeSub === 'Zoology')
           topicTitle = `Physiology Processes, Genetics Punnett Squares & Evolutionary Milestones ${chSummary}`;
+        else if (activeSub === 'Accountancy')
+          topicTitle = `Partnership Accounts, Share Capital & Cash Flow Analysis Drills ${chSummary}`;
+        else if (activeSub === 'Business Studies')
+          topicTitle = `Management Principles, Financial Markets & Marketing Case Studies ${chSummary}`;
+        else if (activeSub === 'Economics')
+          topicTitle = `Macroeconomic Aggregates, National Income & Indian Economic Development Trends ${chSummary}`;
+        else if (activeSub === 'Computer Applications')
+          topicTitle = `Web Technologies, HTML/CSS/JavaScript & Database Management Concepts ${chSummary}`;
+        else if (activeSub === 'History')
+          topicTitle = `Chronological Timelines, Architectural Heritage & Source-based Inferences ${chSummary}`;
+        else if (activeSub === 'Political Science')
+          topicTitle = `Constitutional Provisions, Cold War & Post-Cold War Global Developments ${chSummary}`;
+        else if (activeSub === 'Sociology')
+          topicTitle = `Social Institutions, Structural Change & Contemporary Social Movements ${chSummary}`;
 
         planDays[revDayIndex].tasks.push({
           id: `REV_DAY_${r + 1}_${activeSub.replace(/\s+/g, '_')}`,
@@ -726,7 +746,9 @@ export function buildIntelligentPlan(
     const deadline = opts.deadlineDateStr || opts.deadlineDate;
     const start = opts.startDateStr || opts.startDate || TODAY_STR;
     const impOnly = Boolean(opts.improvementOnly || opts.stream === 'imp_only');
-    const str = opts.stream === 'imp_only' ? (opts.plusOneSubjects?.some((s) => s === 'Botany' || s === 'Zoology') ? 'bio' : 'cs') : (opts.stream || 'cs');
+    const str = opts.stream === 'imp_only'
+      ? 'imp_only'
+      : (opts.stream || (opts.plusOneSubjects?.some((s) => s === 'Botany' || s === 'Zoology') ? 'bio' : 'cs'));
     const term = opts.termScope || 3;
     const incP1 = Boolean(opts.includePlusOne || impOnly);
     const p1Subs = opts.plusOneSubjects || [];
@@ -755,10 +777,21 @@ export function buildIntelligentPlan(
 }
 
 export function getStreamSubjects(stream = 'cs') {
-  if (stream === 'imp_only') {
-    return ['Physics', 'Chemistry', 'Mathematics', 'Botany', 'Zoology', 'Computer Science'];
+  if (stream === 'bio') {
+    return ['Physics', 'Chemistry', 'Mathematics', 'Botany', 'Zoology'];
   }
-  return stream === 'bio'
-    ? ['Physics', 'Chemistry', 'Mathematics', 'Botany', 'Zoology']
-    : ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'];
+  if (stream === 'commerce') {
+    return ['Accountancy', 'Business Studies', 'Economics', 'Computer Applications'];
+  }
+  if (stream === 'humanities') {
+    return ['History', 'Political Science', 'Sociology', 'Economics'];
+  }
+  if (stream === 'imp_only') {
+    return [
+      'Physics', 'Chemistry', 'Mathematics', 'Computer Science', 'Botany', 'Zoology',
+      'Accountancy', 'Business Studies', 'Economics', 'Computer Applications',
+      'History', 'Political Science', 'Sociology',
+    ];
+  }
+  return ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'];
 }

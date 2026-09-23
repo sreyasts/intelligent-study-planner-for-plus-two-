@@ -1249,6 +1249,8 @@ function showToastMessage(text, icon = 'checkCircle') {
 
         function setStreamSelection(stream) {
             selectedStream = stream;
+            selectedCompletedChapters.clear();
+            const subs = getStreamSubjects(stream);
             if (stream === 'imp_only') {
                 activeSetupGradeTab = '+1';
                 activeSetupSubjectTab = 'Physics';
@@ -1256,7 +1258,7 @@ function showToastMessage(text, icon = 'checkCircle') {
                 if (cb) cb.checked = true;
             } else {
                 activeSetupGradeTab = '+2';
-                activeSetupSubjectTab = 'Physics';
+                activeSetupSubjectTab = subs[0];
             }
             renderApp();
             goToSetupStep(1);
@@ -1276,6 +1278,14 @@ function showToastMessage(text, icon = 'checkCircle') {
                     if (desc1) desc1.innerText = 'Onam Exams (~18 chapters). Rapid short-term focus.';
                     if (desc2) desc2.innerText = 'Complete pre-Christmas portion (~35 chaps) before model exams.';
                     if (desc3) desc3.innerText = 'All 49 rationalized chapters (Term 1 + 2 + 3) for Public Exams.';
+                } else if (selectedStream === 'commerce') {
+                    if (desc1) desc1.innerText = 'Onam Exams (~15 chapters). Rapid short-term focus.';
+                    if (desc2) desc2.innerText = 'Complete pre-Christmas portion (~29 chaps) before model exams.';
+                    if (desc3) desc3.innerText = 'All 44 rationalized chapters (Term 1 + 2 + 3) for Public Exams.';
+                } else if (selectedStream === 'humanities') {
+                    if (desc1) desc1.innerText = 'Onam Exams (~18 chapters). Rapid short-term focus.';
+                    if (desc2) desc2.innerText = 'Complete pre-Christmas portion (~34 chaps) before model exams.';
+                    if (desc3) desc3.innerText = 'All 52 rationalized chapters (Term 1 + 2 + 3) for Public Exams.';
                 } else {
                     if (desc1) desc1.innerText = 'Onam Exams (~17 chapters). Rapid short-term focus.';
                     if (desc2) desc2.innerText = 'Complete pre-Christmas portion (~31 chaps) before model exams.';
@@ -1364,7 +1374,14 @@ function showToastMessage(text, icon = 'checkCircle') {
                 'Chemistry': '2026-10-16',
                 'Botany': '2026-10-19',
                 'Zoology': '2026-10-19',
-                'Computer Science': '2026-10-19'
+                'Computer Science': '2026-10-19',
+                'Accountancy': '2026-10-14',
+                'Business Studies': '2026-10-16',
+                'Economics': '2026-10-18',
+                'Computer Applications': '2026-10-20',
+                'History': '2026-10-14',
+                'Political Science': '2026-10-16',
+                'Sociology': '2026-10-18'
             };
             const subs = getStreamSubjects(selectedStream);
             return subs.map(sub => {
@@ -2075,7 +2092,49 @@ function showToastMessage(text, icon = 'checkCircle') {
                                     </p>
                                 </div>
 
-                                <!-- Option 3: Plus One (+1) Improvement Only -->
+                                <!-- Option 3: Commerce (Plus Two) -->
+                                <div id="stream-card-commerce" onclick="setStreamSelection('commerce')" class="cursor-pointer p-4 rounded-2xl border-2 ${selectedStream === 'commerce' ? 'border-purple-600 dark:border-purple-500 bg-purple-50/60 dark:bg-purple-950/40 ring-2 ring-purple-500/20 shadow-sm' : 'border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#0e1526] hover:border-slate-300 dark:hover:border-slate-600'} transition text-left flex flex-col justify-between relative group">
+                                    <div class="flex items-start justify-between">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 flex items-center justify-center text-lg font-bold shrink-0">
+                                                <i class="fa-solid fa-chart-line"></i>
+                                            </div>
+                                            <div>
+                                                <h4 class="font-black text-slate-900 dark:text-white text-base">${isML ? ML_I18N.setup.commerceTitle : 'Commerce (+2)'}</h4>
+                                                <span class="text-xs font-semibold text-purple-700 dark:text-purple-300">Accountancy • Business • Econ • CA</span>
+                                            </div>
+                                        </div>
+                                        <span class="w-6 h-6 rounded-full ${selectedStream === 'commerce' ? 'bg-purple-600 dark:bg-purple-500 text-white' : 'border-2 border-slate-300 dark:border-slate-600'} flex items-center justify-center text-xs stream-check">
+                                            ${selectedStream === 'commerce' ? '<i class="fa-solid fa-check"></i>' : ''}
+                                        </span>
+                                    </div>
+                                    <p class="text-xs text-slate-500 dark:text-slate-300 mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 font-medium">
+                                        Total <strong class="text-slate-900 dark:text-white">44 chapters</strong> across 4 subjects.
+                                    </p>
+                                </div>
+
+                                <!-- Option 4: Humanities (Plus Two) -->
+                                <div id="stream-card-humanities" onclick="setStreamSelection('humanities')" class="cursor-pointer p-4 rounded-2xl border-2 ${selectedStream === 'humanities' ? 'border-rose-600 dark:border-rose-500 bg-rose-50/60 dark:bg-rose-950/40 ring-2 ring-rose-500/20 shadow-sm' : 'border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#0e1526] hover:border-slate-300 dark:hover:border-slate-600'} transition text-left flex flex-col justify-between relative group">
+                                    <div class="flex items-start justify-between">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 rounded-xl bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 flex items-center justify-center text-lg font-bold shrink-0">
+                                                <i class="fa-solid fa-landmark"></i>
+                                            </div>
+                                            <div>
+                                                <h4 class="font-black text-slate-900 dark:text-white text-base">${isML ? ML_I18N.setup.humanitiesTitle : 'Humanities (+2)'}</h4>
+                                                <span class="text-xs font-semibold text-rose-700 dark:text-rose-300">History • Pol Science • Sociology • Econ</span>
+                                            </div>
+                                        </div>
+                                        <span class="w-6 h-6 rounded-full ${selectedStream === 'humanities' ? 'bg-rose-600 dark:bg-rose-500 text-white' : 'border-2 border-slate-300 dark:border-slate-600'} flex items-center justify-center text-xs stream-check">
+                                            ${selectedStream === 'humanities' ? '<i class="fa-solid fa-check"></i>' : ''}
+                                        </span>
+                                    </div>
+                                    <p class="text-xs text-slate-500 dark:text-slate-300 mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 font-medium">
+                                        Total <strong class="text-slate-900 dark:text-white">52 chapters</strong> across 4 subjects.
+                                    </p>
+                                </div>
+
+                                <!-- Option 5: Plus One (+1) Improvement Only -->
                                 <div id="stream-card-imp" onclick="setStreamSelection('imp_only')" class="cursor-pointer p-4 rounded-2xl border-2 ${selectedStream === 'imp_only' ? 'border-amber-500 dark:border-amber-400 bg-amber-50/70 dark:bg-amber-950/40 ring-2 ring-amber-400/25 shadow-sm' : 'border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#0e1526] hover:border-slate-300 dark:hover:border-slate-600'} transition text-left flex flex-col justify-between relative group sm:col-span-2">
                                     <div class="flex items-start justify-between">
                                         <div class="flex items-center gap-3">
@@ -2087,7 +2146,7 @@ function showToastMessage(text, icon = 'checkCircle') {
                                                     <h4 class="font-black text-slate-900 dark:text-white text-base">${isML ? ML_I18N.setup.impOnlyTitle : 'Plus One (+1) Improvement Only'}</h4>
                                                     <span class="text-[11px] font-black bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-200 px-2 py-0.5 rounded-full uppercase tracking-wider">Improvement</span>
                                                 </div>
-                                                <span class="text-xs font-semibold text-amber-700 dark:text-amber-300">${isML ? ML_I18N.setup.impOnlySub : 'Physics • Chem • Maths • Bio • CS (+1 Syllabus Only)'}</span>
+                                                <span class="text-xs font-semibold text-amber-700 dark:text-amber-300">${isML ? ML_I18N.setup.impOnlySub : 'All Streams Supported • Dedicated +1 Schedule'}</span>
                                             </div>
                                         </div>
                                         <span class="w-6 h-6 rounded-full ${selectedStream === 'imp_only' ? 'bg-amber-600 dark:bg-amber-500 text-white' : 'border-2 border-slate-300 dark:border-slate-600'} flex items-center justify-center text-xs stream-check">
@@ -2658,7 +2717,11 @@ function showToastMessage(text, icon = 'checkCircle') {
                             <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">
                                 ${(function() {
                                     const userStream = appState?.stream || (appState?.plan?.some(d => d.tasks.some(t => t.subject === 'Botany' || t.subject === 'Zoology')) ? 'bio' : 'cs');
-                                    return userStream === 'bio' ? (isML ? '🌿 ബയോളജി സയൻസ്' : '🌿 Biology Science') : (isML ? '💻 കമ്പ്യൂട്ടർ സയൻസ്' : '💻 Computer Science');
+                                    if (userStream === 'bio') return isML ? '🌿 ബയോളജി സയൻസ്' : '🌿 Biology Science';
+                                    if (userStream === 'commerce') return isML ? '📊 കൊമേഴ്സ്' : '📊 Commerce';
+                                    if (userStream === 'humanities') return isML ? '🏛️ ഹ്യൂമാനിറ്റീസ്' : '🏛️ Humanities';
+                                    if (userStream === 'imp_only') return isML ? '⚡ ഇംപ്രൂവ്മെന്റ് ഒൺലി' : '⚡ +1 Improvement';
+                                    return isML ? '💻 കമ്പ്യൂട്ടർ സയൻസ്' : '💻 Computer Science';
                                 })()}
                             </span>
                         </div>
@@ -2817,21 +2880,33 @@ function showToastMessage(text, icon = 'checkCircle') {
                     <div class="no-print flex items-center gap-1.5 overflow-x-auto pb-2 mb-4 scrollbar-none text-xs">
                         ${(function() {
                             const userStream = appState?.stream || (appState?.plan?.some(d => d.tasks.some(t => t.subject === 'Botany' || t.subject === 'Zoology')) ? 'bio' : 'cs');
-                            const filters = userStream === 'bio' ? [
+                            const subjectIcons = {
+                                'Physics': 'fa-atom',
+                                'Chemistry': 'fa-flask',
+                                'Mathematics': 'fa-calculator',
+                                'Computer Science': 'fa-laptop-code',
+                                'Botany': 'fa-seedling',
+                                'Zoology': 'fa-dna',
+                                'Accountancy': 'fa-calculator',
+                                'Business Studies': 'fa-briefcase',
+                                'Economics': 'fa-chart-line',
+                                'Computer Applications': 'fa-desktop',
+                                'History': 'fa-landmark',
+                                'Political Science': 'fa-scale-balanced',
+                                'Sociology': 'fa-users',
+                            };
+                            const streamSubs = getStreamSubjects(userStream);
+                            const activeSubs = userStream === 'imp_only'
+                                ? Array.from(new Set((appState?.plan || []).flatMap(d => (d.tasks || []).map(t => t.subject))))
+                                : streamSubs;
+
+                            const filters = [
                                 { id: 'All', label: isML ? ML_I18N.plan.allSubjects : 'All Subjects', icon: 'fa-layer-group' },
-                                { id: 'Physics', label: 'Physics', icon: 'fa-atom' },
-                                { id: 'Chemistry', label: 'Chemistry', icon: 'fa-flask' },
-                                { id: 'Mathematics', label: 'Maths', icon: 'fa-calculator' },
-                                { id: 'Botany', label: 'Botany', icon: 'fa-seedling' },
-                                { id: 'Zoology', label: 'Zoology', icon: 'fa-dna' },
-                                { id: '+2 Regular', label: '+2 Regular', icon: 'fa-graduation-cap' },
-                                { id: '+1 Improvement', label: '+1 Improvement', icon: 'fa-arrow-up-right-dots' }
-                            ] : [
-                                { id: 'All', label: isML ? ML_I18N.plan.allSubjects : 'All Subjects', icon: 'fa-layer-group' },
-                                { id: 'Physics', label: 'Physics', icon: 'fa-atom' },
-                                { id: 'Chemistry', label: 'Chemistry', icon: 'fa-flask' },
-                                { id: 'Mathematics', label: 'Maths', icon: 'fa-calculator' },
-                                { id: 'Computer Science', label: 'CS', icon: 'fa-laptop-code' },
+                                ...activeSubs.map(s => ({
+                                    id: s,
+                                    label: s === 'Mathematics' ? 'Maths' : s === 'Computer Science' ? 'CS' : s === 'Business Studies' ? 'Business' : s === 'Computer Applications' ? 'CA' : s === 'Political Science' ? 'Pol Science' : s,
+                                    icon: subjectIcons[s] || 'fa-book'
+                                })),
                                 { id: '+2 Regular', label: '+2 Regular', icon: 'fa-graduation-cap' },
                                 { id: '+1 Improvement', label: '+1 Improvement', icon: 'fa-arrow-up-right-dots' }
                             ];
@@ -2872,9 +2947,9 @@ function showToastMessage(text, icon = 'checkCircle') {
             // View 3: Official Syllabus Reference & Completed Chapters Overview (Strictly Stream Isolated)
             if (currentView === 'syllabus') {
                 const userStream = appState?.stream || (appState?.plan?.some(d => d.tasks.some(t => t.subject === 'Botany' || t.subject === 'Zoology')) ? 'bio' : 'cs');
-                const subjects = userStream === 'bio'
-                    ? ['Physics', 'Chemistry', 'Mathematics', 'Botany', 'Zoology']
-                    : ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'];
+                const subjects = userStream === 'imp_only'
+                    ? Array.from(new Set((appState?.plan || []).flatMap(d => (d.tasks || []).map(t => t.subject))))
+                    : getStreamSubjects(userStream);
 
                 let syllabusHTML = '';
                 subjects.forEach(sub => {
@@ -2903,7 +2978,7 @@ function showToastMessage(text, icon = 'checkCircle') {
                                     if (appState && appState.plan) {
                                         const chapterTasksInPlan = [];
                                         appState.plan.forEach(d => {
-                                            d.tasks.forEach(t => {
+                                             d.tasks.forEach(t => {
                                                 if (t.chapId === ch.chapId) chapterTasksInPlan.push(t);
                                             });
                                         });
@@ -2933,7 +3008,18 @@ function showToastMessage(text, icon = 'checkCircle') {
                     <div class="flex items-center justify-between mb-6">
                         <div>
                             <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900">${isML ? ML_I18N.syllabus.title : 'Official DHSE Scheme of Work'}</h2>
-                            <p class="text-xs text-slate-500">${isML ? (userStream === 'bio' ? ML_I18N.syllabus.subtitleBio : ML_I18N.syllabus.subtitleCs) : (userStream === 'bio' ? 'Biology Science Stream (Botany & Zoology)' : 'Computer Science Stream') + ' • Rationalized Kerala Higher Secondary curriculum.'}</p>
+                            <p class="text-xs text-slate-500">${(function() {
+                                if (isML) {
+                                    if (userStream === 'bio') return ML_I18N.syllabus.subtitleBio;
+                                    if (userStream === 'commerce') return ML_I18N.syllabus.subtitleCommerce;
+                                    if (userStream === 'humanities') return ML_I18N.syllabus.subtitleHumanities;
+                                    return ML_I18N.syllabus.subtitleCs;
+                                }
+                                if (userStream === 'bio') return 'Biology Science Stream (Botany & Zoology) • Rationalized Kerala Higher Secondary curriculum.';
+                                if (userStream === 'commerce') return 'Commerce Stream (Accountancy, Business Studies, Economics, Computer Applications) • Rationalized Kerala Higher Secondary curriculum.';
+                                if (userStream === 'humanities') return 'Humanities Stream (History, Political Science, Sociology, Economics) • Rationalized Kerala Higher Secondary curriculum.';
+                                return 'Computer Science Stream • Rationalized Kerala Higher Secondary curriculum.';
+                            })()}</p>
                         </div>
                         <button onclick="goToDashboard()" class="text-xs font-bold bg-white border border-slate-200 hover:bg-slate-50 px-3.5 py-2 rounded-xl text-slate-700 transition">
                             <i class="fa-solid fa-arrow-left mr-1"></i> ${isML ? ML_I18N.syllabus.backToToday : 'Back to Today'}
@@ -2956,6 +3042,13 @@ function showToastMessage(text, icon = 'checkCircle') {
                 case 'Computer Science': return 'bg-cyan-50 text-cyan-700 border border-cyan-200/60 dark:bg-cyan-950/60 dark:text-cyan-300 dark:border-cyan-800/60';
                 case 'Botany': return 'bg-emerald-50 text-emerald-700 border border-emerald-200/60 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800/60';
                 case 'Zoology': return 'bg-teal-50 text-teal-700 border border-teal-200/60 dark:bg-teal-950/60 dark:text-teal-300 dark:border-teal-800/60';
+                case 'Accountancy': return 'bg-emerald-50 text-emerald-700 border border-emerald-200/60 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800/60';
+                case 'Business Studies': return 'bg-blue-50 text-blue-700 border border-blue-200/60 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800/60';
+                case 'Economics': return 'bg-amber-50 text-amber-700 border border-amber-200/60 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800/60';
+                case 'Computer Applications': return 'bg-cyan-50 text-cyan-700 border border-cyan-200/60 dark:bg-cyan-950/60 dark:text-cyan-300 dark:border-cyan-800/60';
+                case 'History': return 'bg-stone-50 text-stone-700 border border-stone-200/60 dark:bg-stone-950/60 dark:text-stone-300 dark:border-stone-800/60';
+                case 'Political Science': return 'bg-violet-50 text-violet-700 border border-violet-200/60 dark:bg-violet-950/60 dark:text-violet-300 dark:border-violet-800/60';
+                case 'Sociology': return 'bg-pink-50 text-pink-700 border border-pink-200/60 dark:bg-pink-950/60 dark:text-pink-300 dark:border-pink-800/60';
                 default: return 'bg-purple-50 text-purple-700 border border-purple-200/60 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800/60';
             }
         }

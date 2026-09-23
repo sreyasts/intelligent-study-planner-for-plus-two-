@@ -654,6 +654,842 @@ export const PLUS_TWO_CHAPTERS = {
       ],
     },
   ],
+  Accountancy: [
+    {
+      num: 1,
+      name: 'Accounting for Partnership: Basic Concepts',
+      term: 1,
+      effort: 'HIGH',
+      parts: [
+        { title: 'Partnership Deed, Provisions Affecting Accounting & Capital Accounts (Fixed vs Fluctuating)', minutes: 65 },
+        { title: 'Distribution of Profit, P&L Appropriation Account & Past Adjustments', minutes: 75 },
+      ],
+    },
+    {
+      num: 2,
+      name: 'Reconstitution of a Partnership Firm: Admission of a Partner',
+      term: 1,
+      effort: 'HIGH',
+      parts: [
+        { title: 'New Profit Sharing Ratio, Sacrificing Ratio & Goodwill Valuation/Accounting', minutes: 70 },
+        { title: 'Revaluation of Assets, Liabilities & Adjustment of Capitals', minutes: 75 },
+      ],
+    },
+    {
+      num: 3,
+      name: 'Reconstitution: Retirement/Death of a Partner',
+      term: 1,
+      effort: 'HIGH',
+      parts: [
+        { title: 'Gaining Ratio, Goodwill Treatment & Revaluation upon Retirement', minutes: 65 },
+        { title: 'Settlement of Amount Due to Retiring Partner & Deceased Partner Profit Calculation', minutes: 70 },
+      ],
+    },
+    {
+      num: 4,
+      name: 'Dissolution of a Partnership Firm',
+      term: 2,
+      effort: 'HIGH',
+      parts: [
+        { title: 'Modes of Dissolution, Settlement of Accounts & Realisation Account', minutes: 70 },
+        { title: 'Partners Loan, Capital Accounts & Cash/Bank Account on Dissolution', minutes: 75 },
+      ],
+    },
+    {
+      num: 5,
+      name: 'Accounting for Share Capital',
+      term: 2,
+      effort: 'HIGH',
+      parts: [
+        { title: 'Issue of Shares at Par/Premium, Calls in Arrear & Calls in Advance', minutes: 70 },
+        { title: 'Forfeiture of Shares Issued at Par & Premium', minutes: 75 },
+        { title: 'Reissue of Forfeited Shares & Capital Reserve Transfer', minutes: 70 },
+      ],
+    },
+    {
+      num: 6,
+      name: 'Issue and Redemption of Debentures',
+      term: 2,
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Issue of Debentures for Cash, Consideration Other Than Cash & Collateral Security', minutes: 65 },
+        { title: 'Terms of Issue & Redemption, Interest on Debentures & Writing off Loss', minutes: 65 },
+      ],
+    },
+    {
+      num: 7,
+      name: 'Financial Statements of a Company',
+      term: 2,
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Balance Sheet of a Company as per Schedule III Part I', minutes: 65 },
+        { title: 'Statement of Profit and Loss as per Schedule III Part II', minutes: 60 },
+      ],
+    },
+    {
+      num: 8,
+      name: 'Analysis of Financial Statements',
+      term: 3,
+      effort: 'LOW',
+      parts: [
+        { title: 'Meaning, Significance & Tools: Comparative & Common Size Statements', minutes: 55 },
+      ],
+    },
+    {
+      num: 9,
+      name: 'Accounting Ratios',
+      term: 3,
+      effort: 'HIGH',
+      parts: [
+        { title: 'Liquidity Ratios (Current, Quick) & Solvency Ratios (Debt-Equity, Total Assets to Debt)', minutes: 65 },
+        { title: 'Activity/Turnover Ratios (Inventory, Trade Receivables/Payables) & Profitability Ratios (Gross, Net, ROI)', minutes: 75 },
+      ],
+    },
+    {
+      num: 10,
+      name: 'Cash Flow Statement',
+      term: 3,
+      effort: 'HIGH',
+      parts: [
+        { title: 'Operating Activities: Calculation of Cash from Operations under Indirect Method', minutes: 75 },
+        { title: 'Investing & Financing Activities, Final Cash & Cash Equivalents Reconciliation', minutes: 70 },
+      ],
+    },
+  ],
+  'Business Studies': [
+    {
+      num: 1,
+      name: 'Nature and Significance of Management',
+      term: 1,
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Concept, Objectives, Importance & Management as Art, Science, Profession', minutes: 60 },
+        { title: 'Levels of Management, Functions & Coordination Nature and Importance', minutes: 60 },
+      ],
+    },
+    {
+      num: 2,
+      name: 'Principles of Management',
+      term: 1,
+      effort: 'HIGH',
+      parts: [
+        { title: "Fayol's 14 Principles of General Management", minutes: 65 },
+        { title: "Taylor's Scientific Management: Principles and Techniques", minutes: 65 },
+      ],
+    },
+    {
+      num: 3,
+      name: 'Business Environment',
+      term: 1,
+      effort: 'LOW',
+      parts: [
+        { title: 'Meaning, Dimensions (Economic, Social, Tech, Political, Legal) & Demonetization', minutes: 55 },
+      ],
+    },
+    {
+      num: 4,
+      name: 'Planning',
+      term: 1,
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Concept, Importance, Limitations & Planning Process Steps', minutes: 60 },
+      ],
+    },
+    {
+      num: 5,
+      name: 'Organising',
+      term: 2,
+      effort: 'HIGH',
+      parts: [
+        { title: 'Concept, Organising Process & Organizational Structure (Functional vs Divisional)', minutes: 65 },
+        { title: 'Formal vs Informal Organization, Delegation & Decentralization', minutes: 65 },
+      ],
+    },
+    {
+      num: 6,
+      name: 'Staffing',
+      term: 2,
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Concept, Importance, Staffing as Part of HRM & Staffing Process', minutes: 60 },
+        { title: 'Recruitment Sources (Internal/External), Selection Process & Training Methods', minutes: 65 },
+      ],
+    },
+    {
+      num: 7,
+      name: 'Directing',
+      term: 2,
+      effort: 'HIGH',
+      parts: [
+        { title: 'Concept, Supervision, Motivation (Maslow Hierarchy, Financial/Non-Financial)', minutes: 65 },
+        { title: 'Leadership Styles (Autocratic, Democratic, Laissez-faire) & Communication Barriers', minutes: 65 },
+      ],
+    },
+    {
+      num: 8,
+      name: 'Controlling',
+      term: 2,
+      effort: 'LOW',
+      parts: [
+        { title: 'Concept, Importance, Relationship with Planning & Controlling Process Steps', minutes: 55 },
+      ],
+    },
+    {
+      num: 9,
+      name: 'Financial Management',
+      term: 3,
+      effort: 'HIGH',
+      parts: [
+        { title: 'Meaning, Objectives, Financial Decisions (Investment, Financing, Dividend)', minutes: 65 },
+        { title: 'Financial Planning, Capital Structure Factors & Fixed/Working Capital Requirements', minutes: 70 },
+      ],
+    },
+    {
+      num: 10,
+      name: 'Financial Markets',
+      term: 3,
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Money Market Instruments & Capital Market (Primary vs Secondary)', minutes: 65 },
+        { title: 'Stock Exchange Functions, Trading Procedure & SEBI Objectives/Functions', minutes: 65 },
+      ],
+    },
+    {
+      num: 11,
+      name: 'Marketing',
+      term: 3,
+      effort: 'HIGH',
+      parts: [
+        { title: 'Marketing Philosophies & Marketing Mix: Product (Branding, Packaging, Labelling)', minutes: 65 },
+        { title: 'Price Determination, Physical Distribution Channels & Promotion Mix (Advertising, Sales, PR)', minutes: 70 },
+      ],
+    },
+    {
+      num: 12,
+      name: 'Consumer Protection',
+      term: 3,
+      effort: 'LOW',
+      parts: [
+        { title: 'Importance, Consumer Rights, Responsibilities & Redressal Agencies under CPA 2019', minutes: 55 },
+      ],
+    },
+  ],
+  Economics: [
+    {
+      num: 1,
+      name: 'Introduction to Microeconomics',
+      term: 1,
+      effort: 'LOW',
+      parts: [
+        { title: 'Central Problems of an Economy, Production Possibility Frontier & Opportunity Cost', minutes: 55 },
+      ],
+    },
+    {
+      num: 2,
+      name: 'Theory of Consumer Behaviour',
+      term: 1,
+      effort: 'HIGH',
+      parts: [
+        { title: 'Utility Analysis (Total vs Marginal, Law of Diminishing Marginal Utility)', minutes: 65 },
+        { title: 'Indifference Curve Analysis, Budget Set/Line & Consumer Equilibrium', minutes: 70 },
+        { title: 'Demand Curve, Law of Demand, Elasticity of Demand & Determinants', minutes: 65 },
+      ],
+    },
+    {
+      num: 3,
+      name: 'Production and Costs',
+      term: 1,
+      effort: 'HIGH',
+      parts: [
+        { title: 'Production Function, TP, MP, AP & Law of Variable Proportions / Returns to Scale', minutes: 65 },
+        { title: 'Short Run Costs (TFC, TVC, TC, AFC, AVC, AC, MC) & Long Run Cost Curves', minutes: 70 },
+      ],
+    },
+    {
+      num: 4,
+      name: 'Theory of the Firm Under Perfect Competition',
+      term: 2,
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Features of Perfect Competition, Total, Average & Marginal Revenue', minutes: 60 },
+        { title: 'Profit Maximisation Conditions & Short Run/Long Run Supply Curve of a Firm', minutes: 65 },
+      ],
+    },
+    {
+      num: 5,
+      name: 'Market Equilibrium',
+      term: 2,
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Equilibrium Price and Quantity Determination & Shift in Demand/Supply', minutes: 65 },
+        { title: 'Applications of Demand-Supply: Price Ceiling and Price Floor', minutes: 60 },
+      ],
+    },
+    {
+      num: 6,
+      name: 'Non-Competitive Markets',
+      term: 2,
+      effort: 'LOW',
+      parts: [
+        { title: 'Simple Monopoly, Monopolistic Competition & Oligopoly Key Characteristics', minutes: 55 },
+      ],
+    },
+    {
+      num: 7,
+      name: 'Introduction to Macroeconomics',
+      term: 2,
+      effort: 'LOW',
+      parts: [
+        { title: 'Emergence of Macroeconomics, Context & Circular Flow of Income in a 2-Sector Economy', minutes: 55 },
+      ],
+    },
+    {
+      num: 8,
+      name: 'National Income Accounting',
+      term: 2,
+      effort: 'HIGH',
+      parts: [
+        { title: 'Basic Aggregates: GDP, GNP, NDP, NNP at Market Price and Factor Cost', minutes: 70 },
+        { title: 'Measurement of National Income: Value Added, Income & Expenditure Methods', minutes: 75 },
+        { title: 'Nominal vs Real GDP, GDP Deflator & GDP as Welfare Indicator Limitations', minutes: 60 },
+      ],
+    },
+    {
+      num: 9,
+      name: 'Money and Banking',
+      term: 3,
+      effort: 'HIGH',
+      parts: [
+        { title: 'Functions of Money, Demand for Money & Motives for Holding Cash', minutes: 60 },
+        { title: 'Commercial Banks Credit Creation Process & Money Multiplier', minutes: 65 },
+        { title: 'Central Bank (RBI) Functions & Quantitative/Qualitative Credit Control Tools', minutes: 65 },
+      ],
+    },
+    {
+      num: 10,
+      name: 'Determination of Income and Employment',
+      term: 3,
+      effort: 'HIGH',
+      parts: [
+        { title: 'Aggregate Demand, Aggregate Supply, Propensity to Consume (APC, MPC, APS, MPS)', minutes: 65 },
+        { title: 'Short Run Equilibrium Output, Investment Multiplier & Deficient/Excess Demand', minutes: 75 },
+      ],
+    },
+    {
+      num: 11,
+      name: 'Government Budget and the Economy',
+      term: 3,
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Meaning, Objectives, Revenue vs Capital Receipts & Expenditure Classification', minutes: 60 },
+        { title: 'Measures of Government Deficit: Revenue, Fiscal, Primary Deficit & Implications', minutes: 65 },
+      ],
+    },
+    {
+      num: 12,
+      name: 'Open Economy Macroeconomics',
+      term: 3,
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Balance of Payments (Current vs Capital Account) & Autonomous/Accommodating Items', minutes: 65 },
+        { title: 'Foreign Exchange Rate (Fixed vs Flexible) & Determination in Open Markets', minutes: 60 },
+      ],
+    },
+  ],
+  'Computer Applications': [
+    {
+      num: 1,
+      name: 'Review of C++ Programming',
+      term: 1,
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Data Types, Operators, Expressions & Control Structures Review', minutes: 60 },
+      ],
+    },
+    {
+      num: 2,
+      name: 'Arrays and Strings',
+      term: 1,
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Single & Multidimensional Arrays, String Manipulation & Applications in Business', minutes: 65 },
+      ],
+    },
+    {
+      num: 3,
+      name: 'Functions',
+      term: 1,
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Function Declaration, Parameter Passing (Value vs Reference) & Scope Rules', minutes: 60 },
+      ],
+    },
+    {
+      num: 4,
+      name: 'Web Technology',
+      term: 1,
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Client-Server Architecture, Web Servers, Browsers & Communication Protocols', minutes: 60 },
+      ],
+    },
+    {
+      num: 5,
+      name: 'Web Designing using HTML',
+      term: 2,
+      effort: 'HIGH',
+      parts: [
+        { title: 'HTML Structural Tags, Text Formatting, Lists & Hyperlinks', minutes: 65 },
+        { title: 'Tables, Forms, Input Controls & Multimedia Embedding', minutes: 70 },
+      ],
+    },
+    {
+      num: 6,
+      name: 'Client Side Scripting using JavaScript',
+      term: 2,
+      effort: 'HIGH',
+      parts: [
+        { title: 'JavaScript Syntax, Variables, Operators & Control Structures', minutes: 65 },
+        { title: 'DOM Manipulation, Event Handling & Client-Side Form Validation', minutes: 70 },
+      ],
+    },
+    {
+      num: 7,
+      name: 'Web Hosting',
+      term: 2,
+      effort: 'LOW',
+      parts: [
+        { title: 'Domain Registration, DNS, Hosting Types & FTP Publishing', minutes: 55 },
+      ],
+    },
+    {
+      num: 8,
+      name: 'Database Management System',
+      term: 2,
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Database Concepts, Relational Data Model, Keys & Normalization Fundamentals', minutes: 65 },
+      ],
+    },
+    {
+      num: 9,
+      name: 'Structured Query Language (SQL)',
+      term: 3,
+      effort: 'HIGH',
+      parts: [
+        { title: 'DDL Commands (CREATE, ALTER, DROP) & Table Constraints', minutes: 65 },
+        { title: 'DML Commands (INSERT, UPDATE, DELETE) & Queries (SELECT, WHERE, GROUP BY, ORDER BY)', minutes: 70 },
+      ],
+    },
+    {
+      num: 10,
+      name: 'Enterprise Resource Planning (ERP)',
+      term: 3,
+      effort: 'LOW',
+      parts: [
+        { title: 'Concept, Modules of ERP, Benefits & ERP Implementation in Modern Business', minutes: 55 },
+      ],
+    },
+  ],
+  History: [
+    {
+      num: 1,
+      name: 'Bricks, Beads and Bones',
+      term: 1,
+      effort: 'HIGH',
+      parts: [
+        { title: 'Harappan Civilisation: Urban Planning, Craft Production & Trade Networks', minutes: 65 },
+        { title: 'Social Differences, Harappan Script, Weights & Causes of Decline', minutes: 65 },
+      ],
+    },
+    {
+      num: 2,
+      name: 'Kings, Farmers and Towns',
+      term: 1,
+      effort: 'HIGH',
+      parts: [
+        { title: 'Sixteen Mahajanapadas, Magadha Rise & Mauryan Administration', minutes: 65 },
+        { title: 'Inscriptions Decipherment (Ashokan Edicts) & Post-Mauryan Kingdoms', minutes: 65 },
+      ],
+    },
+    {
+      num: 3,
+      name: 'Kinship, Caste and Class',
+      term: 1,
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Social Stratification, Varna/Jati Rules & Gender Access to Property in Mahabharata Period', minutes: 60 },
+        { title: 'The Critical Edition of the Mahabharata & Social Differences Beyond Caste', minutes: 60 },
+      ],
+    },
+    {
+      num: 4,
+      name: 'Thinkers, Beliefs and Buildings',
+      term: 1,
+      effort: 'HIGH',
+      parts: [
+        { title: 'Philosophical Currents, Jainism Philosophy & Early Buddhist Teachings', minutes: 65 },
+        { title: 'Buddhist Stupas (Sanchi Architecture), Mahayana Growth & Early Hindu Temples', minutes: 65 },
+      ],
+    },
+    {
+      num: 5,
+      name: 'Through the Eyes of Travellers',
+      term: 2,
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Al-Biruni (Kitab-ul-Hind) on Caste System & Ibn Battuta (Rihla) on Indian Cities', minutes: 65 },
+        { title: 'Francois Bernier on Mughal Ownership of Land & Eastern Despotism Comparison', minutes: 60 },
+      ],
+    },
+    {
+      num: 6,
+      name: 'Bhakti-Sufi Traditions',
+      term: 2,
+      effort: 'HIGH',
+      parts: [
+        { title: 'Early Traditions in South India (Alvars & Nayanars), Virashaiva Movement', minutes: 65 },
+        { title: 'Sufism Principles, Khanqah Life & Popular Silsilas in India', minutes: 65 },
+        { title: 'Voices of Rejection: Kabir, Guru Nanak & Mirabai Composites', minutes: 60 },
+      ],
+    },
+    {
+      num: 7,
+      name: 'An Imperial Capital: Vijayanagara',
+      term: 2,
+      effort: 'HIGH',
+      parts: [
+        { title: 'Discovery of Hampi, Water Resources, Fortifications & Royal Centre', minutes: 65 },
+        { title: 'Mahanavami Dibba, Sacred Centre Temples (Virupaksha, Vittala) & Amara-Nayaka System', minutes: 70 },
+      ],
+    },
+    {
+      num: 8,
+      name: 'Peasants, Zamindars and the State',
+      term: 2,
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Agrarian Society in 16th-17th Centuries, Village Community & Role of Women', minutes: 60 },
+        { title: 'Zamindari Power, Ain-i-Akbari of Abul Fazl & Revenue System', minutes: 65 },
+      ],
+    },
+    {
+      num: 9,
+      name: 'Colonialism and the Countryside',
+      term: 3,
+      effort: 'HIGH',
+      parts: [
+        { title: 'Permanent Settlement in Bengal, Jotedars Rise & Fifth Report', minutes: 65 },
+        { title: 'The Ryotwari System, Deccan Riots of 1875 & Cotton Boom Repercussions', minutes: 65 },
+      ],
+    },
+    {
+      num: 10,
+      name: 'Rebels and the Raj',
+      term: 3,
+      effort: 'HIGH',
+      parts: [
+        { title: '1857 Revolt Outbreak, Pattern of Rebellion, Leaders & Causes', minutes: 65 },
+        { title: 'British Repression, Visual Images of 1857 & Nationalist Hero Representation', minutes: 65 },
+      ],
+    },
+    {
+      num: 11,
+      name: 'Mahatma Gandhi and the Nationalist Movement',
+      term: 3,
+      effort: 'HIGH',
+      parts: [
+        { title: 'Champaran to Non-Cooperation Movement, Khilafat Movement & Satyagraha Technique', minutes: 65 },
+        { title: 'Salt March (Dandi), Round Table Conferences & Quit India Movement', minutes: 70 },
+      ],
+    },
+    {
+      num: 12,
+      name: 'Framing the Constitution',
+      term: 3,
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Constituent Assembly Composition, Vision of the Constitution & Objectives Resolution', minutes: 65 },
+        { title: 'Debates on Rights, Federal Powers, Language Question & Dr. Ambedkar Draft', minutes: 65 },
+      ],
+    },
+  ],
+  'Political Science': [
+    {
+      num: 1,
+      name: 'The End of Bipolarity',
+      term: 1,
+      effort: 'HIGH',
+      parts: [
+        { title: 'Soviet System Features, Gorbachev Reforms & Disintegration Causes/Consequences', minutes: 65 },
+        { title: 'Shock Therapy and Its Consequences, Post-Communist Regimes & India-Russia Relations', minutes: 65 },
+      ],
+    },
+    {
+      num: 2,
+      name: 'Contemporary Centres of Power',
+      term: 1,
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'European Union Political/Economic Influence & ASEAN Economic Community', minutes: 65 },
+        { title: 'Rise of Chinese Economy, Market Reforms & Sino-Indian Relations', minutes: 65 },
+      ],
+    },
+    {
+      num: 3,
+      name: 'Contemporary South Asia',
+      term: 1,
+      effort: 'HIGH',
+      parts: [
+        { title: 'Democracy in Pakistan and Bangladesh & Monarchy to Democracy in Nepal', minutes: 65 },
+        { title: 'Ethnic Conflict in Sri Lanka, India-Pakistan Conflicts & SAARC / SAFTA', minutes: 65 },
+      ],
+    },
+    {
+      num: 4,
+      name: 'International Organisations',
+      term: 2,
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Need for International Organisations, UN Evolution, Principal Organs & Agencies', minutes: 65 },
+        { title: 'UN Security Council Reform Debates, Jurisdiction & Unipolar World Context', minutes: 65 },
+      ],
+    },
+    {
+      num: 5,
+      name: 'Security in the Contemporary World',
+      term: 2,
+      effort: 'LOW',
+      parts: [
+        { title: 'Traditional Security Notions (Internal/External) vs Non-Traditional (Human & Global Security)', minutes: 60 },
+      ],
+    },
+    {
+      num: 6,
+      name: 'Environment and Natural Resources',
+      term: 2,
+      effort: 'LOW',
+      parts: [
+        { title: 'Global Commons, Common But Differentiated Responsibilities & Indigenous Peoples Rights', minutes: 55 },
+      ],
+    },
+    {
+      num: 7,
+      name: 'Globalisation',
+      term: 2,
+      effort: 'LOW',
+      parts: [
+        { title: 'Concept, Causes & Political, Economic, Cultural Consequences of Globalisation', minutes: 55 },
+      ],
+    },
+    {
+      num: 8,
+      name: 'Challenges of Nation-Building',
+      term: 1,
+      effort: 'HIGH',
+      parts: [
+        { title: 'Three Challenges of Independent India & Partition: Legacy, Process, Consequences', minutes: 65 },
+        { title: 'Integration of Princely States (Sardar Patel, Hyderabad, Kashmir) & States Reorganisation', minutes: 70 },
+      ],
+    },
+    {
+      num: 9,
+      name: 'Era of One-Party Dominance',
+      term: 1,
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'First Three General Elections, Nature of Congress Dominance & Social/Ideological Coalition', minutes: 65 },
+        { title: 'Opposition Parties Emergence: Socialist, BJS, CPI, Swatantra Party', minutes: 60 },
+      ],
+    },
+    {
+      num: 10,
+      name: 'Politics of Planned Development',
+      term: 2,
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Planning Commission, First vs Second Five Year Plans & Agricultural vs Industrial Debate', minutes: 65 },
+      ],
+    },
+    {
+      num: 11,
+      name: "India's External Relations",
+      term: 2,
+      effort: 'HIGH',
+      parts: [
+        { title: 'Nehru Foreign Policy Principles, Non-Aligned Movement & Panchsheel Framework', minutes: 65 },
+        { title: 'Wars with China (1962) and Pakistan (1965, 1971), Nuclear Policy Evolution', minutes: 70 },
+      ],
+    },
+    {
+      num: 12,
+      name: 'Challenges to and Restoration of the Congress System',
+      term: 2,
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Political Succession (Shastri, Indira Gandhi), 1967 General Elections & Non-Congressism', minutes: 65 },
+        { title: 'Congress Split 1969, Abolition of Privy Purses & 1971 Election Restoration', minutes: 65 },
+      ],
+    },
+    {
+      num: 13,
+      name: 'The Crisis of Democratic Order',
+      term: 3,
+      effort: 'HIGH',
+      parts: [
+        { title: 'Economic Context, Gujarat & Bihar Movements, Railway Strike & Declaration of Emergency', minutes: 65 },
+        { title: 'Controversies Regarding Emergency, Shah Commission & 1977 Lok Sabha Elections', minutes: 65 },
+      ],
+    },
+    {
+      num: 14,
+      name: 'Regional Aspirations',
+      term: 3,
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Jammu and Kashmir Issue, Punjab Crisis & Anandpur Sahib Resolution', minutes: 65 },
+        { title: 'North-East Demands for Autonomy, Secessionist Movements & Assam Accord', minutes: 65 },
+      ],
+    },
+    {
+      num: 15,
+      name: 'Recent Developments in Indian Politics',
+      term: 3,
+      effort: 'HIGH',
+      parts: [
+        { title: 'Era of Coalitions, Mandal Commission Recommendations & Implementation Politics', minutes: 65 },
+        { title: 'New Economic Policy Consensus, Ayodhya Dispute & Contemporary Coalition Governance', minutes: 70 },
+      ],
+    },
+  ],
+  Sociology: [
+    {
+      num: 1,
+      name: 'Introducing Indian Society',
+      term: 1,
+      effort: 'LOW',
+      parts: [
+        { title: 'Colonialism, Nationalism, Class and Community & Sociological Perspective', minutes: 55 },
+      ],
+    },
+    {
+      num: 2,
+      name: 'The Demographic Structure of Indian Society',
+      term: 1,
+      effort: 'HIGH',
+      parts: [
+        { title: 'Theories of Demography (Malthus, Demographic Transition) & Common Concepts', minutes: 65 },
+        { title: 'Size and Growth of India Population, Age Structure, Declining Sex Ratio & Literacy', minutes: 65 },
+      ],
+    },
+    {
+      num: 3,
+      name: 'Social Institutions: Continuity and Change',
+      term: 1,
+      effort: 'HIGH',
+      parts: [
+        { title: 'Caste and Caste System: Traditional Characteristics & Colonial/Modern Transformations', minutes: 65 },
+        { title: 'Tribal Communities Classification, Integration vs Isolation & Family and Kinship Types', minutes: 65 },
+      ],
+    },
+    {
+      num: 4,
+      name: 'The Market as a Social Institution',
+      term: 2,
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Sociological Perspectives on Markets, Weekly Tribal Markets (Dhorai) & Caste Capitalists', minutes: 60 },
+        { title: 'Commoditisation and Consumption in the Age of Globalisation', minutes: 60 },
+      ],
+    },
+    {
+      num: 5,
+      name: 'Patterns of Social Inequality and Exclusion',
+      term: 2,
+      effort: 'HIGH',
+      parts: [
+        { title: 'Social Stratification Concepts, Untouchability Prejudices & Dalit/Adivasi Struggles', minutes: 65 },
+        { title: 'Other Backward Classes (OBC), Adivasi Struggles & Women Equality Movements', minutes: 65 },
+      ],
+    },
+    {
+      num: 6,
+      name: 'The Challenges of Cultural Diversity',
+      term: 2,
+      effort: 'HIGH',
+      parts: [
+        { title: 'Cultural Diversity in India, Cultural Communities, Nation-State & Assimilation/Integration', minutes: 65 },
+        { title: 'Communalism, Secularism, Nation-State Minorities & Civil Society Initiatives', minutes: 65 },
+      ],
+    },
+    {
+      num: 7,
+      name: 'Structural Change',
+      term: 2,
+      effort: 'LOW',
+      parts: [
+        { title: 'Colonialism Impact, Urbanisation and Industrialisation Patterns in Independent India', minutes: 55 },
+      ],
+    },
+    {
+      num: 8,
+      name: 'Cultural Change',
+      term: 2,
+      effort: 'HIGH',
+      parts: [
+        { title: 'Social Reform Movements in 19th & 20th Centuries, Sanskritisation & Westernisation', minutes: 65 },
+        { title: 'Modernisation and Secularisation Dynamics in Contemporary India', minutes: 60 },
+      ],
+    },
+    {
+      num: 9,
+      name: 'The Story of Indian Democracy',
+      term: 3,
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Constitutional Values, Grassroots Democracy & 73rd/74th Constitutional Amendments', minutes: 65 },
+      ],
+    },
+    {
+      num: 10,
+      name: 'Change and Development in Rural Society',
+      term: 3,
+      effort: 'HIGH',
+      parts: [
+        { title: 'Agrarian Structure, Land Reforms in Kerala and India & Green Revolution Social Consequences', minutes: 65 },
+        { title: 'Commercialisation of Agriculture, Rural Indebtedness & Farmers Suicide Issues', minutes: 65 },
+      ],
+    },
+    {
+      num: 11,
+      name: 'Change and Development in Industrial Society',
+      term: 3,
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Industrialisation in India, Working Conditions in Organised vs Unorganised Sectors', minutes: 60 },
+        { title: 'Strike Actions, Trade Unions & Globalisation and Disinvestment Impacts', minutes: 60 },
+      ],
+    },
+    {
+      num: 12,
+      name: 'Globalisation and Social Change',
+      term: 3,
+      effort: 'LOW',
+      parts: [
+        { title: 'Dimensions of Globalisation (Economic, Electronic, Cultural) & Corporate Media Impacts', minutes: 55 },
+      ],
+    },
+    {
+      num: 13,
+      name: 'Social Movements',
+      term: 3,
+      effort: 'HIGH',
+      parts: [
+        { title: 'Features and Theories of Social Movements (Resource Mobilisation, Relative Deprivation)', minutes: 65 },
+        { title: 'Peasant Movements, Workers Movements, Tribal Movements & Women Movements in India', minutes: 70 },
+      ],
+    },
+  ],
 };
 
 export const createCanonicalTasks = (subject, grade, chapters) => {
@@ -718,4 +1554,11 @@ export const PLUS_TWO_SYLLABUS = [
   ...createCanonicalTasks('Computer Science', '+2', PLUS_TWO_CHAPTERS['Computer Science']),
   ...createCanonicalTasks('Botany', '+2', PLUS_TWO_CHAPTERS.Botany),
   ...createCanonicalTasks('Zoology', '+2', PLUS_TWO_CHAPTERS.Zoology),
+  ...createCanonicalTasks('Accountancy', '+2', PLUS_TWO_CHAPTERS.Accountancy),
+  ...createCanonicalTasks('Business Studies', '+2', PLUS_TWO_CHAPTERS['Business Studies']),
+  ...createCanonicalTasks('Economics', '+2', PLUS_TWO_CHAPTERS.Economics),
+  ...createCanonicalTasks('Computer Applications', '+2', PLUS_TWO_CHAPTERS['Computer Applications']),
+  ...createCanonicalTasks('History', '+2', PLUS_TWO_CHAPTERS.History),
+  ...createCanonicalTasks('Political Science', '+2', PLUS_TWO_CHAPTERS['Political Science']),
+  ...createCanonicalTasks('Sociology', '+2', PLUS_TWO_CHAPTERS.Sociology),
 ];

@@ -60,7 +60,39 @@ node scripts/benchmark-planner.js
 
 ---
 
-### Scenario 3: Dual Stream + Dual Improvement (+1 Physics & Chem with early exams)
+### Scenario 3: Standard Commerce Runway (100 days, 77 tasks)
+
+*Runway: 2026-10-01 to 2027-01-08 (100 days). Tasks: 77 canonical Plus Two Commerce parts (Accountancy, Business Studies, Economics, CA).*
+
+| Metric | Mission PlusTwo (v6.1) | Naive Sequential | Naive Round-Robin |
+| :--- | :---: | :---: | :---: |
+| **Task Coverage** | **100.0%** | 100.0% | 100.0% |
+| **Duplicates** | **0** | 0 | 0 |
+| **Ordering Violations** | **0** | 0 | 0 |
+| **Deadline Violations** | **0** | 0 | 0 |
+| **Blank Study Days** | **0** | 23 | 76 |
+| **Workload Imbalance (\(\sigma\))** | **0.00** | 0.42 | 1.47 |
+| **Revision Buffer Days** | **10 days** | 0 days | 0 days |
+
+---
+
+### Scenario 4: Standard Humanities Runway (110 days, 97 tasks)
+
+*Runway: 2026-10-01 to 2027-01-18 (110 days). Tasks: 97 canonical Plus Two Humanities parts (History, Political Science, Sociology, Economics).*
+
+| Metric | Mission PlusTwo (v6.1) | Naive Sequential | Naive Round-Robin |
+| :--- | :---: | :---: | :---: |
+| **Task Coverage** | **100.0%** | 100.0% | 100.0% |
+| **Duplicates** | **0** | 0 | 0 |
+| **Ordering Violations** | **0** | 0 | 0 |
+| **Deadline Violations** | **0** | 0 | 0 |
+| **Blank Study Days** | **0** | 13 | 84 |
+| **Workload Imbalance (\(\sigma\))** | **0.00** | 0.32 | 1.62 |
+| **Revision Buffer Days** | **10 days** | 0 days | 0 days |
+
+---
+
+### Scenario 5: Dual Stream + Dual Improvement (+1 Physics & Chem with early exams)
 
 *Runway: 2026-10-01 to 2027-02-15 (138 days). 151 tasks (+2 CS tasks + 46 +1 Improvement tasks). Physics exam on Day 25; Chemistry exam on Day 30.*
 
@@ -79,7 +111,7 @@ node scripts/benchmark-planner.js
 
 ---
 
-### Scenario 4: Compressed Cram Runway (21 days, CS)
+### Scenario 6: Compressed Cram Runway (21 days, CS)
 
 *Runway: 2026-10-01 to 2026-10-21 (21 days, 105 tasks).*
 
@@ -97,6 +129,6 @@ node scripts/benchmark-planner.js
 
 ## 4. Benchmark Summary
 
-1. **Safety**: Mission PlusTwo consistently achieved **0 ordering violations**, **0 duplicate tasks**, and **0 deadline violations** across all four evaluated scenarios.
+1. **Safety**: Mission PlusTwo consistently achieved **0 ordering violations**, **0 duplicate tasks**, and **0 deadline violations** across all six evaluated scenarios (CS, Bio, Commerce, Humanities, Dual Improvement, and Fast Cram).
 2. **Smooth Workload Distribution**: Workload variance remained between \(0.09\) and \(0.71\) tasks/day, avoiding cramming spikes.
 3. **Dedicated Revision Buffer**: Automatically reserved between 2 and 10 days strictly for past paper and mock exam practice, an invariant ignored by naive baselines.

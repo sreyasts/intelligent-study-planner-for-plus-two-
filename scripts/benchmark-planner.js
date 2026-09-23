@@ -185,6 +185,20 @@ export function runBenchmark() {
       improvementConfig: []
     },
     {
+      name: 'Standard Commerce Runway (100 days)',
+      stream: 'commerce',
+      startDate: '2026-10-01',
+      deadlineDate: '2027-01-08',
+      improvementConfig: []
+    },
+    {
+      name: 'Standard Humanities Runway (110 days)',
+      stream: 'humanities',
+      startDate: '2026-10-01',
+      deadlineDate: '2027-01-18',
+      improvementConfig: []
+    },
+    {
       name: 'Dual Stream + Dual Improvement (+1 Physics & Chem with exams on Day 25 & 30)',
       stream: 'cs',
       startDate: '2026-10-01',

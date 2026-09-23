@@ -5,6 +5,7 @@ import {
   formatLocalDateStr,
   calculateDaysBetween,
   getCanonicalTasks,
+  getStreamSubjects,
 } from '../src/engine/planner.js';
 import { migrateUserState } from '../src/engine/migration.js';
 
@@ -423,6 +424,148 @@ describe('Edge Cases, Boundary Conditions & Invariant Hardening', () => {
       expect(validation.scorecard.duplicateTasks).toBe(0);
       expect(validation.scorecard.omittedTasks).toBe(0);
     }
+  });
+
+  describe('Commerce & Humanities Stream Isolation & Verification', () => {
+    it('returns exact canonical subjects for commerce and humanities streams', () => {
+      const commSubs = getStreamSubjects('commerce');
+      expect(commSubs).toEqual(['Accountancy', 'Business Studies', 'Economics', 'Computer Applications']);
+
+      const humSubs = getStreamSubjects('humanities');
+      expect(humSubs).toEqual(['History', 'Political Science', 'Sociology', 'Economics']);
+    });
+
+    it('enforces strict stream isolation in getCanonicalTasks with zero cross-contamination', () => {
+      // Commerce canonical tasks
+      const commTasks = getCanonicalTasks({ stream: 'commerce', termScope: 3 });
+      expect(commTasks.length).toBeGreaterThan(50);
+      const commSubjects = new Set(commTasks.map((t) => t.subject));
+      expect(commSubjects).toEqual(new Set(['Accountancy', 'Business Studies', 'Economics', 'Computer Applications']));
+      // Invariant: Zero Science or Humanities-only subjects in Commerce
+      expect(commSubjects.has('Physics')).toBe(false);
+      expect(commSubjects.has('Chemistry')).toBe(false);
+      expect(commSubjects.has('Mathematics')).toBe(false);
+      expect(commSubjects.has('History')).toBe(false);
+      expect(commSubjects.has('Sociology')).toBe(false);
+
+      // Humanities canonical tasks
+      const humTasks = getCanonicalTasks({ stream: 'humanities', termScope: 3 });
+      expect(humTasks.length).toBeGreaterThan(60);
+      const humSubjects = new Set(humTasks.map((t) => t.subject));
+      expect(humSubjects).toEqual(new Set(['History', 'Political Science', 'Sociology', 'Economics']));
+      // Invariant: Zero Science or Commerce-only subjects in Humanities
+      expect(humSubjects.has('Physics')).toBe(false);
+      expect(humSubjects.has('Accountancy')).toBe(false);
+      expect(humSubjects.has('Business Studies')).toBe(false);
+      expect(humSubjects.has('Computer Science')).toBe(false);
+    });
+
+    it('prevents cross-stream leakage when including +1 improvement subjects', () => {
+      // Even if a caller maliciously passes Physics or Zoology under commerce, it is filtered out
+      const isolatedComm = getCanonicalTasks({
+        stream: 'commerce',
+        termScope: 3,
+        includePlusOne: true,
+        plusOneSubjects: ['Accountancy', 'Economics', 'Physics', 'Zoology'],
+      });
+
+      const subjects = new Set(isolatedComm.map((t) => t.subject));
+      expect(subjects.has('Physics')).toBe(false);
+      expect(subjects.has('Zoology')).toBe(false);
+      expect(subjects.has('Accountancy')).toBe(true);
+      expect(subjects.has('Economics')).toBe(true);
+    });
+
+    it('generates a valid, completely verified plan for Commerce stream', () => {
+      const planState = buildIntelligentPlan({
+        stream: 'commerce',
+        startDateStr: '2026-10-01',
+        deadlineDateStr: '2027-02-28',
+        termScope: 3,
+      });
+
+      expect(planState.stream).toBe('commerce');
+      expect(planState.valid).toBe(true);
+      expect(planState.scorecard.orderingViolations).toBe(0);
+      expect(planState.scorecard.duplicateTasks).toBe(0);
+
+      // Check all non-revision tasks are strictly Commerce subjects
+      const scheduledSubjects = new Set(
+        planState.plan
+          .filter((d) => !d.isRevisionDay)
+          .flatMap((d) => d.tasks)
+          .map((t) => t.subject)
+      );
+      expect(scheduledSubjects).toEqual(new Set(['Accountancy', 'Business Studies', 'Economics', 'Computer Applications']));
+
+      // Verify revision days contain tailored Commerce revision topics
+      const revisionTasks = planState.plan
+        .filter((d) => d.isRevisionDay)
+        .flatMap((d) => d.tasks);
+      expect(revisionTasks.length).toBeGreaterThan(0);
+      const hasCommerceRevTopic = revisionTasks.some(
+        (t) => t.topicTitle && (t.topicTitle.includes('Partnership Accounts') || t.topicTitle.includes('Management Principles'))
+      );
+      expect(hasCommerceRevTopic).toBe(true);
+    });
+
+    it('generates a valid, completely verified plan for Humanities stream', () => {
+      const planState = buildIntelligentPlan({
+        stream: 'humanities',
+        startDateStr: '2026-10-01',
+        deadlineDateStr: '2027-02-28',
+        termScope: 3,
+      });
+
+      expect(planState.stream).toBe('humanities');
+      expect(planState.valid).toBe(true);
+      expect(planState.scorecard.orderingViolations).toBe(0);
+      expect(planState.scorecard.duplicateTasks).toBe(0);
+
+      // Check all non-revision tasks are strictly Humanities subjects
+      const scheduledSubjects = new Set(
+        planState.plan
+          .filter((d) => !d.isRevisionDay)
+          .flatMap((d) => d.tasks)
+          .map((t) => t.subject)
+      );
+      expect(scheduledSubjects).toEqual(new Set(['History', 'Political Science', 'Sociology', 'Economics']));
+
+      // Verify revision days contain tailored Humanities revision topics
+      const revisionTasks = planState.plan
+        .filter((d) => d.isRevisionDay)
+        .flatMap((d) => d.tasks);
+      const hasHumanitiesRevTopic = revisionTasks.some(
+        (t) => t.topicTitle && (t.topicTitle.includes('Chronological Timelines') || t.topicTitle.includes('Constitutional Provisions'))
+      );
+      expect(hasHumanitiesRevTopic).toBe(true);
+    });
+
+    it('schedules Commerce improvement exams before their respective exam dates', () => {
+      const planState = buildIntelligentPlan({
+        stream: 'commerce',
+        startDateStr: '2026-10-01',
+        deadlineDateStr: '2027-02-28',
+        includePlusOne: true,
+        plusOneSubjects: ['Accountancy', 'Business Studies'],
+        improvementDates: {
+          Accountancy: '2026-10-25',
+          'Business Studies': '2026-11-05',
+        },
+      });
+
+      const validation = validatePlan(planState, undefined, {
+        stream: 'commerce',
+        improvementConfig: [
+          { subject: 'Accountancy', examDate: '2026-10-25' },
+          { subject: 'Business Studies', examDate: '2026-11-05' },
+        ],
+      });
+
+      expect(validation.scorecard.deadlineViolations).toBe(0);
+      expect(validation.scorecard.orderingViolations).toBe(0);
+      expect(validation.scorecard.duplicateTasks).toBe(0);
+    });
   });
 });
 

@@ -614,6 +614,718 @@ export const PLUS_ONE_CHAPTERS = {
       ],
     },
   ],
+
+  Accountancy: [
+    {
+      num: 1,
+      name: 'Introduction to Accounting',
+      effort: 'LOW',
+      parts: [
+        { title: 'Meaning, Objectives, Qualitative Characteristics & Basic Accounting Terms', minutes: 55 },
+      ],
+    },
+    {
+      num: 2,
+      name: 'Theory Base of Accounting',
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'GAAP, Basic Concepts & Accounting Principles (Going Concern, Accrual, Matching)', minutes: 60 },
+        { title: 'Accounting Standards, IFRS & Basis of Accounting (Cash vs Accrual)', minutes: 55 },
+      ],
+    },
+    {
+      num: 3,
+      name: 'Recording of Transactions - I',
+      effort: 'HIGH',
+      parts: [
+        { title: 'Accounting Equation, Rules of Debit and Credit & Source Documents', minutes: 65 },
+        { title: 'Journal Entries: Compound Entries, Discount (Trade & Cash) & GST Entries', minutes: 75 },
+        { title: 'Ledger Posting & Balancing of Ledger Accounts', minutes: 65 },
+      ],
+    },
+    {
+      num: 4,
+      name: 'Recording of Transactions - II',
+      effort: 'HIGH',
+      parts: [
+        { title: 'Cash Book: Simple Cash Book, Two-Column Cash Book & Petty Cash Book', minutes: 70 },
+        { title: 'Special Purpose Subsidiary Books: Purchases, Sales, Purchases Return & Sales Return Books', minutes: 65 },
+        { title: 'Journal Proper: Opening, Transfer, Rectification & Adjustment Entries', minutes: 60 },
+      ],
+    },
+    {
+      num: 5,
+      name: 'Bank Reconciliation Statement',
+      effort: 'HIGH',
+      parts: [
+        { title: 'Causes of Differences between Cash Book and Pass Book Balances', minutes: 60 },
+        { title: 'Preparation of BRS with Normal and Overdraft Balances (Favourable & Unfavourable)', minutes: 75 },
+      ],
+    },
+    {
+      num: 6,
+      name: 'Trial Balance and Rectification of Errors',
+      effort: 'HIGH',
+      parts: [
+        { title: 'Objectives, Preparation and Limitations of Trial Balance', minutes: 60 },
+        { title: 'Classification of Errors: Errors of Omission, Commission, Principle & Compensating', minutes: 65 },
+        { title: 'Rectification of Errors: Before and After Trial Balance & Suspense Account', minutes: 75 },
+      ],
+    },
+    {
+      num: 7,
+      name: 'Depreciation, Provisions and Reserves',
+      effort: 'HIGH',
+      parts: [
+        { title: 'Meaning, Causes and Factors of Depreciation: Straight Line Method (SLM)', minutes: 65 },
+        { title: 'Written Down Value Method (WDV) & Disposal of Asset Account', minutes: 75 },
+        { title: 'Provisions vs Reserves: Revenue, Capital, General and Specific Reserves', minutes: 55 },
+      ],
+    },
+    {
+      num: 8,
+      name: 'Financial Statements - I',
+      effort: 'HIGH',
+      parts: [
+        { title: 'Stakeholders of Financial Statements & Capital vs Revenue Expenditure/Receipts', minutes: 55 },
+        { title: 'Trading Account, Gross Profit & Cost of Goods Sold Calculations', minutes: 65 },
+        { title: 'Profit and Loss Account, Net Profit & Preparation of Balance Sheet without Adjustments', minutes: 75 },
+      ],
+    },
+    {
+      num: 9,
+      name: 'Financial Statements - II',
+      effort: 'VERY_HIGH',
+      parts: [
+        { title: 'Adjustments: Closing Stock, Outstanding/Prepaid Expenses, Accrued/Unearned Income', minutes: 70 },
+        { title: 'Bad Debts, Provision for Doubtful Debts & Provision for Discount on Debtors', minutes: 75 },
+        { title: 'Comprehensive Final Accounts Problem with Multiple Adjustments', minutes: 80 },
+      ],
+    },
+  ],
+
+  'Business Studies': [
+    {
+      num: 1,
+      name: 'Business, Trade and Commerce',
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Concept, Characteristics, Objectives of Business & Classification (Industry vs Commerce)', minutes: 60 },
+        { title: 'Business Risks: Nature, Causes & Role of Profit in Business', minutes: 55 },
+      ],
+    },
+    {
+      num: 2,
+      name: 'Forms of Business Organisations',
+      effort: 'HIGH',
+      parts: [
+        { title: 'Sole Proprietorship, Hindu Undivided Family (HUF) & Partnership (Types & Registration)', minutes: 65 },
+        { title: 'Cooperative Societies: Meaning, Types, Merits & Limitations', minutes: 60 },
+        { title: 'Joint Stock Company: Features, Types (Private vs Public) & Choice of Enterprise Form', minutes: 70 },
+      ],
+    },
+    {
+      num: 3,
+      name: 'Private, Public and Global Enterprises',
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Public Sector Enterprises: Departmental Undertakings, Statutory Corporations & Government Companies', minutes: 65 },
+        { title: 'Changing Role of Public Sector, Global Enterprises (MNCs) & Joint Ventures / PPP', minutes: 60 },
+      ],
+    },
+    {
+      num: 4,
+      name: 'Business Services',
+      effort: 'HIGH',
+      parts: [
+        { title: 'Banking Services: Types of Bank Accounts, RTGS, NEFT, Bank Overdraft & E-Banking', minutes: 65 },
+        { title: 'Insurance: Principles of Insurance & Types (Life, Fire, Marine Insurance)', minutes: 70 },
+        { title: 'Communication Services, Postal Services & Warehousing (Functions & Types)', minutes: 55 },
+      ],
+    },
+    {
+      num: 5,
+      name: 'Emerging Modes of Business',
+      effort: 'LOW',
+      parts: [
+        { title: 'E-Business: Scope, Benefits, Limitations & Online Transaction Process', minutes: 60 },
+        { title: 'Outsourcing (BPO/KPO): Concept, Need, Scope and Ethical Concerns', minutes: 50 },
+      ],
+    },
+    {
+      num: 6,
+      name: 'Social Responsibilities of Business and Business Ethics',
+      effort: 'LOW',
+      parts: [
+        { title: 'Concept and Arguments For/Against Social Responsibility towards Stakeholders', minutes: 55 },
+        { title: 'Business Ethics, Elements of Ethics & Environmental Protection by Business', minutes: 50 },
+      ],
+    },
+    {
+      num: 7,
+      name: 'Sources of Business Finance',
+      effort: 'HIGH',
+      parts: [
+        { title: 'Classification of Financial Sources: Short, Medium & Long-term Funds', minutes: 60 },
+        { title: 'Equity Shares, Preference Shares, Retained Earnings & Debentures', minutes: 70 },
+        { title: 'Commercial Banks, Financial Institutions, Trade Credit & International Financing (ADR, GDR, FCCB)', minutes: 65 },
+      ],
+    },
+    {
+      num: 8,
+      name: 'Small Business and Enterprises',
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Entrepreneurship Development (EDP), Intellectual Property Rights (IPR) & Start-up Scheme', minutes: 60 },
+        { title: 'MSME Definition, Role of Small Business in Rural India & Government Assistance (DIC, NSIC)', minutes: 55 },
+      ],
+    },
+    {
+      num: 9,
+      name: 'Internal Trade',
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Wholesale and Retail Trade: Types of Retailers (Itinerant & Fixed Shop Retailers)', minutes: 60 },
+        { title: 'Departmental Stores, Multiple Chain Shops, Mail Order & GST (Goods and Services Tax) Concepts', minutes: 65 },
+      ],
+    },
+    {
+      num: 10,
+      name: 'International Business',
+      effort: 'HIGH',
+      parts: [
+        { title: 'Domestic vs International Trade: Scope, Benefits & Export Trade Procedure', minutes: 65 },
+        { title: 'Import Trade Procedure & Key International Trade Documents (Letter of Credit, Bill of Lading)', minutes: 70 },
+        { title: 'International Trade Institutions: WTO Objectives, Functions & IMF/World Bank', minutes: 60 },
+      ],
+    },
+  ],
+
+  Economics: [
+    {
+      num: 1,
+      name: 'Introduction to Statistics',
+      effort: 'LOW',
+      parts: [
+        { title: 'Meaning, Scope and Importance of Statistics in Economics', minutes: 50 },
+      ],
+    },
+    {
+      num: 2,
+      name: 'Collection of Data',
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Sources of Data: Primary vs Secondary Data & Methods of Collecting Primary Data', minutes: 55 },
+        { title: 'Sampling: Random vs Non-Random Sampling, Census vs Sample & NSSO/Census of India', minutes: 60 },
+      ],
+    },
+    {
+      num: 3,
+      name: 'Organisation of Data',
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Classification of Data: Chronological, Spatial, Qualitative & Quantitative', minutes: 55 },
+        { title: 'Frequency Distribution: Discrete vs Continuous Series, Class Limits & Tally Marks', minutes: 60 },
+      ],
+    },
+    {
+      num: 4,
+      name: 'Presentation of Data',
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Geometric Diagrams: Bar Diagrams (Simple, Multiple, Sub-divided) & Pie Diagrams', minutes: 60 },
+        { title: 'Frequency Diagrams: Histogram, Frequency Polygon, Ogives & Arithmetic Line Graphs', minutes: 65 },
+      ],
+    },
+    {
+      num: 5,
+      name: 'Measures of Central Tendency',
+      effort: 'VERY_HIGH',
+      parts: [
+        { title: 'Arithmetic Mean: Direct, Shortcut and Step-Deviation Methods for Grouped/Ungrouped Data', minutes: 75 },
+        { title: 'Median and Partition Values (Quartiles, Deciles, Percentiles) in Continuous Series', minutes: 75 },
+        { title: 'Mode Calculation (Inspection, Grouping Method & Empirical Formula) & Comparison of Averages', minutes: 70 },
+      ],
+    },
+    {
+      num: 6,
+      name: 'Correlation',
+      effort: 'HIGH',
+      parts: [
+        { title: 'Meaning and Types of Correlation & Scatter Diagram Analysis', minutes: 55 },
+        { title: 'Karl Pearson’s Coefficient of Correlation & Spearman’s Rank Correlation', minutes: 75 },
+      ],
+    },
+    {
+      num: 7,
+      name: 'Index Numbers',
+      effort: 'HIGH',
+      parts: [
+        { title: 'Meaning, Uses and Construction of Simple Index Numbers (Aggregative vs Relatives)', minutes: 60 },
+        { title: 'Weighted Index Numbers: Laspeyres, Paasche, Fisher’s Ideal Index & CPI/WPI', minutes: 70 },
+      ],
+    },
+    {
+      num: 8,
+      name: 'Indian Economy on the Eve of Independence',
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'State of Agricultural, Industrial and Foreign Trade Sectors under Colonial Rule', minutes: 60 },
+        { title: 'Demographic Profile, Occupational Structure & Infrastructure Development before 1947', minutes: 55 },
+      ],
+    },
+    {
+      num: 9,
+      name: 'Indian Economy (1950-1990)',
+      effort: 'HIGH',
+      parts: [
+        { title: 'Five Year Plans: Goals (Growth, Modernisation, Self-Reliance, Equity) & Land Reforms', minutes: 65 },
+        { title: 'Green Revolution, Industrial Policy Resolution 1956 & Inward Looking Trade Strategy', minutes: 65 },
+      ],
+    },
+    {
+      num: 10,
+      name: 'Liberalisation, Privatisation and Globalisation: An Appraisal',
+      effort: 'HIGH',
+      parts: [
+        { title: 'Crisis of 1991 & Liberalisation Measures (Financial, Fiscal, Trade & Industrial Reforms)', minutes: 70 },
+        { title: 'Privatisation (Disinvestment, Navratnas) & Globalisation (Outsourcing, WTO Impact)', minutes: 65 },
+        { title: 'Critical Assessment of LPG Reforms: Growth, Agriculture, Industrial & Employment Performance', minutes: 60 },
+      ],
+    },
+    {
+      num: 11,
+      name: 'Human Capital Formation in India',
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Concept of Human Capital, Sources (Education, Health, Migration) & Economic Growth Linkage', minutes: 60 },
+        { title: 'State of Education Sector in India, Regulatory Bodies & Future Prospects', minutes: 55 },
+      ],
+    },
+    {
+      num: 12,
+      name: 'Rural Development',
+      effort: 'HIGH',
+      parts: [
+        { title: 'Rural Credit: Institutional vs Non-Institutional Sources, SHGs & Micro-Credit', minutes: 60 },
+        { title: 'Agricultural Marketing (Defects, Government Measures), Diversification & Organic Farming', minutes: 65 },
+      ],
+    },
+    {
+      num: 13,
+      name: 'Employment: Growth, Informalisation and Other Issues',
+      effort: 'HIGH',
+      parts: [
+        { title: 'Workers and Employment: Types, Worker-Population Ratio & Formal vs Informal Sector', minutes: 65 },
+        { title: 'Unemployment: Types, Causes, Government Employment Generation Schemes (MGNREGA)', minutes: 60 },
+      ],
+    },
+    {
+      num: 14,
+      name: 'Environment and Sustainable Development',
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Functions and Carrying Capacity of Environment, Global Warming & Land Degradation', minutes: 60 },
+        { title: 'Sustainable Development: Concept, Principles & Strategies for Sustainable Economic Growth', minutes: 55 },
+      ],
+    },
+    {
+      num: 15,
+      name: 'Comparative Development Experiences of India and its Neighbours',
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Developmental Path of India, China and Pakistan: Demographic & Structural Indicators', minutes: 60 },
+        { title: 'Human Development Index (HDI) Comparison & Sectoral Contribution to GDP', minutes: 60 },
+      ],
+    },
+  ],
+
+  'Computer Applications': [
+    {
+      num: 1,
+      name: 'Fundamentals of Computers',
+      effort: 'LOW',
+      parts: [
+        { title: 'Evolution of Computers, Functional Units & Von Neumann Architecture', minutes: 50 },
+      ],
+    },
+    {
+      num: 2,
+      name: 'Components of the Computer System',
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Hardware: Processor, Memory (RAM, ROM, Cache), Secondary Storage Devices & I/O Ports', minutes: 60 },
+        { title: 'Software: System vs Application Software, OS Functions & Open Source Concepts', minutes: 55 },
+      ],
+    },
+    {
+      num: 3,
+      name: 'Principles of Programming and Problem Solving',
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Problem Solving Phases, Algorithm Representation & Flowchart Symbols', minutes: 55 },
+        { title: 'Structured Programming Concepts, Debugging Techniques & Program Documentation', minutes: 55 },
+      ],
+    },
+    {
+      num: 4,
+      name: 'Getting Started with C++',
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Character Set, Tokens (Keywords, Identifiers, Literals, Operators, Punctuators)', minutes: 55 },
+        { title: 'Structure of a C++ Program, Header Files, Compilation & Basic I/O (cin, cout)', minutes: 60 },
+      ],
+    },
+    {
+      num: 5,
+      name: 'Data Types and Operators',
+      effort: 'HIGH',
+      parts: [
+        { title: 'Fundamental Data Types, Variables, Constants & Type Modifiers in C++', minutes: 55 },
+        { title: 'Operators (Arithmetic, Relational, Logical, Assignment, Conditional) & Type Conversion', minutes: 65 },
+      ],
+    },
+    {
+      num: 6,
+      name: 'Introduction to Programming (Control Statements)',
+      effort: 'VERY_HIGH',
+      parts: [
+        { title: 'Conditional Branching: if, if-else, nested if & switch-case Statements', minutes: 70 },
+        { title: 'Iteration Statements: while, do-while & for loops with break and continue', minutes: 75 },
+        { title: 'Nested Loops, Programming Patterns & Dry Run Tracing', minutes: 70 },
+      ],
+    },
+    {
+      num: 7,
+      name: 'Arrays',
+      effort: 'HIGH',
+      parts: [
+        { title: 'Array Concept, Declaration, Initialization & One-Dimensional Array Traversal', minutes: 65 },
+        { title: 'Linear Search, Finding Maximum/Minimum & Character Arrays (Strings) in C++', minutes: 70 },
+      ],
+    },
+    {
+      num: 8,
+      name: 'Functions',
+      effort: 'HIGH',
+      parts: [
+        { title: 'Built-in Library Functions (cmath, cctype, cstring) & User-Defined Function Prototypes', minutes: 65 },
+        { title: 'Function Arguments: Call by Value vs Call by Reference & Scope of Variables', minutes: 70 },
+      ],
+    },
+    {
+      num: 9,
+      name: 'Computer Networks',
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Network Benefits, Transmission Media (Guided vs Unguided) & Network Topologies', minutes: 60 },
+        { title: 'Network Types (LAN, MAN, WAN), Devices (Switch, Router, Gateway) & Protocols (TCP/IP)', minutes: 60 },
+      ],
+    },
+    {
+      num: 10,
+      name: 'Internet and Mobile Computing',
+      effort: 'LOW',
+      parts: [
+        { title: 'Internet Architecture, IP Addressing, DNS, WWW, Email Services & Cloud Computing', minutes: 55 },
+        { title: 'Mobile Computing Technologies: Cellular Generations (4G/5G), Wi-Fi & Cyber Security', minutes: 50 },
+      ],
+    },
+  ],
+
+  History: [
+    {
+      num: 1,
+      name: 'Writing and City Life',
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Mesopotamia: Geography, City Planning of Ur and Uruk & Cuneiform Script', minutes: 60 },
+        { title: 'Urban Economy, Literacy, Mathematical Tablets & Urbanism Legacy', minutes: 55 },
+      ],
+    },
+    {
+      num: 2,
+      name: 'An Empire Across Three Continents',
+      effort: 'HIGH',
+      parts: [
+        { title: 'The Roman Empire: Political Structure (Emperor, Senate, Army) & Social Classes', minutes: 65 },
+        { title: 'Economic Expansion, Slavery, Gender Norms, Christianity & Decline in Late Antiquity', minutes: 65 },
+      ],
+    },
+    {
+      num: 3,
+      name: 'Nomadic Empires',
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'The Mongol Empire: Genghis Khan, Military Organisation, Postal System (Yam) & Yasa Code', minutes: 60 },
+        { title: 'Pax Mongolica, Trade Routes & Cultural Synthesis between Nomads and Settled Societies', minutes: 55 },
+      ],
+    },
+    {
+      num: 4,
+      name: 'The Three Orders',
+      effort: 'HIGH',
+      parts: [
+        { title: 'Feudal Society in Medieval Europe: Clergy (First), Nobility (Second) & Peasantry (Third)', minutes: 65 },
+        { title: 'Manorial Economy, Cathedrals, Crisis of 14th Century & Rise of Towns (Fourth Order)', minutes: 60 },
+      ],
+    },
+    {
+      num: 5,
+      name: 'Changing Cultural Traditions',
+      effort: 'HIGH',
+      parts: [
+        { title: 'The Italian Renaissance: Humanism, Universities, Printing Press & Vernacular Literature', minutes: 65 },
+        { title: 'Visual Arts (Michelangelo, Da Vinci), Scientific Revolution & The Protestant Reformation', minutes: 65 },
+      ],
+    },
+    {
+      num: 6,
+      name: 'Displacing Indigenous Peoples',
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'European Colonisation of North America: Encounters, Displacement, Treaties & Gold Rush', minutes: 60 },
+        { title: 'Australia: European Settlement, Terra Nullius, Impact on Aborigines & Rights Movements', minutes: 55 },
+      ],
+    },
+    {
+      num: 7,
+      name: 'Paths to Modernisation',
+      effort: 'VERY_HIGH',
+      parts: [
+        { title: 'Japan: Meiji Restoration, Industrial Modernisation, Militarism & Post-War Transformation', minutes: 70 },
+        { title: 'China: Opium Wars, Sun Yat-sen, Communist Movement (CCP) & Cultural Revolution', minutes: 75 },
+        { title: 'Deng Xiaoping’s Modernisation Reforms & Comparative Asian Trajectories', minutes: 65 },
+      ],
+    },
+  ],
+
+  'Political Science': [
+    {
+      num: 1,
+      name: 'Constitution: Why and How?',
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Functions of a Constitution, Authority of Constituent Assembly & National Movement Heritage', minutes: 60 },
+        { title: 'Provisions Borrowed from World Constitutions & Institutional Arrangements', minutes: 55 },
+      ],
+    },
+    {
+      num: 2,
+      name: 'Rights in the Indian Constitution',
+      effort: 'HIGH',
+      parts: [
+        { title: 'Fundamental Rights (Articles 14-32): Equality, Freedom, Religion & Remedies (Writs)', minutes: 65 },
+        { title: 'Directive Principles of State Policy (DPSP) vs Fundamental Rights & Fundamental Duties', minutes: 60 },
+      ],
+    },
+    {
+      num: 3,
+      name: 'Election and Representation',
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'First-Past-The-Post (FPTP) vs Proportional Representation (PR) Systems', minutes: 60 },
+        { title: 'Free and Fair Elections: Election Commission of India (Powers, Autonomy) & Electoral Reforms', minutes: 55 },
+      ],
+    },
+    {
+      num: 4,
+      name: 'Executive',
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Parliamentary vs Presidential Executive: President of India (Powers & Discretionary Role)', minutes: 60 },
+        { title: 'Prime Minister, Council of Ministers & Bureaucracy (Civil Services of India)', minutes: 60 },
+      ],
+    },
+    {
+      num: 5,
+      name: 'Legislature',
+      effort: 'HIGH',
+      parts: [
+        { title: 'Bicameral Legislature: Lok Sabha vs Rajya Sabha Composition, Powers and Functions', minutes: 60 },
+        { title: 'Law-Making Procedure in Parliament & Devices of Parliamentary Control', minutes: 65 },
+      ],
+    },
+    {
+      num: 6,
+      name: 'Judiciary',
+      effort: 'HIGH',
+      parts: [
+        { title: 'Independence of Judiciary: Supreme Court Jurisdiction (Original, Appellate, Advisory, Writs)', minutes: 65 },
+        { title: 'Judicial Activism, Public Interest Litigation (PIL) & Judiciary vs Legislature Relations', minutes: 65 },
+      ],
+    },
+    {
+      num: 7,
+      name: 'Federalism',
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Federal Features in India: Division of Powers (Union, State, Concurrent Lists)', minutes: 60 },
+        { title: 'Federalism with Strong Central Bias, Interstate Disputes & Special Provisions (Article 371)', minutes: 55 },
+      ],
+    },
+    {
+      num: 8,
+      name: 'Local Governments',
+      effort: 'MEDIUM',
+      parts: [
+        { title: '73rd Constitutional Amendment: Panchayati Raj Institutions (Three-tier Architecture & 11th Schedule)', minutes: 60 },
+        { title: '74th Constitutional Amendment: Urban Local Bodies & Decentralisation Outcomes', minutes: 55 },
+      ],
+    },
+    {
+      num: 9,
+      name: 'Constitution as a Living Document',
+      effort: 'LOW',
+      parts: [
+        { title: 'Amendment Procedure (Article 368), Flexibility vs Rigidity & Basic Structure Doctrine', minutes: 55 },
+      ],
+    },
+    {
+      num: 10,
+      name: 'The Philosophy of the Constitution',
+      effort: 'LOW',
+      parts: [
+        { title: 'Preamble Philosophy, Democratic Values, Secular Credentials & Social Justice Commitments', minutes: 50 },
+      ],
+    },
+    {
+      num: 11,
+      name: 'Political Theory: An Introduction',
+      effort: 'LOW',
+      parts: [
+        { title: 'Meaning, Scope and Significance of Political Theory in Everyday Life', minutes: 50 },
+      ],
+    },
+    {
+      num: 12,
+      name: 'Freedom',
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Concept of Liberty, Negative vs Positive Liberty Dimensions', minutes: 55 },
+        { title: 'Harm Principle (J.S. Mill) & Justified Constraints on Freedom of Expression', minutes: 55 },
+      ],
+    },
+    {
+      num: 13,
+      name: 'Equality',
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Dimensions of Equality: Political, Economic and Social Equality', minutes: 55 },
+        { title: 'Affirmative Action, Equality of Opportunity vs Outcome & Special Needs', minutes: 55 },
+      ],
+    },
+    {
+      num: 14,
+      name: 'Social Justice',
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Principles of Justice: Equal Treatment, Proportionality & Rawls’ Theory of Justice', minutes: 60 },
+        { title: 'Pursuit of Social Justice in India, Affirmative Policies & Constitutional Safeguards', minutes: 55 },
+      ],
+    },
+    {
+      num: 15,
+      name: 'Rights',
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'What are Rights? Origins (Natural vs Legal) & Justification of Rights', minutes: 55 },
+        { title: 'Rights and Responsibilities & Emerging Generation of Human Rights', minutes: 50 },
+      ],
+    },
+    {
+      num: 16,
+      name: 'Development',
+      effort: 'LOW',
+      parts: [
+        { title: 'Models of Development, Criticisms of Top-Down Growth & Sustainable Democratic Alternatives', minutes: 55 },
+      ],
+    },
+  ],
+
+  Sociology: [
+    {
+      num: 1,
+      name: 'Sociology and Society',
+      effort: 'LOW',
+      parts: [
+        { title: 'Sociological Imagination, Sociology vs Common Sense & Pluralities in Society', minutes: 55 },
+      ],
+    },
+    {
+      num: 2,
+      name: 'Terms, Concepts and their use in Sociology',
+      effort: 'HIGH',
+      parts: [
+        { title: 'Social Groups: Primary vs Secondary, In-Group vs Out-Group & Reference Groups', minutes: 60 },
+        { title: 'Social Stratification (Caste, Class, Gender), Status, Role & Social Control', minutes: 65 },
+      ],
+    },
+    {
+      num: 3,
+      name: 'Understanding Social Institutions',
+      effort: 'HIGH',
+      parts: [
+        { title: 'Family, Marriage and Kinship: Structures, Types and Contemporary Transformations', minutes: 60 },
+        { title: 'Work and Economic Life, Political Systems & Religion and Education as Institutions', minutes: 65 },
+      ],
+    },
+    {
+      num: 4,
+      name: 'Culture and Socialisation',
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Dimensions of Culture (Cognitive, Normative, Material) & Ethnocentrism', minutes: 55 },
+        { title: 'Socialisation: Agencies (Family, School, Media, Peer Groups) & Identity Development', minutes: 55 },
+      ],
+    },
+    {
+      num: 5,
+      name: 'Social Structure, Stratification and Social Processes in Society',
+      effort: 'HIGH',
+      parts: [
+        { title: 'Social Processes: Cooperation, Competition and Conflict Dynamics', minutes: 60 },
+        { title: 'Social Stratification and Inequality: Functionalist vs Conflict Interpretations', minutes: 60 },
+      ],
+    },
+    {
+      num: 6,
+      name: 'Social Order, Social Change and Social Processes in Rural and Urban Society',
+      effort: 'HIGH',
+      parts: [
+        { title: 'Social Change: Causes (Technological, Demographic, Cultural, Political) & Social Order', minutes: 60 },
+        { title: 'Authority, Law, Crime and Spatial Differences in Rural vs Urban Communities', minutes: 60 },
+      ],
+    },
+    {
+      num: 7,
+      name: 'Environment and Society',
+      effort: 'MEDIUM',
+      parts: [
+        { title: 'Ecology and Society: Major Environmental Crises (Resource Depletion, Pollution, Global Warming)', minutes: 55 },
+        { title: 'Environmental Justice, Social Causes of Ecological Problems & Sustainable Alternatives', minutes: 55 },
+      ],
+    },
+    {
+      num: 8,
+      name: 'Introducing Western Sociologists',
+      effort: 'VERY_HIGH',
+      parts: [
+        { title: 'Origins of Sociology: Enlightenment, French Revolution & Industrial Transformation', minutes: 60 },
+        { title: 'Karl Marx: Historical Materialism, Class Struggle & Alienation', minutes: 70 },
+        { title: 'Emile Durkheim (Social Facts, Division of Labour) & Max Weber (Social Action, Bureaucracy)', minutes: 75 },
+      ],
+    },
+    {
+      num: 9,
+      name: 'Indian Sociologists',
+      effort: 'HIGH',
+      parts: [
+        { title: 'G.S. Ghurye (Caste and Race in India) & D.P. Mukerji (Tradition and Change)', minutes: 65 },
+        { title: 'M.N. Srinivas (The Indian Village, Sanskritisation) & A.R. Desai (State and Society)', minutes: 65 },
+      ],
+    },
+  ],
 };
 
 import { createCanonicalTasks } from './syllabus-plus-two.js';
@@ -625,4 +1337,11 @@ export const PLUS_ONE_SYLLABUS = [
   ...createCanonicalTasks('Computer Science', '+1', PLUS_ONE_CHAPTERS['Computer Science']),
   ...createCanonicalTasks('Botany', '+1', PLUS_ONE_CHAPTERS.Botany),
   ...createCanonicalTasks('Zoology', '+1', PLUS_ONE_CHAPTERS.Zoology),
+  ...createCanonicalTasks('Accountancy', '+1', PLUS_ONE_CHAPTERS.Accountancy),
+  ...createCanonicalTasks('Business Studies', '+1', PLUS_ONE_CHAPTERS['Business Studies']),
+  ...createCanonicalTasks('Economics', '+1', PLUS_ONE_CHAPTERS.Economics),
+  ...createCanonicalTasks('Computer Applications', '+1', PLUS_ONE_CHAPTERS['Computer Applications']),
+  ...createCanonicalTasks('History', '+1', PLUS_ONE_CHAPTERS.History),
+  ...createCanonicalTasks('Political Science', '+1', PLUS_ONE_CHAPTERS['Political Science']),
+  ...createCanonicalTasks('Sociology', '+1', PLUS_ONE_CHAPTERS.Sociology),
 ];

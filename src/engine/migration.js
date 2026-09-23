@@ -4,7 +4,7 @@
  * Guarantees 100% preservation of user checkmarks, progress, and historical completion.
  */
 
-import { PLANNER_ENGINE_VERSION, ENGINE_VERSION, formatLocalDateStr, buildIntelligentPlan } from './planner.js';
+import { PLANNER_ENGINE_VERSION, ENGINE_VERSION, formatLocalDateStr, buildIntelligentPlan, getStreamSubjects } from './planner.js';
 import { PLUS_TWO_SYLLABUS } from '../data/syllabus-plus-two.js';
 import { PLUS_ONE_SYLLABUS } from '../data/syllabus-plus-one.js';
 
@@ -32,12 +32,22 @@ export function migrateOldState(oldState) {
     })),
   }));
 
-  const hasBio = migratedPlan.some((d) =>
-    d.tasks.some((t) => t.subject === 'Botany' || t.subject === 'Zoology')
-  );
+  let detectedStream = oldState.stream;
+  if (!detectedStream) {
+    const allSubjects = new Set(migratedPlan.flatMap((d) => d.tasks.map((t) => t.subject)));
+    if (allSubjects.has('Accountancy') || allSubjects.has('Business Studies')) {
+      detectedStream = 'commerce';
+    } else if (allSubjects.has('History') || allSubjects.has('Political Science') || allSubjects.has('Sociology')) {
+      detectedStream = 'humanities';
+    } else if (allSubjects.has('Botany') || allSubjects.has('Zoology')) {
+      detectedStream = 'bio';
+    } else {
+      detectedStream = 'cs';
+    }
+  }
 
   return {
-    stream: oldState.stream || (hasBio ? 'bio' : 'cs'),
+    stream: detectedStream,
     startDate: oldState.startDate || formatLocalDateStr(),
     deadlineDate: oldState.deadlineDate || '2026-11-30',
     targetTerm: oldState.targetTerm || 2,
@@ -68,21 +78,25 @@ export function migrateLegacyUserPlan(existingState) {
     });
   });
 
-  const hasBio =
-    existingState.stream === 'bio' ||
-    existingState.plan.some((d) =>
-      (d.tasks || []).some((t) => t.subject === 'Botany' || t.subject === 'Zoology')
-    );
-  const userStream = existingState.stream || (hasBio ? 'bio' : 'cs');
+  let userStream = existingState.stream;
+  if (!userStream) {
+    const allSubjects = new Set(existingState.plan.flatMap((d) => (d.tasks || []).map((t) => t.subject)));
+    if (allSubjects.has('Accountancy') || allSubjects.has('Business Studies')) {
+      userStream = 'commerce';
+    } else if (allSubjects.has('History') || allSubjects.has('Political Science') || allSubjects.has('Sociology')) {
+      userStream = 'humanities';
+    } else if (allSubjects.has('Botany') || allSubjects.has('Zoology')) {
+      userStream = 'bio';
+    } else {
+      userStream = 'cs';
+    }
+  }
   const targetTerm = existingState.targetTerm || 3;
   const deadlineDate = existingState.deadlineDate || '2026-11-30';
   const improvementConfig = existingState.improvementConfig || [];
   const startDate = existingState.startDate || formatLocalDateStr();
 
-  const allowedSubjects =
-    userStream === 'bio'
-      ? ['Physics', 'Chemistry', 'Mathematics', 'Botany', 'Zoology']
-      : ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'];
+  const allowedSubjects = getStreamSubjects(userStream);
 
   const allTasksToPlan = PLUS_TWO_SYLLABUS.filter(
     (t) =>
