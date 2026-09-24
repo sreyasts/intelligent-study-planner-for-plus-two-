@@ -71,6 +71,14 @@
       {
         "source": "/pages/backlog-recovery-planner",
         "destination": "/pages/backlog-recovery-planner.html"
+      },
+      {
+        "source": "/stats",
+        "destination": "/pages/stats.html"
+      },
+      {
+        "source": "/pages/stats",
+        "destination": "/pages/stats.html"
       }
     ],
     "headers": [

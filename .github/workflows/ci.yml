@@ -2,9 +2,9 @@ name: CI & Build Verification
 
 on:
   push:
-    branches: [main, feature/**]
+    branches: [main, master, 'feature/**', 'feat/**', 'fix/**']
   pull_request:
-    branches: [main]
+    branches: [main, master]
 
 jobs:
   test-and-build:
@@ -23,17 +23,20 @@ jobs:
       - name: Install Dependencies
         run: npm ci || npm install
 
-      - name: Run Planner Engine Tests
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Run Vitest Unit & Integration Tests
         run: npm test
 
-      - name: Run Invariant Regression Suite
-        run: npm run test:legacy
+      - name: Validate Curriculum JSON Schemas
+        run: npx vitest run tests/curriculum-schema.test.js
 
-      - name: Run Linter
-        run: npm run lint
+      - name: Run Invariant Regression Suite (500+ Checks)
+        run: npm run test:legacy
 
       - name: Run Planner Benchmark Verification
         run: node scripts/benchmark-planner.js
 
-      - name: Build Production Bundle (Vite)
+      - name: Build Production Web App (Vite)
         run: npm run build

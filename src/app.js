@@ -503,6 +503,11 @@ function loadInitialState() {
         }
 
         async function signInWithGoogleFromModal() {
+            const consentCheckbox = document.getElementById('auth-consent-checkbox');
+            if (consentCheckbox && !consentCheckbox.checked) {
+                showToastMessage("Please confirm parental/guardian consent if under 18 to enable cloud sync.", "fa-circle-exclamation text-amber-400");
+                return;
+            }
             await signInWithGoogle();
         }
 
@@ -3599,7 +3604,7 @@ function showToastMessage(text, icon = 'checkCircle') {
                 const exportData = {
                     ...appState,
                     exportedAt: new Date().toISOString(),
-                    appVersion: "5.2"
+                    appVersion: "6.3.0"
                 };
                 const jsonStr = JSON.stringify(exportData, null, 2);
                 const blob = new Blob([jsonStr], { type: "application/json" });

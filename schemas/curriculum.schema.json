@@ -1,0 +1,154 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://mission-plustwo.web.app/schemas/curriculum.schema.json",
+  "title": "Kerala DHSE Curriculum Specification",
+  "description": "Rigid machine-readable schema for Kerala Directorate of Higher Secondary Education (DHSE) syllabi, chapter weightages, and revision hours.",
+  "oneOf": [
+    {
+      "$ref": "#/definitions/streamCurriculum"
+    },
+    {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/subject"
+      }
+    },
+    {
+      "$ref": "#/definitions/subject"
+    }
+  ],
+  "definitions": {
+    "streamCurriculum": {
+      "type": "object",
+      "required": ["stream", "subjects"],
+      "additionalProperties": false,
+      "properties": {
+        "$schema": {
+          "type": "string"
+        },
+        "stream": {
+          "type": "string",
+          "enum": ["science", "commerce", "humanities"],
+          "description": "Academic stream identifier"
+        },
+        "streamTitle": {
+          "type": "string",
+          "description": "Human-readable stream title"
+        },
+        "board": {
+          "type": "string",
+          "description": "Educational board authority (e.g. Kerala DHSE / SCERT)"
+        },
+        "academicYear": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2,4}$",
+          "description": "Official academic year of the Scheme of Work (e.g. 2026-2027)"
+        },
+        "lastUpdated": {
+          "type": "string",
+          "description": "ISO date of the curriculum verification"
+        },
+        "subjects": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/subject"
+          }
+        }
+      }
+    },
+    "subject": {
+      "type": "object",
+      "required": ["subjectId", "subjectName", "stream", "chapters"],
+      "properties": {
+        "subjectId": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$",
+          "minLength": 3,
+          "description": "Unique canonical identifier for the subject"
+        },
+        "subjectName": {
+          "type": "string",
+          "minLength": 2,
+          "description": "Official subject display name"
+        },
+        "stream": {
+          "type": "string",
+          "enum": ["science", "commerce", "humanities"],
+          "description": "Stream the subject belongs to"
+        },
+        "grade": {
+          "type": "integer",
+          "enum": [11, 12],
+          "description": "Class grade (+1 = 11, +2 = 12)"
+        },
+        "totalMaxMarks": {
+          "type": "number",
+          "minimum": 20,
+          "maximum": 100,
+          "description": "Total examination marks for the subject"
+        },
+        "chapters": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/chapter"
+          }
+        }
+      }
+    },
+    "chapter": {
+      "type": "object",
+      "required": ["chapterNumber", "title", "weightageScore", "recommendedRevisionHours"],
+      "properties": {
+        "chapterNumber": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Official 1-indexed chapter number in SCERT textbook"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 2,
+          "description": "Official chapter title matching the Kerala DHSE curriculum"
+        },
+        "weightageScore": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Official marks weightage or blueprint exam score points"
+        },
+        "recommendedRevisionHours": {
+          "type": "number",
+          "minimum": 0.25,
+          "description": "Estimated minimum study and active recall hours required"
+        },
+        "term": {
+          "type": "integer",
+          "enum": [1, 2, 3],
+          "description": "Official academic term (1: Onam, 2: Christmas, 3: Model & Board)"
+        },
+        "effort": {
+          "type": "string",
+          "enum": ["LOW", "MEDIUM", "HIGH", "VERY_HIGH"],
+          "description": "Relative cognitive workload intensity"
+        },
+        "parts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["title", "minutes"],
+            "properties": {
+              "title": {
+                "type": "string",
+                "minLength": 3
+              },
+              "minutes": {
+                "type": "integer",
+                "minimum": 15
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

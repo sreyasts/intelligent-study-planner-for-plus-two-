@@ -2,36 +2,44 @@
 
 <img src="icon.png" alt="Mission PlusTwo Logo" width="120" style="border-radius: 28px; box-shadow: 0 10px 25px rgba(37,99,235,0.25);" />
 
-# 🎓 Mission PlusTwo (v6.3)
-### 🚀 The Intelligent Daily Study Planner for Kerala Higher Secondary (+2) & +1 Improvement Students
+# 🎓 Mission PlusTwo
+### 🚀 The Intelligent Daily Study Revision Engine for Kerala Higher Secondary (+2) Candidates
 
-[![🚀 Open Web App](https://img.shields.io/badge/🚀_LAUNCH_WEB_APP-CLICK_HERE_TO_OPEN-2563eb?style=for-the-badge&logo=googlechrome&logoColor=white)](https://mission-plustwo.web.app/)
-[![CI & Build](https://img.shields.io/github/actions/workflow/status/sreyasts/intelligent-study-planner-for-plus-two-/ci.yml?branch=main&style=for-the-badge&logo=githubactions&logoColor=white&label=CI%20Status)](https://github.com/sreyasts/intelligent-study-planner-for-plus-two-/actions)
-[![Test Suite](https://img.shields.io/badge/Tests-53%20Unit%20•%20551%20Invariants%20Passed-10b981?style=for-the-badge&logo=vitest&logoColor=white)](https://github.com/sreyasts/intelligent-study-planner-for-plus-two-)
-[![Release](https://img.shields.io/badge/Release-v6.3.0-blue?style=for-the-badge&logo=semanticrelease&logoColor=white)](https://github.com/sreyasts/intelligent-study-planner-for-plus-two-/releases/tag/v6.3.0)
-[![Roadmap](https://img.shields.io/badge/Roadmap-Engineering_&_Adoption-orange?style=for-the-badge&logo=target&logoColor=white)](docs/ENGINEERING-ADOPTION-ROADMAP.md)
-[![Algorithm Docs](https://img.shields.io/badge/Algorithm-Formal_Spec-indigo?style=for-the-badge&logo=codewars&logoColor=white)](docs/ALGORITHM.md)
-[![Benchmarks](https://img.shields.io/badge/Benchmarks-Empirical-blueviolet?style=for-the-badge&logo=speedtest&logoColor=white)](docs/BENCHMARKS.md)
+[![CI Build](https://img.shields.io/github/actions/workflow/status/sreyasts/intelligent-study-planner-for-plus-two-/ci.yml?branch=main&style=for-the-badge&logo=githubactions&logoColor=white&label=CI%20Build)](https://github.com/sreyasts/intelligent-study-planner-for-plus-two-/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
-[![PWA Ready](https://img.shields.io/badge/PWA-WebAPK_Compliant-8b5cf6?style=for-the-badge&logo=pwa&logoColor=white)](https://mission-plustwo.web.app/)
-[![Privacy: DPDP](https://img.shields.io/badge/Privacy-DPDP_Act_2023-emerald?style=for-the-badge&logo=privacysandbox&logoColor=white)](pages/privacy.html)
+[![PWA Ready](https://img.shields.io/badge/PWA-Offline%20Ready-8b5cf6?style=for-the-badge&logo=pwa&logoColor=white)](https://mission-plustwo.web.app/)
+[![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-brightgreen?style=for-the-badge&logo=github)](CONTRIBUTING.md)
+[![Board Support](https://img.shields.io/badge/Board-Kerala%20DHSE%20%7C%20SCERT-orange?style=for-the-badge&logo=read-the-docs&logoColor=white)](data/kerala-dhse/)
+[![Tests](https://img.shields.io/badge/Vitest-68%20Passed%20•%20551%20Invariants-10b981?style=for-the-badge&logo=vitest&logoColor=white)](https://github.com/sreyasts/intelligent-study-planner-for-plus-two-)
 
 <br/>
 
-## 🌐 👉 [**CLICK HERE TO LAUNCH MISSION PLUSTWO**](https://mission-plustwo.web.app/) 👈
-*100% Free & Open Source • Runs in any browser on Phone, Tablet, or PC • No downloads required*
+## 🌐 👉 [**LAUNCH MISSION PLUSTWO (WEB APP)**](https://mission-plustwo.web.app/) 👈
+*100% Free, Zero-Cost Civic Software • Works Offline in any browser on Phone, Tablet, or PC • No Ads, Zero PII Tracking*
 
 <br/>
 
 <a href="https://mission-plustwo.web.app/">
-  <img src="og-image.png" alt="Mission PlusTwo — Kerala Plus Two (12th) Daily Study Planner & Timetable" style="border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); max-width: 100%; height: auto;" />
+  <img src="og-image.png" alt="Mission PlusTwo — Kerala Plus Two Daily Study Revision Engine" style="border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); max-width: 100%; height: auto;" />
 </a>
-
----
 
 </div>
 
-## 📸 Application Interface & Visual Tour
+---
+
+## 🏛️ Mission & Civic Impact Statement
+
+Over **350,000 students** appear annually for the Kerala Directorate of Higher Secondary Education (DHSE) Class 12 board examinations. The vast majority study in government and aided higher secondary schools across rural and semi-urban panchayats in Kerala. Commercial coaching packages and proprietary test-prep apps cost thousands of rupees per year—creating an acute digital and economic divide for candidates from low-income families.
+
+**Mission PlusTwo** was created as an uncompromising public good:
+- **100% Free and Open-Source**: Zero subscription walls, zero microtransactions, zero sponsored content.
+- **Privacy-First & DPDP Act 2023 Compliant**: Operates by default in 100% client-side Guest Mode using browser `localStorage`. No student names, phone numbers, or academic records are collected or sold.
+- **Low-Bandwidth Rural Resilience**: Designed as an **Offline-First Progressive Web App (PWA)** with service worker asset caching. Once loaded, students can generate schedules, track completed chapters, review formulas, and print timetables with zero active internet connection during power outages or limited 2G/3G rural cellular coverage.
+- **Pedagogical Empathy**: Rather than static, demoralizing PDF timetables downloaded from Telegram channels, Mission PlusTwo provides an adaptive constraint-satisfaction scheduler that spaces cognitive load evenly, weaves active recall, and recovers smoothly when a student falls sick or misses a day.
+
+---
+
+## 📸 Interface & User Experience
 
 | 🖥️ Desktop Daily Study Dashboard | 📅 Complete Interleaved Timetable & QR |
 | :---: | :---: |
@@ -41,149 +49,110 @@
 | :---: | :---: |
 | <img src="assets/screenshots/screenshot-mobile.png" alt="Mission PlusTwo Mobile Checklist" width="260" style="border-radius: 16px; border: 1px solid #e2e8f0;" /> | <img src="assets/screenshots/screenshot-countdown.png" alt="Kerala Plus Two Exam Countdown" width="480" style="border-radius: 12px; border: 1px solid #e2e8f0;" /> |
 
-## 📖 Why Mission PlusTwo?
-
-Most students download static PDF timetables from Telegram or HSSLive, try to follow them for 3 days, miss a day, fall behind, and give up. 
-
-**Mission PlusTwo** is a **deterministic adaptive planner and constraint-aware scheduling engine** designed specifically for Kerala State Board (DHSE) Higher Secondary students. It calculates your exact deadline runway, balances subjects across school days and weekends, enforces strict chapter-part dependency ordering, prioritizes Class 11 improvement exams before their respective test dates, and guarantees dedicated revision buffers for mock exams and PYQ practice.
-
 ---
 
-## 📚 Technical Documentation & Roadmaps
+## ⚙️ System Architecture & Algorithms
 
-- **[Engineering & Adoption Roadmap (2026–2027)](docs/ENGINEERING-ADOPTION-ROADMAP.md)**: Product pillars, feature roadmap, grassroots school distribution, and community milestones.
-- **[System Architecture](docs/ARCHITECTURE.md)**: Deep dive into local-first PWA design, canonical syllabus schema, curriculum adapter interfaces, state machine lifecycle, and offline persistence.
-- **[Algorithm Specification](docs/ALGORITHM.md)**: Mathematical inputs, constraints, capacity accumulator model, candidate subject interleaving heuristics, and \(O(N \log N + D \cdot S)\) complexity bounds.
-- **[Empirical Benchmarks](docs/BENCHMARKS.md)**: Reproducible comparative benchmark evaluating Mission PlusTwo against naive sequential and round-robin baselines across coverage, deadline violations, ordering integrity, and workload variance.
-- **[Verified OSS & Codex Evidence](docs/CODEX-OSS-EVIDENCE.md)**: Verifiable adoption metrics, test counts, maintainer evidence, and technical invariants.
-- **[Contributing Guide](CONTRIBUTING.md)** & **[Code of Conduct](CODE_OF_CONDUCT.md)**: Open source contributor workflow and community standards.
-
----
-
-## ✨ Key Features in v6.3
-
-| Feature | Description |
-| :--- | :--- |
-| 💻 **Four Complete Streams (+2)** | Computer Science, Biology Science, Commerce (Accountancy, Business Studies, Economics, CA), and Humanities (History, Pol Science, Sociology). |
-| ⚡ **1-Tap Instant Generation** | Zero-friction onboarding: pick your stream, click generate, and start your Day 1 schedule immediately. |
-| 📙 **Plus One (+1) Improvement Module** | Weaves +1 improvement chapters seamlessly before exam dates based strictly on the 2025–26 SCERT syllabus. |
-| 🛡️ **Guaranteed Revision Buffers** | Automatically reserves 1 to 10 final days prior to your target deadline strictly for mock question papers and formula recall. |
-| 🔄 **Intelligent Rebalancing** | Missed a few days? Select where you left off, and the algorithm redistributes remaining chapters evenly without starting over. |
-| 📱 **Offline Vector QR Sharing** | Zero-dependency client-side SVG QR code generator (`src/utils/qr.js`) embedded into printable full study schedules for desk-wall hanging and peer scanning. |
-| 📊 **Spreadsheet CSV & PDF Print** | 1-click CSV timetable export and high-contrast `@media print` black-and-white print stylesheet for wall schedules. |
-| ⏳ **Live Exam Countdown & Load Analyzer** | Dedicated tool ([`/exam-countdown`](https://mission-plustwo.web.app/exam-countdown)) computing available study hours per chapter until DHSE board/practical exams. |
-| 🩹 **Backlog Recovery & Catch-Up Planner** | Evidence-based tool ([`/backlog-recovery-planner`](https://mission-plustwo.web.app/backlog-recovery-planner)) using 70/30 interleaving to clear backlogs without falling behind on school. |
-| 🧪 **Practical Exam & Lab Guidance** | Pacing protocol for Kerala DHSE 40-mark practical exams, fair record book deadlines (Jan 15), and viva-voce prep ([`/plus-two-timetable`](https://mission-plustwo.web.app/plus-two-timetable)). |
-| 🧩 **Modular Curriculum Adapters** | Decoupled adapter layer (`src/adapters/`) allowing generic curriculum modules to plug directly into the deterministic scheduler. |
-| ☁️ **Google Account Cloud Sync** | Offline-first with Cloud Firestore persistence. Sync your checkmarks seamlessly between phone and laptop. |
-| 🎵 **Ultra-Lightweight Audio Synth** | 0.6 KB native WebAudio harmonic chimes with haptic feedback and celebration confetti. |
-| 📱 **WebAPK & Maskable PWA** | Compliant PWA with dedicated maskable safe-zone icons, installing as a native standalone app without browser badges. |
-| 🌓 **OLED Dark & High-Contrast Light Mode** | Crisp, eye-strain-free reading experience calibrated for long late-night or morning study sessions. |
-| 🔒 **Privacy & DPDP Compliance** | Transparent, plain-English privacy policy compliant with India's Digital Personal Data Protection Act 2023 ([Read Telemetry Spec](docs/USAGE-METRICS.md)). |
-
----
-
-## 🏛️ Project Architecture & Documentation
+Mission PlusTwo is structured as a decoupled, multi-tier software architecture:
 
 ```
-├── .github/
-│   ├── workflows/ci.yml           # Automated GitHub Actions test & build verification
-│   ├── workflows/deploy.yml       # Production deployment to GitHub Pages
-│   └── ISSUE_TEMPLATE/            # Standardized templates (Bug, Feat, A11y, Perf, i18n, Syllabus)
-├── docs/
-│   ├── ENGINEERING-ADOPTION-ROADMAP.md # Comprehensive 2026-2027 Engineering & Adoption Roadmap
-│   ├── ALGORITHM.md               # Formal algorithm specification (pacing, constraints, complexity)
-│   ├── BENCHMARKS.md              # Empirical benchmarks comparing Sequential, Round-Robin & MPT
-│   ├── ARCHITECTURE.md            # System architecture, PWA design & adapter framework
-│   ├── CODEX-OSS-EVIDENCE.md      # Verified evidence portfolio for OpenAI Codex for Open Source
-│   ├── USAGE-METRICS.md           # Privacy-first telemetry specification (DPDP Act 2023)
-│   ├── IMPACT.md                  # Verified open-source adoption and impact ledger
-│   ├── OSS-ADOPTION-BASELINE.md   # Forensic Day 0 baseline audit
-│   ├── distribution-growth-kit.md # WhatsApp, Telegram, and teacher outreach scripts
-│   ├── how-to-update-syllabus.md  # Community guide for updating syllabus data
-│   └── syllabus-discrepancy-report.md # Canonical audit against SCERT Scheme of Work
-├── pages/
-│   ├── exam-countdown.html        # Real-time DHSE board/practical exam countdown & load analyzer
-│   ├── backlog-recovery-planner.html # Scientific 70/30 interleaved catch-up schedule generator
-│   ├── plus-two-timetable.html    # Timetable guide & DHSE practical exam lab strategy
-│   ├── study-hours-calculator.html # School day vs holiday study hours calculator
-│   ├── plus-one-improvement-guide.html # SEO guide for +1 improvement students
-│   ├── privacy.html               # DPDP Act 2023 plain-English privacy policy
-│   ├── syllabus-plus-two.html     # Canonical Plus Two syllabus reference
-│   └── terms.html                 # Terms of service
-├── scripts/
-│   ├── benchmark.js               # Automated comparative benchmark harness
-│   ├── check-dhse-datesheet.js    # Automated DHSE portal examination scraper
-│   ├── generate-pwa-icons.js      # Sharp-based PWA icon generator
-│   └── post-build.js              # Production asset & static pages verification
+intelligent-study-planner-for-plus-two/
+├── data/kerala-dhse/            # Machine-readable curriculum JSON specifications
+│   ├── science.json             # Physics, Chemistry, Math, Biology, CS
+│   ├── commerce.json            # Accountancy, Business Studies, Economics, CA
+│   └── humanities.json          # History, Political Science, Sociology, Economics
+├── schemas/                     # Rigid JSON Schemas validating curriculum data
+│   └── curriculum.schema.json   # Draft-07 schema for subjects, chapters & weightages
 ├── src/
-│   ├── adapters/                  # Modular Curriculum Adapter Framework
-│   │   ├── CurriculumAdapter.js   # Abstract base class & schema validator
-│   │   ├── KeralaDHSEAdapter.js   # Canonical Kerala SCERT +2 and +1 adapter
-│   │   └── index.js               # Adapter exports
-│   ├── analytics/tracker.js       # Cookieless, DPDP-compliant event tracking
-│   ├── audio/chime.js             # 0.6 KB WebAudio harmonic synth
-│   ├── data/
-│   │   ├── chapter-resources.js   # Verified textbook, PYQ, and KITE Victers links
-│   │   ├── syllabus-plus-one.js   # 2025-26 +1 Improvement syllabus
-│   │   ├── syllabus-plus-two.js   # 2026-27 +2 Canonical syllabus
-│   │   └── syllabus-schema.json   # JSON Schema validation
-│   ├── engine/
-│   │   ├── migration.js           # Idempotent state upgrade engine
-│   │   └── planner.js             # Deterministic study planner engine
-│   ├── i18n/
-│   │   ├── detector.js            # Language detection & storage
-│   │   └── ml.js                  # Malayalam (മലയാളം) localization dictionary
-│   ├── ui/
-│   │   ├── dialogs.js             # Accessible in-app modal alerts & confirms
-│   │   └── icons.js               # Lightweight inline SVGs
-│   ├── utils/
-│   │   └── qr.js                  # Offline vector SVG QR code generator
-│   └── app.js                     # Unified ESM client application
-├── tests/
-│   ├── auth.test.js               # Authentication and cloud sync unit tests
-│   ├── i18n.test.js               # Malayalam translation and string completeness tests
-│   ├── curriculum_adapter.test.js # Multi-board adapter contract & scheduling tests
-│   ├── engine.test.js             # Vitest unit test suite (26 engine tests)
-│   ├── qr.test.js                 # Vector QR code generation tests
-│   └── engine_test.cjs            # 551-check invariant test runner
-├── CHANGELOG.md                   # Keep a Changelog semantic release ledger
-├── index.html                     # Main Single Page Application
-├── manifest.json                  # PWA WebAPK manifest
-├── sw.js                          # Offline Service Worker (Cache-first/Network-first)
-└── vite.config.js                 # Production Vite build configuration
+│   ├── core/                    # Framework-agnostic pure scheduling engine
+│   │   ├── scheduler.js         # Deterministic timetable & active recall allocation
+│   │   └── index.js             # Reusable core entry point
+│   ├── engine/                  # Legacy planner adapter & migration bridges
+│   ├── audio/                   # 0.6 KB WebAudio synthesizer for sensory feedback
+│   ├── i18n/                    # Malayalam (മലയാളം) & English bilingual localization
+│   ├── utils/qr.js              # Offline vector SVG QR code generator
+│   └── app.js                   # Reactive UI controller & PWA lifecycle
+└── tests/                       # Vitest suites & 550+ engine invariant checks
+```
+
+### 1. The Core Scheduling Algorithm (`src/core/scheduler.js`)
+The scheduling engine solves an academic constraint satisfaction problem in deterministic $O(N \log N + D \cdot S)$ time:
+1. **Capacity Accumulator**: Computes daily study capacity based on student hours, weekday/weekend balance, and weekly rest rhythm.
+2. **Topological Part Dependency**: Enforces that for any chapter with multiple parts (e.g. *Part 1: Concept*, *Part 2: Derivations & Numericals*), Part $N$ is strictly scheduled on or before Part $N+1$.
+3. **Multi-Subject Interleaving**: Prevents mental burnout by rotating across subjects daily using a balanced scoring heuristic ($w \cdot 1.2 + \text{inProgBonus} + \text{recencyGap} \cdot 0.8$) rather than single-subject cramming.
+4. **Dynamic Active Recall Runway**: Automatically reserves 1 to 10 days immediately before the target examination date dedicated exclusively to:
+   - High-yield Previous Year Questions (PYQs)
+   - Timed 3-hour Model Exam simulations under board conditions
+   - Formula sheet and circuit diagram retrieval sessions
+5. **Class 11 (+1) Improvement Weaving**: Prioritizes pending Class 11 improvement papers before their specific milestone exam dates while keeping Class 12 studies on track.
+
+### 2. Standalone Core Engine Usage (For External Developers & Other Boards)
+The core scheduling engine under `src/core/` is 100% decoupled from the DOM and web framework. External developers, researchers, or regional education boards (e.g., CBSE, ICSE, Tamil Nadu, Karnataka State Board) can import and use it in Node.js, React Native, or backend APIs:
+
+```javascript
+import { generateSchedule, validateSchedule } from './src/core/index.js';
+
+// Generate a deterministic study schedule for any student
+const schedule = generateSchedule({
+  stream: 'science',
+  examDate: '2027-03-01',
+  startDate: '2026-10-01',
+  subjects: ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'],
+  hoursPerDay: 3.5,
+  focusAreas: ['Physics'], // Subtle +15% focus nudge
+  weeklyRhythm: 'weekend_booster',
+});
+
+// Verify plan validity across all academic invariants
+const check = validateSchedule(schedule);
+console.log(`Plan valid: ${check.isValid}, Total Days: ${schedule.plan.length}`);
 ```
 
 ---
 
-## 🧪 Testing & Verification
+## 📊 Standardized Curriculum Schemas
 
-Every pull request and build runs automated unit tests, invariant checks, and performance benchmarks:
+All curriculum data is codified into open, standardized JSON formats under `data/kerala-dhse/` strictly validated against [`schemas/curriculum.schema.json`](schemas/curriculum.schema.json).
 
-```bash
-# Run Vitest test suite (53 unit tests across 5 test suites)
-npm test
-
-# Run 551-invariant regression test suite (Matrix Scenarios A-Y, 500 fuzz iterations)
-npm run test:legacy
-
-# Run empirical benchmark suite
-npm run test:benchmark
-
-# Run ESLint static analysis (0 errors, 0 warnings)
-npm run lint
-
-# Build production bundle and synchronize static landing pages
-npm run build
-```
+### Contributing New Syllabus Blueprints
+To add or update chapter marks or revision hours:
+1. Edit the relevant stream file (`data/kerala-dhse/science.json`, `commerce.json`, or `humanities.json`).
+2. Adhere to the schema specification:
+   ```json
+   {
+     "subjectId": "physics-plus-two",
+     "subjectName": "Physics",
+     "stream": "science",
+     "grade": 12,
+     "chapters": [
+       {
+         "chapterNumber": 1,
+         "title": "Electric Charges and Fields",
+         "weightageScore": 6,
+         "recommendedRevisionHours": 4.5,
+         "term": 1,
+         "effort": "HIGH"
+       }
+     ]
+   }
+   ```
+3. Run the automated schema validation test:
+   ```bash
+   npx vitest run tests/curriculum-schema.test.js
+   ```
 
 ---
 
-## 🚀 Running Locally & Deploying
+## 🛠️ Local Development & Contribution
 
-### Local Development
+### Prerequisites
+- **Node.js**: v18.0.0 or later (v20+ LTS recommended)
+- **npm**: v9.0.0 or later
+- **Git**
+
+### Quick Start
 ```bash
-# 1. Clone repository
+# 1. Clone the repository
 git clone https://github.com/sreyasts/intelligent-study-planner-for-plus-two-.git
 cd intelligent-study-planner-for-plus-two-
 
@@ -192,45 +161,44 @@ npm install
 
 # 3. Start local development server
 npm run dev
+
+# 4. Open in browser
+# http://localhost:5173
 ```
 
-### Production Deployment
+### Running Automated Tests
 ```bash
-# Build and deploy to Firebase Hosting
-npm run deploy
+# Run all Vitest unit and integration test suites (68+ tests)
+npm test
+
+# Run legacy invariant test suite (550+ checks)
+npm run test:legacy
+
+# Run code linter
+npm run lint
+
+# Build production bundle and verify static assets
+npm run build
 ```
 
 ---
 
-## 🗺️ Engineering & Adoption Roadmap
+## 📋 Community, Governance & Transparency
 
-For the complete technical breakdown, distribution channels, and grassroots adoption strategy, see the **[Engineering & Adoption Roadmap (2026–2027)](docs/ENGINEERING-ADOPTION-ROADMAP.md)**.
-
-| Milestone | Horizon | Core Deliverables | Status |
-| :--- | :--- | :--- | :--- |
-| **v6.0 – v6.1** | Sep 2026 | ESM modular architecture, greedy constraint scheduler, empirical benchmarks, and 551 invariant checks | ✅ **Released** |
-| **v6.2** | Sep 2026 | Web Share API, WhatsApp/Telegram fallback, CSV export, `@media print` stylesheet, and Contributor Covenant 2.1 | ✅ **Released** |
-| **v6.3** | Sep 2026 | Curriculum Adapter architecture (`src/adapters/`), Exam Countdown (`/exam-countdown`), Backlog Recovery (`/backlog-recovery-planner`), offline vector QR code sharing, and DHSE practical exam lab guidance (Fixes #3) | ✅ **Released** |
-| **v6.4** | Q4 2026 | Dynamic 2.5-hour DHSE model exam simulation mode, formula spaced retrieval flashcards, and automated DHSE circular scraper | 🔄 **In Progress** |
-
-### Key Adoption & Distribution Tracks
-1. **Teacher & School Grassroots**: Distribution toolkits (`docs/distribution-growth-kit.md`) and printable notice board posters for Higher Secondary teachers (HSST) across Kerala.
-2. **Peer Study Group Network Effects**: Non-spammy daily check-in summary cards for student WhatsApp and Telegram study groups.
-3. **High-Intent Search Discovery**: Crawlable interactive web tools ([`/exam-countdown`](https://mission-plustwo.web.app/exam-countdown), [`/backlog-recovery-planner`](https://mission-plustwo.web.app/backlog-recovery-planner), [`/plus-two-timetable`](https://mission-plustwo.web.app/plus-two-timetable)).
-4. **Open Source Community**: Transparent issues, reproducible benchmarks, and active `good first issue` contribution on-ramps.
-
----
-
-## 🤝 Contributing
-
-Contributions from students, teachers, and developers are welcome!
-- See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines and coding conventions.
-- See [docs/ALGORITHM.md](docs/ALGORITHM.md) for the mathematical specification of the planning engine.
-- See [docs/how-to-update-syllabus.md](docs/how-to-update-syllabus.md) if DHSE announces curriculum revisions.
-- Read our [SECURITY.md](SECURITY.md) for vulnerability reporting.
+- **[Project Maintainers & 48h SLA](MAINTAINERS.md)**: Maintainer identity (Sreyas T S), review commitments, and project invariants.
+- **[Project Governance](GOVERNANCE.md)**: Decision-making model, RFC process, and release policies.
+- **[Public Audit & Usage Statistics](https://mission-plustwo.web.app/pages/stats.html)**: Public telemetry, 0-fake commitment, and test scorecards.
+- **[Contributor Outreach & Good First Issues](docs/contributor-outreach.md)**: Ready-to-claim beginner issues and Malayalam tech community outreach.
+- **[Codex Readiness Scorecard (Draft)](docs/CODEX-READINESS-SCORECARD.md)**: 60/90-day review thresholds and draft application.
+- **[Contributing Guidelines](CONTRIBUTING.md)**: Local setup, Conventional Commits, branch workflows, and curriculum updates.
+- **[Code of Conduct](CODE_OF_CONDUCT.md)**: Contributor Covenant v2.1.
+- **[Security & Privacy Policy](SECURITY.md)**: Responsible disclosure instructions and DPDP Act 2023 compliance.
+- **[Changelog](CHANGELOG.md)**: Keep a Changelog releases and history.
+- **[Algorithm Specification](docs/ALGORITHM.md)**: Formal mathematical pacing specification.
+- **[Empirical Benchmarks](docs/BENCHMARKS.md)**: Comparative benchmarks against sequential and round-robin baselines.
 
 ---
 
 ## 📄 License
 
-Mission PlusTwo is open source under the [MIT License](LICENSE).
+This project is licensed under the OSI-approved [MIT License](LICENSE) &copy; 2026 Sreyas T S & Mission PlusTwo Contributors. Free to use, adapt, and build upon for educational equity.

@@ -3,9 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Privacy Policy | Mission PlusTwo</title>
-    <meta name="description" content="Plain-English Privacy Policy for Mission PlusTwo. Learn how student data and pseudonymous analytics are handled.">
-    <link rel="icon" type="image/png" href="../icon-192.png">
+    <script id="canonical-domain-bridge">
+    (function() {
+        try {
+            var CANONICAL_HOST = 'mission-plustwo.web.app';
+            var currentHost = window.location.hostname;
+            var isLocal = currentHost === 'localhost' || currentHost === '127.0.0.1' || currentHost.startsWith('192.168.');
+            if (!isLocal && currentHost !== CANONICAL_HOST && currentHost.includes('github.io')) {
+                var cleanPath = window.location.pathname.replace(/^\/intelligent-study-planner-for-plus-two-?/, '');
+                if (!cleanPath || cleanPath === '') cleanPath = '/';
+                var target = 'https://' + CANONICAL_HOST + cleanPath + window.location.search + window.location.hash;
+                window.location.replace(target);
+            }
+        } catch(e) {}
+    })();
+    </script>
+    <title>Privacy Policy | Mission PlusTwo — Kerala Plus Two (12th) Study Planner</title>
+    <meta name="description" content="Plain-English Privacy Policy for Mission PlusTwo. Learn how student data and pseudonymous analytics are handled under DPDP Act 2023.">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://mission-plustwo.web.app/pages/privacy.html">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="shortcut icon" href="/icon.png">
+    <meta property="og:image" content="https://mission-plustwo.web.app/og-image.png">
+    <meta property="og:logo" content="https://mission-plustwo.web.app/icon.png">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         body {
@@ -62,6 +85,11 @@
     <div class="container">
         <a href="../index.html" class="back-link">← Back to Mission PlusTwo Study Planner</a>
         
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
+            <img src="/icon.png" alt="Mission PlusTwo Logo" style="width:40px; height:40px; border-radius:10px; box-shadow:0 4px 12px rgba(37,99,235,0.2);">
+            <span style="font-weight:800; font-size:20px; color:#0f172a;">Mission <span style="color:#2563eb;">PlusTwo</span></span>
+        </div>
+
         <h1>Privacy Policy</h1>
         <p><strong>Effective Date:</strong> September 21, 2026</p>
         <p><strong>Applicability:</strong> Mission PlusTwo (web application for Kerala Higher Secondary Class 11 and 12 students)</p>
@@ -115,7 +143,7 @@
             <li>We do NOT track or profile children's browsing behavior across third-party websites.</li>
             <li>We do NOT serve targeted advertisements, sponsored commercial content, or sell user records.</li>
             <li>We do NOT process data detrimental to a student's physical or mental well-being.</li>
-            <li><strong>Parental Consent Notice:</strong> Please note that Mission PlusTwo currently operates primarily as an offline-first guest application and does not implement a verifiable parental-consent mechanism for minor accounts. Parents or legal guardians who do not consent to their child syncing study data to the cloud should use the application in Guest Mode (default) or clear the cloud plan via the "Reset Plan" button in Settings.</li>
+            <li><strong>Parental Consent Gate (DPDP Act 2023):</strong> In accordance with Section 9 of India's Digital Personal Data Protection Act 2023, students under 18 must confirm affirmative parental or guardian consent before linking a Google account for cloud synchronization. An explicit confirmation gate is presented prior to OAuth authentication. Offline Guest Mode remains accessible at all times with zero personal information collected.</li>
             <li>Students or parents may delete their cloud account and all study data at any time directly through the "Reset Plan" button in Settings, which permanently deletes the Firestore cloud document.</li>
         </ul>
 

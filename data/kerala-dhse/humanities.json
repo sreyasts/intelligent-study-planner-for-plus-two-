@@ -1,0 +1,405 @@
+{
+  "stream": "humanities",
+  "streamTitle": "Humanities Stream (History, Political Science, Sociology, Economics)",
+  "board": "Kerala DHSE / SCERT",
+  "academicYear": "2026-2027",
+  "lastUpdated": "2026-09-24",
+  "subjects": [
+    {
+      "subjectId": "history-plus-two",
+      "subjectName": "History",
+      "stream": "humanities",
+      "grade": 12,
+      "totalMaxMarks": 80,
+      "chapters": [
+        {
+          "chapterNumber": 1,
+          "title": "Bricks, Beads and Bones: The Harappan Civilisation",
+          "weightageScore": 7,
+          "recommendedRevisionHours": 4.5,
+          "term": 1,
+          "effort": "HIGH"
+        },
+        {
+          "chapterNumber": 2,
+          "title": "Kings, Farmers and Towns: Early States and Economies",
+          "weightageScore": 7,
+          "recommendedRevisionHours": 4.5,
+          "term": 1,
+          "effort": "HIGH"
+        },
+        {
+          "chapterNumber": 3,
+          "title": "Kinship, Caste and Class: Early Societies",
+          "weightageScore": 6,
+          "recommendedRevisionHours": 4.0,
+          "term": 1,
+          "effort": "MEDIUM"
+        },
+        {
+          "chapterNumber": 4,
+          "title": "Thinkers, Beliefs and Buildings: Cultural Developments",
+          "weightageScore": 8,
+          "recommendedRevisionHours": 5.0,
+          "term": 1,
+          "effort": "VERY_HIGH"
+        },
+        {
+          "chapterNumber": 5,
+          "title": "Through the Eyes of Travellers: Perceptions of Society",
+          "weightageScore": 6,
+          "recommendedRevisionHours": 4.0,
+          "term": 2,
+          "effort": "MEDIUM"
+        },
+        {
+          "chapterNumber": 6,
+          "title": "Bhakti-Sufi Traditions: Changes in Religious Beliefs",
+          "weightageScore": 7,
+          "recommendedRevisionHours": 4.5,
+          "term": 2,
+          "effort": "HIGH"
+        },
+        {
+          "chapterNumber": 7,
+          "title": "An Imperial Capital: Vijayanagara",
+          "weightageScore": 8,
+          "recommendedRevisionHours": 5.0,
+          "term": 2,
+          "effort": "VERY_HIGH"
+        },
+        {
+          "chapterNumber": 8,
+          "title": "Peasants, Zamindars and the State: Agrarian Society",
+          "weightageScore": 6,
+          "recommendedRevisionHours": 4.0,
+          "term": 2,
+          "effort": "MEDIUM"
+        },
+        {
+          "chapterNumber": 9,
+          "title": "Colonialism and the Countryside",
+          "weightageScore": 7,
+          "recommendedRevisionHours": 4.5,
+          "term": 3,
+          "effort": "HIGH"
+        },
+        {
+          "chapterNumber": 10,
+          "title": "Rebels and the Raj: The 1857 Revolt and Its Representations",
+          "weightageScore": 8,
+          "recommendedRevisionHours": 5.0,
+          "term": 3,
+          "effort": "VERY_HIGH"
+        },
+        {
+          "chapterNumber": 11,
+          "title": "Mahatma Gandhi and the Nationalist Movement",
+          "weightageScore": 10,
+          "recommendedRevisionHours": 6.0,
+          "term": 3,
+          "effort": "VERY_HIGH"
+        }
+      ]
+    },
+    {
+      "subjectId": "political-science-plus-two",
+      "subjectName": "Political Science",
+      "stream": "humanities",
+      "grade": 12,
+      "totalMaxMarks": 80,
+      "chapters": [
+        {
+          "chapterNumber": 1,
+          "title": "The End of Bipolarity",
+          "weightageScore": 6,
+          "recommendedRevisionHours": 4.0,
+          "term": 1,
+          "effort": "HIGH"
+        },
+        {
+          "chapterNumber": 2,
+          "title": "Contemporary Centres of Power (New Centres of Power)",
+          "weightageScore": 6,
+          "recommendedRevisionHours": 4.0,
+          "term": 1,
+          "effort": "HIGH"
+        },
+        {
+          "chapterNumber": 3,
+          "title": "Contemporary South Asia",
+          "weightageScore": 5,
+          "recommendedRevisionHours": 3.5,
+          "term": 1,
+          "effort": "MEDIUM"
+        },
+        {
+          "chapterNumber": 4,
+          "title": "International Organisations",
+          "weightageScore": 6,
+          "recommendedRevisionHours": 4.0,
+          "term": 1,
+          "effort": "MEDIUM"
+        },
+        {
+          "chapterNumber": 5,
+          "title": "Security in the Contemporary World",
+          "weightageScore": 5,
+          "recommendedRevisionHours": 3.0,
+          "term": 2,
+          "effort": "LOW"
+        },
+        {
+          "chapterNumber": 6,
+          "title": "Environment and Natural Resources",
+          "weightageScore": 5,
+          "recommendedRevisionHours": 3.0,
+          "term": 2,
+          "effort": "LOW"
+        },
+        {
+          "chapterNumber": 7,
+          "title": "Globalisation",
+          "weightageScore": 5,
+          "recommendedRevisionHours": 3.5,
+          "term": 2,
+          "effort": "MEDIUM"
+        },
+        {
+          "chapterNumber": 8,
+          "title": "Challenges of Nation Building",
+          "weightageScore": 8,
+          "recommendedRevisionHours": 5.0,
+          "term": 2,
+          "effort": "VERY_HIGH"
+        },
+        {
+          "chapterNumber": 9,
+          "title": "Era of One-Party Dominance",
+          "weightageScore": 6,
+          "recommendedRevisionHours": 4.0,
+          "term": 2,
+          "effort": "MEDIUM"
+        },
+        {
+          "chapterNumber": 10,
+          "title": "Politics of Planned Development",
+          "weightageScore": 6,
+          "recommendedRevisionHours": 4.0,
+          "term": 3,
+          "effort": "MEDIUM"
+        },
+        {
+          "chapterNumber": 11,
+          "title": "India's External Relations",
+          "weightageScore": 7,
+          "recommendedRevisionHours": 4.5,
+          "term": 3,
+          "effort": "HIGH"
+        },
+        {
+          "chapterNumber": 12,
+          "title": "Democratic Resurgence & Recent Developments in Indian Politics",
+          "weightageScore": 9,
+          "recommendedRevisionHours": 5.5,
+          "term": 3,
+          "effort": "VERY_HIGH"
+        }
+      ]
+    },
+    {
+      "subjectId": "sociology-plus-two",
+      "subjectName": "Sociology",
+      "stream": "humanities",
+      "grade": 12,
+      "totalMaxMarks": 80,
+      "chapters": [
+        {
+          "chapterNumber": 1,
+          "title": "Introducing Indian Society",
+          "weightageScore": 4,
+          "recommendedRevisionHours": 2.5,
+          "term": 1,
+          "effort": "LOW"
+        },
+        {
+          "chapterNumber": 2,
+          "title": "The Demographic Structure of the Indian Society",
+          "weightageScore": 9,
+          "recommendedRevisionHours": 5.5,
+          "term": 1,
+          "effort": "VERY_HIGH"
+        },
+        {
+          "chapterNumber": 3,
+          "title": "Social Institutions: Continuity and Change",
+          "weightageScore": 8,
+          "recommendedRevisionHours": 5.0,
+          "term": 1,
+          "effort": "HIGH"
+        },
+        {
+          "chapterNumber": 4,
+          "title": "The Market as a Social Institution",
+          "weightageScore": 6,
+          "recommendedRevisionHours": 4.0,
+          "term": 1,
+          "effort": "MEDIUM"
+        },
+        {
+          "chapterNumber": 5,
+          "title": "Patterns of Social Inequality and Exclusion",
+          "weightageScore": 9,
+          "recommendedRevisionHours": 5.5,
+          "term": 2,
+          "effort": "VERY_HIGH"
+        },
+        {
+          "chapterNumber": 6,
+          "title": "The Challenges of Cultural Diversity",
+          "weightageScore": 8,
+          "recommendedRevisionHours": 5.0,
+          "term": 2,
+          "effort": "HIGH"
+        },
+        {
+          "chapterNumber": 7,
+          "title": "Structural Change & Colonialism",
+          "weightageScore": 6,
+          "recommendedRevisionHours": 4.0,
+          "term": 2,
+          "effort": "MEDIUM"
+        },
+        {
+          "chapterNumber": 8,
+          "title": "Cultural Change in Modern India",
+          "weightageScore": 7,
+          "recommendedRevisionHours": 4.5,
+          "term": 2,
+          "effort": "HIGH"
+        },
+        {
+          "chapterNumber": 9,
+          "title": "Change and Development in Rural Society",
+          "weightageScore": 7,
+          "recommendedRevisionHours": 4.5,
+          "term": 3,
+          "effort": "HIGH"
+        },
+        {
+          "chapterNumber": 10,
+          "title": "Change and Development in Industrial Society",
+          "weightageScore": 6,
+          "recommendedRevisionHours": 4.0,
+          "term": 3,
+          "effort": "MEDIUM"
+        },
+        {
+          "chapterNumber": 11,
+          "title": "Social Movements in Contemporary India",
+          "weightageScore": 10,
+          "recommendedRevisionHours": 6.0,
+          "term": 3,
+          "effort": "VERY_HIGH"
+        }
+      ]
+    },
+    {
+      "subjectId": "economics-humanities-plus-two",
+      "subjectName": "Economics",
+      "stream": "humanities",
+      "grade": 12,
+      "totalMaxMarks": 80,
+      "chapters": [
+        {
+          "chapterNumber": 1,
+          "title": "Introduction to Microeconomics",
+          "weightageScore": 4,
+          "recommendedRevisionHours": 2.5,
+          "term": 1,
+          "effort": "LOW"
+        },
+        {
+          "chapterNumber": 2,
+          "title": "Theory of Consumer Behaviour",
+          "weightageScore": 8,
+          "recommendedRevisionHours": 5.0,
+          "term": 1,
+          "effort": "VERY_HIGH"
+        },
+        {
+          "chapterNumber": 3,
+          "title": "Production and Costs",
+          "weightageScore": 8,
+          "recommendedRevisionHours": 5.0,
+          "term": 1,
+          "effort": "HIGH"
+        },
+        {
+          "chapterNumber": 4,
+          "title": "The Theory of the Firm under Perfect Competition",
+          "weightageScore": 6,
+          "recommendedRevisionHours": 4.0,
+          "term": 1,
+          "effort": "MEDIUM"
+        },
+        {
+          "chapterNumber": 5,
+          "title": "Market Equilibrium",
+          "weightageScore": 6,
+          "recommendedRevisionHours": 4.0,
+          "term": 2,
+          "effort": "MEDIUM"
+        },
+        {
+          "chapterNumber": 6,
+          "title": "Introduction to Macroeconomics",
+          "weightageScore": 4,
+          "recommendedRevisionHours": 2.5,
+          "term": 2,
+          "effort": "LOW"
+        },
+        {
+          "chapterNumber": 7,
+          "title": "National Income Accounting",
+          "weightageScore": 10,
+          "recommendedRevisionHours": 6.0,
+          "term": 2,
+          "effort": "VERY_HIGH"
+        },
+        {
+          "chapterNumber": 8,
+          "title": "Money and Banking",
+          "weightageScore": 7,
+          "recommendedRevisionHours": 4.5,
+          "term": 2,
+          "effort": "HIGH"
+        },
+        {
+          "chapterNumber": 9,
+          "title": "Determination of Income and Employment",
+          "weightageScore": 9,
+          "recommendedRevisionHours": 5.5,
+          "term": 3,
+          "effort": "VERY_HIGH"
+        },
+        {
+          "chapterNumber": 10,
+          "title": "Government Budget and the Economy",
+          "weightageScore": 7,
+          "recommendedRevisionHours": 4.0,
+          "term": 3,
+          "effort": "MEDIUM"
+        },
+        {
+          "chapterNumber": 11,
+          "title": "Open Economy Macroeconomics",
+          "weightageScore": 7,
+          "recommendedRevisionHours": 4.0,
+          "term": 3,
+          "effort": "MEDIUM"
+        }
+      ]
+    }
+  ]
+}

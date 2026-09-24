@@ -1,0 +1,389 @@
+{
+  "stream": "commerce",
+  "streamTitle": "Commerce Stream (Accountancy, Business Studies, Economics, Computer Applications)",
+  "board": "Kerala DHSE / SCERT",
+  "academicYear": "2026-2027",
+  "lastUpdated": "2026-09-24",
+  "subjects": [
+    {
+      "subjectId": "accountancy-plus-two",
+      "subjectName": "Accountancy",
+      "stream": "commerce",
+      "grade": 12,
+      "totalMaxMarks": 80,
+      "chapters": [
+        {
+          "chapterNumber": 1,
+          "title": "Accounting for Not-for-Profit Organisation",
+          "weightageScore": 8,
+          "recommendedRevisionHours": 5.0,
+          "term": 1,
+          "effort": "HIGH"
+        },
+        {
+          "chapterNumber": 2,
+          "title": "Accounting for Partnership: Basic Concepts",
+          "weightageScore": 7,
+          "recommendedRevisionHours": 4.5,
+          "term": 1,
+          "effort": "HIGH"
+        },
+        {
+          "chapterNumber": 3,
+          "title": "Reconstitution of a Partnership Firm: Admission of a Partner",
+          "weightageScore": 9,
+          "recommendedRevisionHours": 6.0,
+          "term": 1,
+          "effort": "VERY_HIGH"
+        },
+        {
+          "chapterNumber": 4,
+          "title": "Reconstitution of a Partnership Firm: Retirement/Death of a Partner",
+          "weightageScore": 7,
+          "recommendedRevisionHours": 4.5,
+          "term": 2,
+          "effort": "HIGH"
+        },
+        {
+          "chapterNumber": 5,
+          "title": "Dissolution of Partnership Firm",
+          "weightageScore": 6,
+          "recommendedRevisionHours": 4.0,
+          "term": 2,
+          "effort": "MEDIUM"
+        },
+        {
+          "chapterNumber": 6,
+          "title": "Accounting for Share Capital",
+          "weightageScore": 9,
+          "recommendedRevisionHours": 6.0,
+          "term": 2,
+          "effort": "VERY_HIGH"
+        },
+        {
+          "chapterNumber": 7,
+          "title": "Issue and Redemption of Debentures",
+          "weightageScore": 6,
+          "recommendedRevisionHours": 4.0,
+          "term": 2,
+          "effort": "MEDIUM"
+        },
+        {
+          "chapterNumber": 8,
+          "title": "Financial Statements of a Company",
+          "weightageScore": 5,
+          "recommendedRevisionHours": 3.5,
+          "term": 3,
+          "effort": "MEDIUM"
+        },
+        {
+          "chapterNumber": 9,
+          "title": "Analysis of Financial Statements & Accounting Ratios",
+          "weightageScore": 8,
+          "recommendedRevisionHours": 5.0,
+          "term": 3,
+          "effort": "HIGH"
+        },
+        {
+          "chapterNumber": 10,
+          "title": "Computerized Accounting System & Spreadsheet",
+          "weightageScore": 15,
+          "recommendedRevisionHours": 5.0,
+          "term": 3,
+          "effort": "HIGH"
+        }
+      ]
+    },
+    {
+      "subjectId": "business-studies-plus-two",
+      "subjectName": "Business Studies",
+      "stream": "commerce",
+      "grade": 12,
+      "totalMaxMarks": 80,
+      "chapters": [
+        {
+          "chapterNumber": 1,
+          "title": "Nature and Significance of Management",
+          "weightageScore": 6,
+          "recommendedRevisionHours": 3.5,
+          "term": 1,
+          "effort": "MEDIUM"
+        },
+        {
+          "chapterNumber": 2,
+          "title": "Principles of Management",
+          "weightageScore": 7,
+          "recommendedRevisionHours": 4.0,
+          "term": 1,
+          "effort": "HIGH"
+        },
+        {
+          "chapterNumber": 3,
+          "title": "Business Environment",
+          "weightageScore": 5,
+          "recommendedRevisionHours": 3.0,
+          "term": 1,
+          "effort": "LOW"
+        },
+        {
+          "chapterNumber": 4,
+          "title": "Planning",
+          "weightageScore": 6,
+          "recommendedRevisionHours": 3.5,
+          "term": 1,
+          "effort": "MEDIUM"
+        },
+        {
+          "chapterNumber": 5,
+          "title": "Organising",
+          "weightageScore": 8,
+          "recommendedRevisionHours": 4.5,
+          "term": 1,
+          "effort": "HIGH"
+        },
+        {
+          "chapterNumber": 6,
+          "title": "Staffing",
+          "weightageScore": 7,
+          "recommendedRevisionHours": 4.0,
+          "term": 2,
+          "effort": "HIGH"
+        },
+        {
+          "chapterNumber": 7,
+          "title": "Directing",
+          "weightageScore": 8,
+          "recommendedRevisionHours": 4.5,
+          "term": 2,
+          "effort": "HIGH"
+        },
+        {
+          "chapterNumber": 8,
+          "title": "Controlling",
+          "weightageScore": 5,
+          "recommendedRevisionHours": 3.0,
+          "term": 2,
+          "effort": "LOW"
+        },
+        {
+          "chapterNumber": 9,
+          "title": "Financial Management",
+          "weightageScore": 9,
+          "recommendedRevisionHours": 5.0,
+          "term": 2,
+          "effort": "VERY_HIGH"
+        },
+        {
+          "chapterNumber": 10,
+          "title": "Financial Markets",
+          "weightageScore": 7,
+          "recommendedRevisionHours": 4.0,
+          "term": 3,
+          "effort": "MEDIUM"
+        },
+        {
+          "chapterNumber": 11,
+          "title": "Marketing Management",
+          "weightageScore": 9,
+          "recommendedRevisionHours": 5.0,
+          "term": 3,
+          "effort": "VERY_HIGH"
+        },
+        {
+          "chapterNumber": 12,
+          "title": "Consumer Protection",
+          "weightageScore": 5,
+          "recommendedRevisionHours": 2.5,
+          "term": 3,
+          "effort": "LOW"
+        }
+      ]
+    },
+    {
+      "subjectId": "economics-plus-two",
+      "subjectName": "Economics",
+      "stream": "commerce",
+      "grade": 12,
+      "totalMaxMarks": 80,
+      "chapters": [
+        {
+          "chapterNumber": 1,
+          "title": "Introduction to Microeconomics",
+          "weightageScore": 4,
+          "recommendedRevisionHours": 2.5,
+          "term": 1,
+          "effort": "LOW"
+        },
+        {
+          "chapterNumber": 2,
+          "title": "Theory of Consumer Behaviour",
+          "weightageScore": 8,
+          "recommendedRevisionHours": 5.0,
+          "term": 1,
+          "effort": "VERY_HIGH"
+        },
+        {
+          "chapterNumber": 3,
+          "title": "Production and Costs",
+          "weightageScore": 8,
+          "recommendedRevisionHours": 5.0,
+          "term": 1,
+          "effort": "HIGH"
+        },
+        {
+          "chapterNumber": 4,
+          "title": "The Theory of the Firm under Perfect Competition",
+          "weightageScore": 6,
+          "recommendedRevisionHours": 4.0,
+          "term": 1,
+          "effort": "MEDIUM"
+        },
+        {
+          "chapterNumber": 5,
+          "title": "Market Equilibrium",
+          "weightageScore": 6,
+          "recommendedRevisionHours": 4.0,
+          "term": 2,
+          "effort": "MEDIUM"
+        },
+        {
+          "chapterNumber": 6,
+          "title": "Introduction to Macroeconomics",
+          "weightageScore": 4,
+          "recommendedRevisionHours": 2.5,
+          "term": 2,
+          "effort": "LOW"
+        },
+        {
+          "chapterNumber": 7,
+          "title": "National Income Accounting",
+          "weightageScore": 10,
+          "recommendedRevisionHours": 6.0,
+          "term": 2,
+          "effort": "VERY_HIGH"
+        },
+        {
+          "chapterNumber": 8,
+          "title": "Money and Banking",
+          "weightageScore": 7,
+          "recommendedRevisionHours": 4.5,
+          "term": 2,
+          "effort": "HIGH"
+        },
+        {
+          "chapterNumber": 9,
+          "title": "Determination of Income and Employment",
+          "weightageScore": 9,
+          "recommendedRevisionHours": 5.5,
+          "term": 3,
+          "effort": "VERY_HIGH"
+        },
+        {
+          "chapterNumber": 10,
+          "title": "Government Budget and the Economy",
+          "weightageScore": 7,
+          "recommendedRevisionHours": 4.0,
+          "term": 3,
+          "effort": "MEDIUM"
+        },
+        {
+          "chapterNumber": 11,
+          "title": "Open Economy Macroeconomics",
+          "weightageScore": 7,
+          "recommendedRevisionHours": 4.0,
+          "term": 3,
+          "effort": "MEDIUM"
+        }
+      ]
+    },
+    {
+      "subjectId": "computer-applications-commerce-plus-two",
+      "subjectName": "Computer Applications (Commerce)",
+      "stream": "commerce",
+      "grade": 12,
+      "totalMaxMarks": 60,
+      "chapters": [
+        {
+          "chapterNumber": 1,
+          "title": "Review of C++ Programming",
+          "weightageScore": 6,
+          "recommendedRevisionHours": 3.5,
+          "term": 1,
+          "effort": "MEDIUM"
+        },
+        {
+          "chapterNumber": 2,
+          "title": "Arrays and String Handling",
+          "weightageScore": 7,
+          "recommendedRevisionHours": 4.0,
+          "term": 1,
+          "effort": "HIGH"
+        },
+        {
+          "chapterNumber": 3,
+          "title": "Web Technology Fundamentals & HTML",
+          "weightageScore": 6,
+          "recommendedRevisionHours": 3.5,
+          "term": 1,
+          "effort": "MEDIUM"
+        },
+        {
+          "chapterNumber": 4,
+          "title": "Cascading Style Sheets (CSS)",
+          "weightageScore": 5,
+          "recommendedRevisionHours": 3.0,
+          "term": 1,
+          "effort": "LOW"
+        },
+        {
+          "chapterNumber": 5,
+          "title": "JavaScript and Client-side Scripting",
+          "weightageScore": 8,
+          "recommendedRevisionHours": 5.0,
+          "term": 2,
+          "effort": "HIGH"
+        },
+        {
+          "chapterNumber": 6,
+          "title": "Web Hosting & Responsive Design",
+          "weightageScore": 4,
+          "recommendedRevisionHours": 2.5,
+          "term": 2,
+          "effort": "LOW"
+        },
+        {
+          "chapterNumber": 7,
+          "title": "Database Management System (DBMS)",
+          "weightageScore": 7,
+          "recommendedRevisionHours": 4.5,
+          "term": 2,
+          "effort": "HIGH"
+        },
+        {
+          "chapterNumber": 8,
+          "title": "Structured Query Language (SQL)",
+          "weightageScore": 9,
+          "recommendedRevisionHours": 5.5,
+          "term": 3,
+          "effort": "VERY_HIGH"
+        },
+        {
+          "chapterNumber": 9,
+          "title": "Enterprise Resource Planning (ERP)",
+          "weightageScore": 4,
+          "recommendedRevisionHours": 2.5,
+          "term": 3,
+          "effort": "LOW"
+        },
+        {
+          "chapterNumber": 10,
+          "title": "Trends in Computing and Cyber Security",
+          "weightageScore": 4,
+          "recommendedRevisionHours": 2.5,
+          "term": 3,
+          "effort": "LOW"
+        }
+      ]
+    }
+  ]
+}
