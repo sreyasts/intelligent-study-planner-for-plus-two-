@@ -196,7 +196,6 @@ For the complete technical breakdown, distribution channels, and grassroots adop
 | **v6.2** | Sep 2026 | Web Share API, WhatsApp/Telegram fallback, CSV export, `@media print` stylesheet, and Contributor Covenant 2.1 | ✅ **Released** |
 | **v6.3** | Sep 2026 | Curriculum Adapter architecture (`src/adapters/`), Exam Countdown (`/exam-countdown`), Backlog Recovery (`/backlog-recovery-planner`), offline vector QR code sharing, and DHSE practical exam lab guidance (Fixes #3) | ✅ **Released** |
 | **v6.4** | Q4 2026 | Dynamic 2.5-hour DHSE model exam simulation mode, formula spaced retrieval flashcards, and automated DHSE circular scraper | 🔄 **In Progress** |
-| **v7.0** | Q1 2027 | Web Speech API Malayalam voice audio guides, peer-to-peer study room sync, and teacher classroom batch exports | 📋 **Planned** |
 
 ### Key Adoption & Distribution Tracks
 1. **Teacher & School Grassroots**: Distribution toolkits (`docs/distribution-growth-kit.md`) and printable notice board posters for Higher Secondary teachers (HSST) across Kerala.

@@ -10,10 +10,9 @@
 +-----------------------------------------------------------------------------------+
 |                        ENGINEERING & PRODUCT PILLARS                              |
 |                                                                                   |
-|  Phase 1: Deterministic Engine Core (v6.0 - v6.1)       [✅ COMPLETED - Sep 2026]  |
-|  Phase 2: Viral Growth & Curriculum Adapters (v6.2 - v6.3)[✅ COMPLETED - Sep 2026]|
+|  Phase 1: Deterministic Engine Core (v6.0 - v6.1)        [✅ COMPLETED - Sep 2026] |
+|  Phase 2: Product Growth & Tool Architecture (v6.2 - v6.3)[✅ COMPLETED - Sep 2026]|
 |  Phase 3: Interactive Revision & Spaced Recall (v6.4)    [🔄 IN PROGRESS - Q4 2026]|
-|  Phase 4: Multilingual Voice & Real-Time Sync (v7.0)     [📋 PLANNED - Q1 2027]    |
 +-----------------------------------------------------------------------------------+
                                          |
                                          v
@@ -21,7 +20,7 @@
 |                         ADOPTION & COMMUNITY PILLARS                              |
 |                                                                                   |
 |  Track A: Classroom & Teacher Grassroots Network (PTA, HSST teacher toolkits)     |
-|  Track B: Peer-to-Peer Viral Loops (Printable QR codes, WhatsApp/Telegram shares) |
+|  Track B: Peer-to-Peer Study Loops (Printable QR codes, WhatsApp/Telegram shares) |
 |  Track C: High-Intent Search Acquisition (Countdown, Backlog, Calculator tools)   |
 |  Track D: Open Source Contributor On-Ramps (Covenant 2.1, good first issues)      |
 +-----------------------------------------------------------------------------------+
@@ -87,20 +86,6 @@
   - Triggers automated GitHub Actions dispatch to update exam countdown dates upon official government release.
 - [ ] **Ultra-Narrow Mobile Accessibility (<360px)**:
   - Address GitHub Issue #2: Complete accessibility audit for budget Android smartphones (JioPhone Next, Redmi Go, Samsung M-series) with enhanced touch targets (\(\ge 44\text{px}\)) and contrast compliance.
-
----
-
-### Phase 4: Multilingual Voice & Collaborative Revision (v7.0) • 📋 Planned (Q1 2027)
-*Focus: Accessibility for visually impaired students, group study sessions, and teacher tools.*
-
-- [ ] **Malayalam Voice Assistant & Audio Walkthroughs**:
-  - Native browser Web Speech API synthesis reading out daily chapter targets and key definitions in Malayalam.
-  - Low-bandwidth audio option designed for students studying while commuting to school on KSRTC buses.
-- [ ] **Collaborative Peer Study Sprints (WebRTC / Serverless)**:
-  - Allow study groups of 2 to 5 classmates to create a shared room where daily progress is broadcast without storing personal data.
-  - Zero-account, encrypted peer-to-peer check-in counters.
-- [ ] **Teacher & School Batch Export**:
-  - Teacher dashboard mode allowing higher secondary teachers (HSST) to download a master PDF timetable for their entire class section based on school term schedules.
 
 ---
 
