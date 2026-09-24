@@ -6,8 +6,20 @@
       "**/.*",
       "**/node_modules/**"
     ],
-    "cleanUrls": false,
+    "cleanUrls": true,
     "rewrites": [
+      {
+        "source": "/printable-qr-poster",
+        "destination": "/pages/printable-qr-poster.html"
+      },
+      {
+        "source": "/pages/printable-qr-poster",
+        "destination": "/pages/printable-qr-poster.html"
+      },
+      {
+        "source": "/poster",
+        "destination": "/pages/printable-qr-poster.html"
+      },
       {
         "source": "/plus-two-timetable",
         "destination": "/pages/plus-two-timetable.html"

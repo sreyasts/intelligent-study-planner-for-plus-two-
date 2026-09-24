@@ -38,7 +38,8 @@ const rootAssets = [
   'icon-512.png',
   'icon-maskable-192.png',
   'icon-maskable-512.png',
-  'og-image.png'
+  'og-image.png',
+  '404.html'
 ];
 
 rootAssets.forEach((asset) => {
