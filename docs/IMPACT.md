@@ -13,14 +13,16 @@
 | :--- | :--- | :--- | :--- | :--- |
 | **GitHub Stars** | 5 | 2026-09-23 | GitHub REST API (`stargazers_count`) | Unique GitHub accounts that have starred the repository. |
 | **GitHub Forks** | 1 | 2026-09-23 | GitHub REST API (`forks_count`) | Unique public/private forks created from the repository. |
-| **Unique Cloners (14d)** | 163 | 2026-09-23 | GitHub Traffic API (`/traffic/clones`) | Distinct IP/user clones over the past 14 days. |
+| **Unique Cloners (14d)** | 163* | 2026-09-23 | GitHub Traffic API (`/traffic/clones`) | Distinct IP addresses executing `git clone`/`fetch`. Includes automated CI/CD runners (`actions/checkout`), bots, and developers. |
 | **Total Git Clones (14d)**| 465 | 2026-09-23 | GitHub Traffic API (`/traffic/clones`) | Aggregate repository clone operations over the past 14 days. |
-| **Unique Visitors (14d)** | 21 | 2026-09-23 | GitHub Traffic API (`/traffic/views`) | Distinct viewers of the GitHub repository over the past 14 days. |
+| **Unique Visitors (14d)** | 21 | 2026-09-23 | GitHub Traffic API (`/traffic/views`) | Distinct human viewers of the GitHub repository over the past 14 days. |
 | **Repository Views (14d)**| 162 | 2026-09-23 | GitHub Traffic API (`/traffic/views`) | Aggregate page views on the GitHub repository over the past 14 days. |
 | **Official Releases** | 2 | 2026-09-24 | GitHub Releases (`v6.1.0`, `v6.2.0`) | Semantically versioned production releases published on GitHub. |
 | **Total Git Commits** | 65+ | 2026-09-24 | Git log (`main` branch) | Verified commit history on default branch. |
 | **External Contributors** | 0 | 2026-09-23 | GitHub API (`/contributors`) | Non-maintainer contributors merged to `main`. |
 | **Issues Resolved** | 0 | 2026-09-23 | GitHub Issues API | Triage count of community-reported bugs and syllabus corrections. |
+
+*\*Note*: As defined by GitHub, "unique cloners" tracks distinct client IP addresses over a rolling 14-day window. While the raw API reports 163, a significant fraction is attributable to ephemeral GitHub Actions CI/CD runner IPs during frequent commit pushes and automated security scanners. Real organic human viewer interest is conservatively indicated by the **21 unique visitors** and **162 pageviews**.
 
 ---
 

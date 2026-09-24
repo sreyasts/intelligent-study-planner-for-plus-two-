@@ -25,10 +25,12 @@
 | **Total Commits** | 63 | Commit log (`main` branch) |
 | **Contributors** | 1 | `sreyasts` (63 commits) |
 | **Views (14-day rolling)** | 162 total / 21 unique | GitHub Traffic API (`/traffic/views`) |
-| **Clones (14-day rolling)** | 465 total / 163 unique | GitHub Traffic API (`/traffic/clones`) |
+| **Clones (14-day rolling)** | 465 total / 163 unique* | GitHub Traffic API (`/traffic/clones`) |
 | **Top Referrer** | `github.com` (22 views, 9 unique) | GitHub Traffic API (`/traffic/popular/referrers`) |
 | **Default Branch** | `main` | Repository settings |
 | **License** | MIT License | `LICENSE` file |
+
+*\*Note on Clones*: As reported by the official GitHub Traffic API, "unique cloners" counts distinct IP addresses executing `git clone`/`fetch`. A substantial portion of these clones represents automated ephemeral GitHub Actions runners (`actions/checkout` across CI and deploy workflows), security bots, and automated scrapers rather than 163 unique human developers. The organic human viewer count is accurately reflected by the **21 unique visitors** in the Views metric.
 
 ---
 
