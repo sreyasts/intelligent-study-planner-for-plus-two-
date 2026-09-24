@@ -37,7 +37,8 @@ const rootAssets = [
   'icon-192.png',
   'icon-512.png',
   'icon-maskable-192.png',
-  'icon-maskable-512.png'
+  'icon-maskable-512.png',
+  'og-image.png'
 ];
 
 rootAssets.forEach((asset) => {
@@ -48,10 +49,23 @@ rootAssets.forEach((asset) => {
   }
 });
 
+// Copy screenshot assets to dist/assets/screenshots
+const srcScreenshotsDir = path.join(rootDir, 'assets', 'screenshots');
+const distScreenshotsDir = path.join(distDir, 'assets', 'screenshots');
+if (fs.existsSync(srcScreenshotsDir)) {
+  if (!fs.existsSync(distScreenshotsDir)) {
+    fs.mkdirSync(distScreenshotsDir, { recursive: true });
+  }
+  fs.readdirSync(srcScreenshotsDir).forEach((file) => {
+    fs.copyFileSync(path.join(srcScreenshotsDir, file), path.join(distScreenshotsDir, file));
+    console.log(`[post-build] Copied screenshot: ${file} -> dist/assets/screenshots/${file}`);
+  });
+}
+
 // Also copy icon assets into dist/assets for relative resolution from nested bundles
 const distAssetsDir = path.join(distDir, 'assets');
 if (fs.existsSync(distAssetsDir)) {
-  ['icon-192.png', 'icon-512.png', 'icon.png', 'icon-maskable-192.png', 'icon-maskable-512.png'].forEach((icon) => {
+  ['icon-192.png', 'icon-512.png', 'icon.png', 'icon-maskable-192.png', 'icon-maskable-512.png', 'og-image.png'].forEach((icon) => {
     const srcPath = path.join(rootDir, icon);
     if (fs.existsSync(srcPath)) {
       fs.copyFileSync(srcPath, path.join(distAssetsDir, icon));

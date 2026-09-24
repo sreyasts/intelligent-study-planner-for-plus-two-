@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="icon-512.png" alt="Mission PlusTwo Logo" width="120" style="border-radius: 28px; box-shadow: 0 10px 25px rgba(37,99,235,0.25);" />
+<img src="icon.png" alt="Mission PlusTwo Logo" width="120" style="border-radius: 28px; box-shadow: 0 10px 25px rgba(37,99,235,0.25);" />
 
 # 🎓 Mission PlusTwo (v6.3)
 ### 🚀 The Intelligent Daily Study Planner for Kerala Higher Secondary (+2) & +1 Improvement Students
@@ -21,9 +21,25 @@
 ## 🌐 👉 [**CLICK HERE TO LAUNCH MISSION PLUSTWO**](https://mission-plustwo.web.app/) 👈
 *100% Free & Open Source • Runs in any browser on Phone, Tablet, or PC • No downloads required*
 
+<br/>
+
+<a href="https://mission-plustwo.web.app/">
+  <img src="og-image.png" alt="Mission PlusTwo — Kerala Plus Two (12th) Daily Study Planner & Timetable" style="border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); max-width: 100%; height: auto;" />
+</a>
+
 ---
 
 </div>
+
+## 📸 Application Interface & Visual Tour
+
+| 🖥️ Desktop Daily Study Dashboard | 📅 Complete Interleaved Timetable & QR |
+| :---: | :---: |
+| <img src="assets/screenshots/screenshot-desktop.png" alt="Mission PlusTwo Desktop Study Dashboard" width="480" style="border-radius: 12px; border: 1px solid #e2e8f0;" /> | <img src="assets/screenshots/screenshot-plan.png" alt="Mission PlusTwo Full Plan Timetable" width="480" style="border-radius: 12px; border: 1px solid #e2e8f0;" /> |
+
+| 📱 Mobile Study Experience | ⏳ DHSE Board Exam Countdown & Load Analyzer |
+| :---: | :---: |
+| <img src="assets/screenshots/screenshot-mobile.png" alt="Mission PlusTwo Mobile Checklist" width="260" style="border-radius: 16px; border: 1px solid #e2e8f0;" /> | <img src="assets/screenshots/screenshot-countdown.png" alt="Kerala Plus Two Exam Countdown" width="480" style="border-radius: 12px; border: 1px solid #e2e8f0;" /> |
 
 ## 📖 Why Mission PlusTwo?
 
