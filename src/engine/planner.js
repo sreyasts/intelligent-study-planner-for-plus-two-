@@ -806,3 +806,11 @@ export function getStreamSubjects(stream = 'cs') {
   }
   return ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'];
 }
+
+export {
+  generateSchedule,
+  validateSchedule,
+  allocateActiveRecall,
+  CORE_ENGINE_VERSION,
+} from '../core/index.js';
+

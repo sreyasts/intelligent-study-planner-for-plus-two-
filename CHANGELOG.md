@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.0] - 2026-09-24
+
+### Added
+- **Decoupled Core Scheduling Engine (`src/core/`)**:
+  - Extracted framework-agnostic pure logic module into `src/core/scheduler.js` with deterministic `generateSchedule({ stream, examDate, subjects, hoursPerDay, focusAreas })` API.
+  - Added discrete active recall allocation (`allocateActiveRecall`) and invariant schedule validator (`validateSchedule`).
+  - Implemented 100% backward compatibility bridge in `src/engine/planner.js` ensuring existing web UI and legacy tests pass unconditionally.
+- **Machine-Readable Open Curriculum Schemas (`schemas/` and `data/kerala-dhse/`)**:
+  - `schemas/curriculum.schema.json`: Rigid Draft-07 JSON Schema strictly validating `subjectId`, `subjectName`, `stream`, and `chapters` (with `chapterNumber`, `title`, `weightageScore`, and `recommendedRevisionHours`).
+  - `data/kerala-dhse/science.json`: Formalized DHSE Science stream curriculum (Physics, Chemistry, Mathematics, Botany, Zoology, Computer Science).
+  - `data/kerala-dhse/commerce.json`: Formalized DHSE Commerce stream curriculum (Accountancy, Business Studies, Economics, Computer Applications).
+  - `data/kerala-dhse/humanities.json`: Formalized DHSE Humanities stream curriculum (History, Political Science, Sociology, Economics).
+- **Automated Verification & CI Upgrades**:
+  - `tests/scheduler.test.js`: Comprehensive test suite testing short revision runways (7 days), standard multi-month schedules (120 days), single-subject intensive courses, and malformed inputs/boundary conditions.
+  - `tests/curriculum-schema.test.js`: Automated Ajv schema test verifying all curriculum JSON files against `curriculum.schema.json`.
+  - Upgraded `.github/workflows/ci.yml` with ESLint, Vitest, schema validation, legacy invariant tests, and Vite production bundle checks.
+- **Community & Governance Infrastructure**:
+  - Standard Contributor Covenant v2.1 in `CODE_OF_CONDUCT.md`.
+  - Comprehensive `CONTRIBUTING.md` with Conventional Commits and branch workflow specifications.
+  - `SECURITY.md` covering responsible disclosure, SLA, and DPDP Act 2023 minor data protection.
+  - Structured issue templates (`bug_report.md`, `syllabus_update.md`, `feature_request.md`) and `.github/PULL_REQUEST_TEMPLATE.md`.
+
+---
+
+## [1.0.0] - 2026-09-21
+
+### Added
+- Initial open-source release of the core study timetable scheduling algorithm for Kerala DHSE Class 12 candidates.
+- Spaced repetition interleaving across Physics, Chemistry, Mathematics, and Computer Science / Biology.
+- Basic test harness and invariant validation checks.
+
+---
+
 ## [6.3.0] - 2026-09-24
 
 ### Added
