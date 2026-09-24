@@ -21,6 +21,22 @@
         "destination": "/pages/printable-qr-poster.html"
       },
       {
+        "source": "/school-poster",
+        "destination": "/pages/printable-qr-poster.html"
+      },
+      {
+        "source": "/school-poster.html",
+        "destination": "/pages/printable-qr-poster.html"
+      },
+      {
+        "source": "/pages/school-poster",
+        "destination": "/pages/printable-qr-poster.html"
+      },
+      {
+        "source": "/pages/school-poster.html",
+        "destination": "/pages/printable-qr-poster.html"
+      },
+      {
         "source": "/plus-two-timetable",
         "destination": "/pages/plus-two-timetable.html"
       },
@@ -97,6 +113,19 @@
       {
         "source": "sw.js",
         "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, no-store, must-revalidate"
+          }
+        ]
+      },
+      {
+        "source": "sitemap.xml",
+        "headers": [
+          {
+            "key": "Content-Type",
+            "value": "application/xml; charset=utf-8"
+          },
           {
             "key": "Cache-Control",
             "value": "no-cache, no-store, must-revalidate"
