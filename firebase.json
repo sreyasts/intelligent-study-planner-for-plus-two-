@@ -9,7 +9,27 @@
     "cleanUrls": false,
     "rewrites": [
       {
+        "source": "/plus-two-timetable",
+        "destination": "/pages/plus-two-timetable.html"
+      },
+      {
+        "source": "/pages/plus-two-timetable",
+        "destination": "/pages/plus-two-timetable.html"
+      },
+      {
+        "source": "/study-hours-calculator",
+        "destination": "/pages/study-hours-calculator.html"
+      },
+      {
+        "source": "/pages/study-hours-calculator",
+        "destination": "/pages/study-hours-calculator.html"
+      },
+      {
         "source": "/pages/terms",
+        "destination": "/pages/terms.html"
+      },
+      {
+        "source": "/terms",
         "destination": "/pages/terms.html"
       },
       {
@@ -17,11 +37,23 @@
         "destination": "/pages/privacy.html"
       },
       {
+        "source": "/privacy",
+        "destination": "/pages/privacy.html"
+      },
+      {
         "source": "/pages/syllabus-plus-two",
         "destination": "/pages/syllabus-plus-two.html"
       },
       {
+        "source": "/syllabus-plus-two",
+        "destination": "/pages/syllabus-plus-two.html"
+      },
+      {
         "source": "/pages/plus-one-improvement-guide",
+        "destination": "/pages/plus-one-improvement-guide.html"
+      },
+      {
+        "source": "/plus-one-improvement-guide",
         "destination": "/pages/plus-one-improvement-guide.html"
       }
     ],

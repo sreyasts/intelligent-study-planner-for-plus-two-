@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script id="canonical-domain-bridge">
+    (function() {
+        try {
+            var CANONICAL_HOST = 'mission-plustwo.web.app';
+            var currentHost = window.location.hostname;
+            var isLocal = currentHost === 'localhost' || currentHost === '127.0.0.1' || currentHost.startsWith('192.168.');
+            if (!isLocal && currentHost !== CANONICAL_HOST && currentHost.includes('github.io')) {
+                var cleanPath = window.location.pathname.replace(/^\/intelligent-study-planner-for-plus-two-?/, '');
+                if (!cleanPath || cleanPath === '') cleanPath = '/';
+                var target = 'https://' + CANONICAL_HOST + cleanPath + window.location.search + window.location.hash;
+                window.location.replace(target);
+            }
+        } catch(e) {}
+    })();
+    </script>
+    <title>Kerala Plus Two Study Hours Calculator | Daily Runway & Revision Estimator</title>
+    <meta name="description" content="Free online study hours calculator for Kerala DHSE Class 12 Plus Two students. Calculate exact daily self-study hours, chapter pacing, and revision buffers before board exams.">
+    <meta name="keywords" content="plus two study hours calculator, kerala class 12 daily study hours, dhse revision hours estimator, plus two timetable calculator">
+    <link rel="canonical" href="https://mission-plustwo.web.app/pages/study-hours-calculator.html">
+    <link rel="icon" type="image/png" href="../icon.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Schema.org WebApplication -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Kerala Plus Two Study Hours Calculator",
+      "url": "https://mission-plustwo.web.app/pages/study-hours-calculator.html",
+      "applicationCategory": "EducationalApplication",
+      "operatingSystem": "All",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "INR"
+      },
+      "description": "Interactive study calculator for Kerala Higher Secondary Plus Two students to compute required daily study hours and revision runways."
+    }
+    </script>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col">
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+            <a href="/" class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+                    <i class="fa-solid fa-calculator text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight leading-none">Mission <span class="text-blue-600">PlusTwo</span></h1>
+                    <p class="text-xs font-medium text-slate-400 mt-0.5">Study Hours & Runway Calculator</p>
+                </div>
+            </a>
+            <a href="/" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-all shadow-sm flex items-center gap-2">
+                <i class="fa-solid fa-calendar-check"></i>
+                <span>Open Full Planner</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-3xl mx-auto px-4 sm:px-6 py-10 flex-1">
+        <div class="mb-8 text-center">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 mb-3">
+                <i class="fa-solid fa-gauge-high"></i> Interactive Kerala DHSE Pacing Tool
+            </span>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+                Class 12 Daily Study Hours & Runway Calculator
+            </h2>
+            <p class="mt-2 text-slate-600 text-sm max-w-lg mx-auto">
+                Find out exactly how many hours of self-study you need per day to finish your syllabus and reserve buffer time for mock exams.
+            </p>
+        </div>
+
+        <!-- Calculator Card -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm mb-8">
+            <div class="space-y-6">
+                <!-- Days to Exam -->
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Days Remaining Until Board Exams</label>
+                        <span id="days-val" class="text-sm font-extrabold text-blue-600 font-mono">60 Days</span>
+                    </div>
+                    <input type="range" id="days-input" min="10" max="180" value="60" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600" oninput="calculate()">
+                    <div class="flex justify-between text-[11px] text-slate-400 mt-1">
+                        <span>10 Days (Crash)</span>
+                        <span>60 Days (Mid-term)</span>
+                        <span>180 Days (Full Year)</span>
+                    </div>
+                </div>
+
+                <!-- Unfinished Chapters -->
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Unfinished / Weak Chapters to Cover</label>
+                        <span id="chapters-val" class="text-sm font-extrabold text-blue-600 font-mono">35 Chapters</span>
+                    </div>
+                    <input type="range" id="chapters-input" min="5" max="65" value="35" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600" oninput="calculate()">
+                    <div class="flex justify-between text-[11px] text-slate-400 mt-1">
+                        <span>5 Chapters</span>
+                        <span>35 Chapters (Average)</span>
+                        <span>65 Chapters (Full Syllabus)</span>
+                    </div>
+                </div>
+
+                <!-- Average Hours per Chapter -->
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Estimated Self-Study Time per Chapter</label>
+                        <span id="hours-per-chap-val" class="text-sm font-extrabold text-blue-600 font-mono">4.0 Hours</span>
+                    </div>
+                    <input type="range" id="hours-per-chap-input" min="2.0" max="8.0" step="0.5" value="4.0" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600" oninput="calculate()">
+                    <div class="flex justify-between text-[11px] text-slate-400 mt-1">
+                        <span>2.0h (Quick Revision)</span>
+                        <span>4.0h (Standard + PYQs)</span>
+                        <span>8.0h (Deep Conceptual)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Output Grid -->
+            <div class="mt-8 pt-6 border-t border-slate-100">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4">Recommended Pacing Metrics</h3>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+                    <div class="p-3 rounded-xl bg-blue-50/80 border border-blue-100">
+                        <div class="text-[11px] font-medium text-slate-500">School Days</div>
+                        <div id="res-schoolday" class="text-lg font-black text-blue-700 font-mono mt-0.5">3.2 hrs/day</div>
+                    </div>
+                    <div class="p-3 rounded-xl bg-indigo-50/80 border border-indigo-100">
+                        <div class="text-[11px] font-medium text-slate-500">Holidays/Sundays</div>
+                        <div id="res-holiday" class="text-lg font-black text-indigo-700 font-mono mt-0.5">5.5 hrs/day</div>
+                    </div>
+                    <div class="p-3 rounded-xl bg-emerald-50/80 border border-emerald-100">
+                        <div class="text-[11px] font-medium text-slate-500">Mock Exam Buffer</div>
+                        <div id="res-buffer" class="text-lg font-black text-emerald-700 font-mono mt-0.5">8 Days</div>
+                    </div>
+                    <div class="p-3 rounded-xl bg-purple-50/80 border border-purple-100">
+                        <div class="text-[11px] font-medium text-slate-500">Total Workload</div>
+                        <div id="res-total" class="text-lg font-black text-purple-700 font-mono mt-0.5">140 hrs</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transfer Button -->
+            <div class="mt-6 text-center">
+                <a href="/" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl shadow-md shadow-blue-500/20 transition-all">
+                    <span>Generate Day-by-Day Schedule for This Runway</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- FAQ Section -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm">
+            <h3 class="text-base font-bold text-slate-900 mb-4">Frequently Asked Questions</h3>
+            <div class="space-y-4 text-xs leading-relaxed text-slate-600">
+                <div>
+                    <h4 class="font-bold text-slate-800 text-sm mb-1">How is the daily study requirement calculated?</h4>
+                    <p>The calculator multiplies your remaining chapters by estimated hours per chapter, then subtracts a 10–15% buffer runway dedicated strictly to previous year questions (PYQs) and mock papers. The remaining hours are distributed across school days (approx. 40% weight) and holidays (approx. 60% weight).</p>
+                </div>
+                <div>
+                    <h4 class="font-bold text-slate-800 text-sm mb-1">Why is a mock exam buffer necessary?</h4>
+                    <p>Finishing the syllabus on the eve of the exam leaves zero time to practice exam hall time management. Reserving 7 to 14 days before DHSE exams ensures you can attempt at least 3 full-length 60-mark model papers under timed conditions.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-6 mt-12">
+        <div class="max-w-5xl mx-auto px-4 text-center text-xs text-slate-500">
+            <p>Mission PlusTwo is a free, privacy-first open-source initiative for Kerala DHSE students.</p>
+            <div class="flex justify-center gap-4 mt-2 font-medium">
+                <a href="/" class="hover:text-blue-600">Home</a>
+                <a href="/pages/plus-two-timetable.html" class="hover:text-blue-600">Study Timetable</a>
+                <a href="/pages/plus-one-improvement-guide.html" class="hover:text-blue-600">+1 Improvement Guide</a>
+                <a href="/pages/syllabus-plus-two.html" class="hover:text-blue-600">Syllabus Breakdown</a>
+                <a href="/pages/privacy.html" class="hover:text-blue-600">Privacy</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+    function calculate() {
+        const days = parseInt(document.getElementById('days-input').value, 10);
+        const chapters = parseInt(document.getElementById('chapters-input').value, 10);
+        const hoursPerChap = parseFloat(document.getElementById('hours-per-chap-input').value);
+
+        document.getElementById('days-val').textContent = days + ' Days';
+        document.getElementById('chapters-val').textContent = chapters + ' Chapters';
+        document.getElementById('hours-per-chap-val').textContent = hoursPerChap.toFixed(1) + ' Hours';
+
+        const totalHours = chapters * hoursPerChap;
+        const bufferDays = Math.max(2, Math.min(14, Math.floor(days * 0.15)));
+        const studyDays = Math.max(1, days - bufferDays);
+
+        // Assume 5 school days and 2 weekend days per 7-day cycle
+        // Weekend days have ~1.6x the available focus time of school days
+        const cycles = studyDays / 7;
+        const schoolDays = cycles * 5;
+        const weekendDays = cycles * 2;
+        const effectiveRatio = schoolDays + (weekendDays * 1.6);
+        const schoolDayHours = Math.max(1.0, (totalHours / effectiveRatio));
+        const holidayHours = Math.min(8.5, schoolDayHours * 1.6);
+
+        document.getElementById('res-total').textContent = Math.round(totalHours) + ' hrs';
+        document.getElementById('res-buffer').textContent = bufferDays + ' Days';
+        document.getElementById('res-schoolday').textContent = schoolDayHours.toFixed(1) + ' hrs/day';
+        document.getElementById('res-holiday').textContent = holidayHours.toFixed(1) + ' hrs/day';
+    }
+    calculate();
+    </script>
+</body>
+</html>
