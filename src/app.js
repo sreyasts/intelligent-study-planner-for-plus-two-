@@ -18,6 +18,7 @@ import {
   formatLocalDateStr,
   TODAY_STR,
   calculateDaysBetween,
+  getSmartStartDate,
   buildIntelligentPlan,
   validatePlan,
   getStreamSubjects,
@@ -1672,7 +1673,9 @@ function showToastMessage(text, icon = 'checkCircle') {
             const label = document.getElementById('deadline-calc-label');
             if (!input || !label) return;
             const isML = getAppLanguage() === 'ml';
-            const days = calculateDaysBetween(TODAY_STR, input.value);
+            const smartStart = typeof getSmartStartDate === 'function' ? getSmartStartDate() : { startDate: TODAY_STR, isLateEvening: false };
+            const effectiveStart = smartStart.startDate;
+            const days = calculateDaysBetween(effectiveStart, input.value);
             if (days <= 0) {
                 label.innerHTML = isML
                     ? '<span class="text-rose-600 dark:text-rose-400 font-bold flex items-center gap-1.5"><i class="fa-solid fa-triangle-exclamation"></i> തിരഞ്ഞെടുത്ത തീയതി കഴിഞ്ഞുപോയി! ഭാവിയിലെ തീയതി നൽകുക.</span>'
@@ -1685,6 +1688,12 @@ function showToastMessage(text, icon = 'checkCircle') {
                 else if (days >= 14) revDays = 2;
                 else if (days >= 7) revDays = 1;
                 const studyDays = Math.max(1, days - revDays);
+                const nightBadge = smartStart.isLateEvening ? `
+                    <div class="mt-2 text-[11px] text-amber-700 dark:text-amber-300 font-semibold bg-amber-50 dark:bg-amber-950/40 p-2 rounded-xl border border-amber-200/60 dark:border-amber-800/40 flex items-center gap-1.5">
+                        <i class="fa-solid fa-moon text-amber-500"></i>
+                        <span>${isML ? 'രാത്രി വൈകി: ആദ്യ ദിന പഠനം നാളെ രാവിലെ മുതൽ ആരംഭിക്കുന്നു' : 'Late evening: Day 1 study runway starts fresh tomorrow morning'}</span>
+                    </div>
+                ` : '';
                 label.innerHTML = isML ? `
                     <div class="flex flex-wrap items-center justify-between gap-1">
                         <span class="font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
@@ -1698,6 +1707,7 @@ function showToastMessage(text, icon = 'checkCircle') {
                     <div class="text-xs text-slate-500 dark:text-slate-300 mt-1">
                         ${studyDays} ദിവസത്തെ പഠനം. അവസാന ${revDays} ദിവസങ്ങൾ മുൻവർഷ ചോദ്യങ്ങളും ഫോർമുലകളും പഠിക്കാൻ നീക്കിവെച്ചു.
                     </div>
+                    ${nightBadge}
                 ` : `
                     <div class="flex flex-wrap items-center justify-between gap-1">
                         <span class="font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
@@ -1711,8 +1721,184 @@ function showToastMessage(text, icon = 'checkCircle') {
                     <div class="text-xs text-slate-500 dark:text-slate-300 mt-1">
                         ${studyDays} active syllabus study days. Final ${revDays} days will strictly run PYQ sets and formula drills.
                     </div>
+                    ${nightBadge}
                 `;
             }
+        }
+
+        function animatePlanGeneration(options = {}, onComplete) {
+            const overlay = document.getElementById('plan-generation-overlay');
+            if (!overlay) {
+                if (typeof onComplete === 'function') onComplete();
+                return;
+            }
+
+            const isML = getAppLanguage() === 'ml';
+            const isRebalance = options.mode === 'rebalance';
+            const isLateEvening = Boolean(options.isLateEvening);
+
+            const headingEl = document.getElementById('plan-gen-heading');
+            const subheadingEl = document.getElementById('plan-gen-subheading');
+            const progressBar = document.getElementById('plan-gen-progress-bar');
+            const stageLabel = document.getElementById('plan-gen-stage-label');
+            const percentageEl = document.getElementById('plan-gen-percentage');
+            const iconEl = document.getElementById('plan-gen-icon');
+            const nightNotice = document.getElementById('plan-gen-night-notice');
+            const nightText = document.getElementById('plan-gen-night-notice-text');
+
+            if (nightNotice && nightText) {
+                if (isLateEvening) {
+                    nightNotice.classList.remove('hidden');
+                    nightText.innerText = isML
+                        ? "🌙 രാത്രി വൈകിയതിനാൽ ആദ്യ ദിന പഠനം നാളെ രാവിലെ മുതൽ ചിട്ടപ്പെടുത്തുന്നു."
+                        : "🌙 Late evening detected: Scheduling Day 1 starting fresh tomorrow morning.";
+                } else {
+                    nightNotice.classList.add('hidden');
+                }
+            }
+
+            // Reset check items to default
+            for (let i = 1; i <= 4; i++) {
+                const checkEl = document.getElementById(`plan-gen-check-${i}`);
+                if (checkEl) {
+                    checkEl.className = "flex items-center gap-2.5 text-xs text-slate-400 dark:text-slate-500 transition-colors duration-300";
+                    const badge = checkEl.querySelector('span');
+                    if (badge) {
+                        badge.className = "w-5 h-5 rounded-full flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-400 text-[10px] shrink-0 font-bold";
+                        badge.innerHTML = `${i}`;
+                    }
+                }
+            }
+
+            const stages = isRebalance ? [
+                {
+                    pct: 28,
+                    heading: isML ? "പൂർത്തിയായ ഭാഗങ്ങൾ പരിശോധിക്കുന്നു..." : "Auditing Completed Portions...",
+                    subheading: isML ? "തീർത്ത അധ്യായങ്ങളും ബാക്കിയുള്ള ടാസ്കുകളും വേർതിരിക്കുന്നു" : "Separating completed checkmarks from pending chapters",
+                    icon: "fa-list-check",
+                    stageText: isML ? "ഘട്ടം 1 / 4" : "Phase 1 of 4",
+                    checkIndex: 1
+                },
+                {
+                    pct: 58,
+                    heading: isML ? "ബാക്കിയുള്ള സമയം പുനഃക്രമീകരിക്കുന്നു..." : "Recalculating Remaining Runway...",
+                    subheading: isML ? "പരീക്ഷാ തീയതി വരെയുള്ള ശേഷിക്കുന്ന ദിവസങ്ങൾ ക്രമീകരിക്കുന്നു" : "Pacing remaining workload across available study days",
+                    icon: "fa-arrows-rotate",
+                    stageText: isML ? "ഘട്ടം 2 / 4" : "Phase 2 of 4",
+                    checkIndex: 2
+                },
+                {
+                    pct: 85,
+                    heading: isML ? "വിഷയങ്ങൾ തുല്യമായി പുനർവിഭജിക്കുന്നു..." : "Redistributing Subject Workload...",
+                    subheading: isML ? "ബാക്ക്ലോഗ് ഒഴിവാക്കി റിവിഷൻ ദിനങ്ങൾ നിലനിർത്തുന്നു" : "Interleaving subjects evenly with preserved revision buffers",
+                    icon: "fa-scale-balanced",
+                    stageText: isML ? "ഘട്ടം 3 / 4" : "Phase 3 of 4",
+                    checkIndex: 3
+                },
+                {
+                    pct: 100,
+                    heading: isML ? "പുതുക്കിയ ടൈംടേബിൾ റെഡി!" : "Rebalanced Schedule Finalized!",
+                    subheading: isML ? "നിങ്ങളുടെ പുതിയ പഠന ഷെഡ്യൂൾ സജ്ജമായി" : "Updated study timeline ready for tomorrow",
+                    icon: "fa-circle-check",
+                    stageText: isML ? "പൂർത്തിയായി" : "Completed",
+                    checkIndex: 4
+                }
+            ] : [
+                {
+                    pct: 26,
+                    heading: isML ? "സിലബസ് ഘടന പരിശോധിക്കുന്നു..." : "Verifying Syllabus Scope & Blueprints...",
+                    subheading: isML ? "SCERT മാർക്ക് വെയിറ്റേജും പ്രധാന ഭാഗങ്ങളും ഉറപ്പുവരുത്തുന്നു" : "Checking chapter marks weightage and core subtopics",
+                    icon: "fa-compass-drafting",
+                    stageText: isML ? "ഘട്ടം 1 / 4" : "Phase 1 of 4",
+                    checkIndex: 1
+                },
+                {
+                    pct: 56,
+                    heading: isML ? "പഠന സമയവും ഇടവേളകളും കണക്കാക്കുന്നു..." : "Calculating Study Runway & Capacity...",
+                    subheading: isML ? "ദിവസേനയുള്ള പഠന ഭാരവും വിശ്രമ ദിനങ്ങളും ക്രമീകരിക്കുന്നു" : "Optimizing daily workload balance and rest rhythm",
+                    icon: "fa-calculator",
+                    stageText: isML ? "ഘട്ടം 2 / 4" : "Phase 2 of 4",
+                    checkIndex: 2
+                },
+                {
+                    pct: 86,
+                    heading: isML ? "വിഷയ ക്രമവും റിവിഷനും ചിട്ടപ്പെടുത്തുന്നു..." : "Balancing Multi-Subject Rotation...",
+                    subheading: isML ? "ചാപ്റ്റർ മുൻഗണനയും അവസാന വട്ട മോഡൽ എക്സാം ദിനങ്ങളും ഉറപ്പാക്കുന്നു" : "Enforcing prerequisite order and reserving active recall runway",
+                    icon: "fa-shield-halved",
+                    stageText: isML ? "ഘട്ടം 3 / 4" : "Phase 3 of 4",
+                    checkIndex: 3
+                },
+                {
+                    pct: 100,
+                    heading: isML ? "ടൈംടേബിൾ പൂർത്തിയാക്കുന്നു..." : "Finalizing Daily Study Timetable...",
+                    subheading: isML ? "പഠന ഷെഡ്യൂൾ പരിശോധിച്ച് ഉറപ്പുവരുത്തി" : "Daily timeline verified with zero task conflicts",
+                    icon: "fa-circle-check",
+                    stageText: isML ? "പൂർത്തിയായി" : "Completed",
+                    checkIndex: 4
+                }
+            ];
+
+            // Show overlay
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+
+            function applyStage(idx) {
+                const s = stages[idx];
+                if (!s) return;
+
+                if (headingEl) headingEl.innerText = s.heading;
+                if (subheadingEl) subheadingEl.innerText = s.subheading;
+                if (progressBar) progressBar.style.width = `${s.pct}%`;
+                if (percentageEl) percentageEl.innerText = `${s.pct}%`;
+                if (stageLabel) stageLabel.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-blue-500 text-[10px]"></i> ${s.stageText}`;
+                if (iconEl) iconEl.className = `fa-solid ${s.icon} text-xl transition-all duration-300`;
+
+                for (let c = 1; c <= s.checkIndex; c++) {
+                    const checkEl = document.getElementById(`plan-gen-check-${c}`);
+                    if (checkEl) {
+                        const isCurrent = c === s.checkIndex && idx < stages.length - 1;
+                        checkEl.className = isCurrent 
+                            ? "flex items-center gap-2.5 text-xs text-blue-600 dark:text-blue-400 font-bold transition-colors duration-300"
+                            : "flex items-center gap-2.5 text-xs text-emerald-600 dark:text-emerald-400 font-semibold transition-colors duration-300";
+                        const badge = checkEl.querySelector('span');
+                        if (badge) {
+                            if (isCurrent) {
+                                badge.className = "w-5 h-5 rounded-full flex items-center justify-center bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 text-[10px] shrink-0 font-bold";
+                                badge.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i>`;
+                            } else {
+                                badge.className = "w-5 h-5 rounded-full flex items-center justify-center bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 text-[10px] shrink-0 font-bold";
+                                badge.innerHTML = `<i class="fa-solid fa-check"></i>`;
+                            }
+                        }
+                    }
+                }
+            }
+
+            applyStage(0);
+
+            setTimeout(() => {
+                applyStage(1);
+            }, 550);
+
+            setTimeout(() => {
+                applyStage(2);
+            }, 1150);
+
+            setTimeout(() => {
+                applyStage(3);
+            }, 1750);
+
+            setTimeout(() => {
+                if (typeof onComplete === 'function') {
+                    onComplete();
+                }
+                overlay.classList.add('opacity-0');
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                    overlay.classList.remove('flex');
+                    overlay.classList.remove('opacity-0');
+                }, 300);
+            }, 2250);
         }
 
         function handleInitialSetup() {
@@ -1729,7 +1915,10 @@ function showToastMessage(text, icon = 'checkCircle') {
                 return;
             }
 
-            const days = calculateDaysBetween(TODAY_STR, deadlineInput);
+            const smartStart = typeof getSmartStartDate === 'function' ? getSmartStartDate() : { startDate: TODAY_STR, isLateEvening: false };
+            const effectiveStartDate = smartStart.startDate;
+
+            const days = calculateDaysBetween(effectiveStartDate, deadlineInput);
             if (days <= 0) {
                 showAppAlert({
                     title: "Future Date Required",
@@ -1802,41 +1991,55 @@ function showToastMessage(text, icon = 'checkCircle') {
                 return;
             }
 
-            const personalization = getPersonalizationConfig();
-            const planResult = buildIntelligentPlan(deadlineInput, tasksToPlan, TODAY_STR, improvementConfig, selectedStream, {
-                intensity: studyIntensity,
-                personalization: personalization,
-                improvementOnly: isImpOnly
-            });
-
-            if (planResult && planResult.planDays) {
-                appState = {
-                    engineVersion: PLANNER_ENGINE_VERSION,
-                    stream: selectedStream,
-                    improvementOnly: isImpOnly,
-                    studyIntensity: studyIntensity,
+            animatePlanGeneration({ mode: 'create', isLateEvening: smartStart.isLateEvening }, () => {
+                const personalization = getPersonalizationConfig();
+                const planResult = buildIntelligentPlan(deadlineInput, tasksToPlan, effectiveStartDate, improvementConfig, selectedStream, {
+                    intensity: studyIntensity,
                     personalization: personalization,
-                    startDate: TODAY_STR,
-                    deadlineDate: deadlineInput,
-                    targetTerm: isImpOnly ? 1 : targetTerm,
-                    completedChaptersOnInit: checkedCompletedBoxes,
-                    improvementConfig: improvementConfig,
-                    plan: planResult.planDays,
-                    revisionDaysCount: planResult.revisionDaysCount,
-                    totalConfiguredTasks: tasksToPlan.length,
-                    diagnostics: planResult.diagnostics,
-                    createdAt: new Date().toISOString(),
-                    lastModified: new Date().toISOString()
-                };
-                saveAppState();
-                trackAnalyticsEvent('plan_created', {
-                    stream: selectedStream,
-                    daysTotal: days,
-                    tasksCount: tasksToPlan.length
+                    improvementOnly: isImpOnly
                 });
-                goToDashboard();
-                showAppToast("🎉 Your personalized study plan is ready! Let's conquer Day 1!", "fa-rocket text-blue-400");
-            }
+
+                if (planResult && planResult.planDays) {
+                    appState = {
+                        engineVersion: PLANNER_ENGINE_VERSION,
+                        stream: selectedStream,
+                        improvementOnly: isImpOnly,
+                        studyIntensity: studyIntensity,
+                        personalization: personalization,
+                        startDate: effectiveStartDate,
+                        deadlineDate: deadlineInput,
+                        targetTerm: isImpOnly ? 1 : targetTerm,
+                        completedChaptersOnInit: checkedCompletedBoxes,
+                        improvementConfig: improvementConfig,
+                        plan: planResult.planDays,
+                        revisionDaysCount: planResult.revisionDaysCount,
+                        totalConfiguredTasks: tasksToPlan.length,
+                        diagnostics: planResult.diagnostics,
+                        isLateEveningGenerated: smartStart.isLateEvening,
+                        createdAt: new Date().toISOString(),
+                        lastModified: new Date().toISOString()
+                    };
+                    saveAppState();
+                    trackAnalyticsEvent('plan_created', {
+                        stream: selectedStream,
+                        daysTotal: days,
+                        tasksCount: tasksToPlan.length
+                    });
+                    goToDashboard();
+                    const isML = getAppLanguage() === 'ml';
+                    if (smartStart.isLateEvening) {
+                        showAppToast(isML
+                            ? "🌙 രാത്രി വൈകിയതിനാൽ ആദ്യ ദിന പഠനം നാളെ രാവിലെ മുതൽ ആരംഭിക്കുന്നു!"
+                            : "🌙 Day 1 study begins fresh tomorrow morning! Get good rest tonight.",
+                            "fa-moon text-amber-300");
+                    } else {
+                        showAppToast(isML
+                            ? "🎉 നിങ്ങളുടെ വ്യക്തിഗത പഠന പ്ലാൻ തയ്യാറായി! ഒന്നാം ദിനം തുടങ്ങാം!"
+                            : "🎉 Your study plan is ready! Let's conquer Day 1!",
+                            "fa-rocket text-blue-400");
+                    }
+                }
+            });
         }
 
         /* ==========================================================================
@@ -1945,8 +2148,21 @@ function showToastMessage(text, icon = 'checkCircle') {
                 });
             }
 
-            // Rebuild intelligent plan for uncompleted tasks starting from TODAY
-            const rebuildStartDate = (completedUpTo === 0) ? TODAY_STR : getLocalDateStr();
+            const smartStart = typeof getSmartStartDate === 'function' ? getSmartStartDate() : { startDate: TODAY_STR, isLateEvening: false };
+            let rebuildStartDate = (completedUpTo === 0) ? smartStart.startDate : getLocalDateStr();
+
+            // If we kept days, ensure rebuildStartDate starts strictly after the last kept day if that date is on or after rebuildStartDate
+            if (keptDays.length > 0) {
+                const lastKeptDate = keptDays[keptDays.length - 1].date;
+                if (lastKeptDate >= rebuildStartDate) {
+                    const nextDate = new Date(lastKeptDate + 'T00:00:00');
+                    nextDate.setDate(nextDate.getDate() + 1);
+                    rebuildStartDate = formatLocalDateStr(nextDate);
+                } else if (smartStart.isLateEvening && lastKeptDate < smartStart.startDate) {
+                    // Late evening and last kept day was earlier than tomorrow
+                    rebuildStartDate = smartStart.startDate;
+                }
+            }
 
             const userStream = appState.stream || (appState.plan.some(d => d.tasks.some(t => t.subject === 'Botany' || t.subject === 'Zoology')) ? 'bio' : 'cs');
             const targetTerm = appState.targetTerm || 3;
@@ -1972,32 +2188,46 @@ function showToastMessage(text, icon = 'checkCircle') {
                 });
             }
 
-            const result = buildIntelligentPlan(appState.deadlineDate, uncompletedTasks, rebuildStartDate, appState.improvementConfig || [], userStream, {
-                intensity: appState.studyIntensity || 'balanced',
-                personalization: appState.personalization || {}
-            });
+            closeRegenerateModal();
 
-            if (result && result.planDays) {
-                // Adjust day numbering seamlessly following keptDays
-                result.planDays.forEach((d, idx) => {
-                    d.dayNumber = completedUpTo + idx + 1;
+            animatePlanGeneration({ mode: 'rebalance', isLateEvening: (completedUpTo === 0 && smartStart.isLateEvening) }, () => {
+                const result = buildIntelligentPlan(appState.deadlineDate, uncompletedTasks, rebuildStartDate, appState.improvementConfig || [], userStream, {
+                    intensity: appState.studyIntensity || 'balanced',
+                    personalization: appState.personalization || {}
                 });
 
-                appState.plan = [...keptDays, ...result.planDays];
-                if (completedUpTo === 0) {
-                    appState.startDate = TODAY_STR;
-                }
-                selectedMissionDayNumber = completedUpTo + 1;
-                appState.revisionDaysCount = result.revisionDaysCount;
-                appState.diagnostics = result.diagnostics;
-                appState.engineVersion = PLANNER_ENGINE_VERSION;
-                appState.lastModified = new Date().toISOString();
-                saveAppState();
+                if (result && result.planDays) {
+                    // Adjust day numbering seamlessly following keptDays
+                    result.planDays.forEach((d, idx) => {
+                        d.dayNumber = completedUpTo + idx + 1;
+                    });
 
-                closeRegenerateModal();
-                showAppToast("Schedule rebalanced with dependency tracking!", "fa-wand-magic-sparkles text-blue-400");
-                renderApp();
-            }
+                    appState.plan = [...keptDays, ...result.planDays];
+                    if (completedUpTo === 0) {
+                        appState.startDate = rebuildStartDate;
+                    }
+                    selectedMissionDayNumber = completedUpTo + 1;
+                    appState.revisionDaysCount = result.revisionDaysCount;
+                    appState.diagnostics = result.diagnostics;
+                    appState.engineVersion = PLANNER_ENGINE_VERSION;
+                    appState.lastModified = new Date().toISOString();
+                    saveAppState();
+
+                    const isML = getAppLanguage() === 'ml';
+                    if (completedUpTo === 0 && smartStart.isLateEvening) {
+                        showAppToast(isML
+                            ? "🌙 ടൈംടേബിൾ ക്രമീകരിച്ചു! പുതിയ ദിനം നാളെ രാവിലെ ആരംഭിക്കുന്നു."
+                            : "🌙 Schedule rebalanced! Starting fresh tomorrow morning.",
+                            "fa-moon text-amber-300");
+                    } else {
+                        showAppToast(isML
+                            ? "✨ ടൈംടേബിൾ വീണ്ടും ക്രമീകരിച്ചു!"
+                            : "Schedule rebalanced with dependency tracking!",
+                            "fa-wand-magic-sparkles text-blue-400");
+                    }
+                    renderApp();
+                }
+            });
         }
 
         /* ==========================================================================

@@ -811,6 +811,7 @@ export {
   generateSchedule,
   validateSchedule,
   allocateActiveRecall,
+  getSmartStartDate,
   CORE_ENGINE_VERSION,
 } from '../core/index.js';
 

@@ -41,6 +41,47 @@ export const getLocalDateStr = formatLocalDateStr;
 export const TODAY_STR = formatLocalDateStr(new Date());
 
 /**
+ * Determine the effective starting date for study planning.
+ * If the student generates or adjusts their schedule late in the evening (>= 9:00 PM / 21:00),
+ * today's study window is closed. Scheduling starts fresh from tomorrow morning so the student
+ * isn't burdened with an impossible Day 1 workload tonight.
+ *
+ * @param {Date|string} [referenceDate=new Date()]
+ * @param {number} [lateHourThreshold=21] 24-hour format threshold (default: 21 for 9:00 PM)
+ * @returns {{ startDate: string, isLateEvening: boolean, tomorrowDate: string, originalDate: string, currentHour: number, message: string|null }}
+ */
+export function getSmartStartDate(referenceDate = new Date(), lateHourThreshold = 21) {
+  const d = referenceDate instanceof Date ? new Date(referenceDate) : new Date(referenceDate);
+  const currentHour = d.getHours();
+  const originalDate = formatLocalDateStr(d);
+  const isLateEvening = currentHour >= lateHourThreshold;
+
+  if (isLateEvening) {
+    const tomorrow = new Date(d);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowDate = formatLocalDateStr(tomorrow);
+    return {
+      startDate: tomorrowDate,
+      isLateEvening: true,
+      tomorrowDate,
+      originalDate,
+      currentHour,
+      message: 'Late evening generation: starting fresh from tomorrow morning.',
+    };
+  }
+
+  return {
+    startDate: originalDate,
+    isLateEvening: false,
+    tomorrowDate: formatLocalDateStr(new Date(d.getTime() + 86400000)),
+    originalDate,
+    currentHour,
+    message: null,
+  };
+}
+
+
+/**
  * Calculate difference in calendar days between two ISO date strings (inclusive of end boundary)
  * @param {string} startDateStr
  * @param {string} endDateStr

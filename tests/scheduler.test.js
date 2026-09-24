@@ -5,6 +5,7 @@ import {
   calculateDaysBetween,
   allocateActiveRecall,
   getStreamSubjects,
+  getSmartStartDate,
   CORE_ENGINE_VERSION,
 } from '../src/core/index.js';
 
@@ -198,6 +199,34 @@ describe('Mission PlusTwo Core Scheduler Engine', () => {
     it('throws error when calculateDaysBetween receives malformed dates', () => {
       expect(() => calculateDaysBetween('not-a-date', '2026-10-01')).toThrow();
       expect(() => calculateDaysBetween('2026-10-01', '')).toThrow();
+    });
+  });
+
+  describe('6. Time-Aware Start Date Calculation (getSmartStartDate)', () => {
+    it('keeps today as start date when planning during daytime (e.g. 2:00 PM)', () => {
+      const afternoon = new Date('2026-10-15T14:30:00');
+      const result = getSmartStartDate(afternoon);
+      expect(result.isLateEvening).toBe(false);
+      expect(result.startDate).toBe('2026-10-15');
+      expect(result.message).toBeNull();
+    });
+
+    it('advances start date to tomorrow when planning late at night (e.g. 10:00 PM)', () => {
+      const lateNight = new Date('2026-10-15T22:15:00');
+      const result = getSmartStartDate(lateNight);
+      expect(result.isLateEvening).toBe(true);
+      expect(result.startDate).toBe('2026-10-16');
+      expect(result.tomorrowDate).toBe('2026-10-16');
+      expect(result.originalDate).toBe('2026-10-15');
+      expect(result.message).toContain('starting fresh from tomorrow morning');
+    });
+
+    it('respects custom lateHourThreshold parameter', () => {
+      const evening = new Date('2026-10-15T20:05:00');
+      // Threshold 20 (8:00 PM) triggers late evening advance
+      const result = getSmartStartDate(evening, 20);
+      expect(result.isLateEvening).toBe(true);
+      expect(result.startDate).toBe('2026-10-16');
     });
   });
 });

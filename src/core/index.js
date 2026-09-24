@@ -10,6 +10,7 @@ export {
   formatLocalDateStr,
   getLocalDateStr,
   calculateDaysBetween,
+  getSmartStartDate,
   getStreamSubjects,
   getCanonicalTasks,
   allocateActiveRecall,
