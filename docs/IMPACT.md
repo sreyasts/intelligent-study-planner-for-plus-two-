@@ -32,8 +32,8 @@
 | :--- | :--- | :--- | :--- |
 | **Production Domain** | `https://mission-plustwo.web.app/` | Firebase Hosting Console | Primary canonical production endpoint. |
 | **PWA Capability** | Full Offline Support | `sw.js` + Web App Manifest | Installable on Android, iOS, Windows, macOS, and Linux without app stores. |
-| **Syllabus Chapters** | 100% Kerala DHSE Rationalized + CBSE Class 12 | `src/data/syllabus-plus-two.js`, `src/adapters/` | Physics (14), Chemistry (10), Maths (13), Biology (16), Computer Science (11), Commerce, Humanities & CBSE. |
-| **Stream Coverage** | Bio, CS, Commerce, Humanities, CBSE | Application Engine | Includes +1 Improvement exam integration for all major subjects. |
+| **Syllabus Chapters** | 100% Kerala DHSE Rationalized | `src/data/syllabus-plus-two.js` | Physics (14), Chemistry (10), Maths (13), Biology (16), Computer Science (11), Commerce & Humanities. |
+| **Stream Coverage** | Bio, CS, Commerce, Humanities | Application Engine | Includes +1 Improvement exam integration for all major subjects. |
 | **Automated Tests** | 53 Passing Unit Tests | Vitest (`tests/*.test.js`) | Continuous integration test suite across 5 test suites. |
 | **Invariant Verifications**| 551 / 551 Passing | `tests/engine_test.cjs` | Zero schedule collisions, zero duplicate chapters, zero deadline overruns. |
 
@@ -59,5 +59,5 @@
 - **2026-09-21**: Offline-first PWA caching and canonical domain unification deployed.
 - **2026-09-23**: Released `v6.1.0` introducing deterministic constraint-propagation scheduler, empirical benchmark suite (`docs/BENCHMARKS.md`), and Vitest test suite.
 - **2026-09-24**: Released `v6.2.0` introducing sharing engine (Web Share API, WhatsApp/Telegram fallback), CSV export, `@media print` PDF stylesheet, high-intent landing pages, and Contributor Covenant 2.1 infrastructure.
-- **2026-09-24**: Released `v6.3.0` introducing Curriculum Adapter architecture (`src/adapters/`), CBSE Class 12 adapter, Exam Countdown (`/exam-countdown`) and Backlog Recovery (`/backlog-recovery-planner`) tools, offline vector QR generation (`src/utils/qr.js`), and closing Issue #3.
+- **2026-09-24**: Released `v6.3.0` introducing Curriculum Adapter architecture (`src/adapters/`), Exam Countdown (`/exam-countdown`) and Backlog Recovery (`/backlog-recovery-planner`) tools, offline vector QR generation (`src/utils/qr.js`), and closing Issue #3.
 

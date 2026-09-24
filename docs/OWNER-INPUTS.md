@@ -34,3 +34,4 @@ This document records decisions, authorizations, and persistent owner inputs so 
 
 - **2026-09-23**: Integrity Invariant confirmed — zero fake traffic, zero fake stars, zero fake testimonials. All benchmarks and reports strictly grounded in real metrics.
 - **2026-09-23**: Primary canonical host remains `https://mission-plustwo.web.app/`.
+- **2026-09-24**: Product Identity & Target Audience — Do NOT promote CBSE. Mission PlusTwo's primary product identity, branding, onboarding streams, and distribution channels remain strictly focused on Kerala DHSE Higher Secondary (+2 Science, Commerce, Humanities, and +1 Improvement). Any secondary curriculum adapters remain strictly architectural/developer-facing, never promoted in the student UI or user-facing product pages.

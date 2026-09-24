@@ -10,9 +10,9 @@
 
 ## 1. Project Mission & Ecosystem Value
 
-Mission PlusTwo is a free, open-source intelligent study planning and timetable generation system purpose-built for students taking the Kerala Directorate of Higher Secondary Education (DHSE) Class 12 (+2) board examinations, Plus One Improvement examinations, and national board curricula (CBSE Class 12).
+Mission PlusTwo is a free, open-source intelligent study planning and timetable generation system purpose-built for students taking the Kerala Directorate of Higher Secondary Education (DHSE) Class 12 (+2) board examinations and Plus One Improvement examinations.
 
-Unlike commercial ed-tech apps that charge subscription fees or push advertisements, Mission PlusTwo is 100% free, runs entirely client-side, respects student privacy (zero PII collection), functions offline as a Progressive Web App (PWA), and implements an open-source, deterministic constraint-propagation scheduler tailored to Kerala's rationalized state board syllabus and national NCERT frameworks.
+Unlike commercial ed-tech apps that charge subscription fees or push advertisements, Mission PlusTwo is 100% free, runs entirely client-side, respects student privacy (zero PII collection), functions offline as a Progressive Web App (PWA), and implements an open-source, deterministic constraint-propagation scheduler tailored to Kerala's rationalized state board syllabus (SCERT Scheme of Work).
 
 ---
 
@@ -35,7 +35,7 @@ Unlike commercial ed-tech apps that charge subscription fees or push advertiseme
 | :--- | :--- | :--- |
 | **Automated Unit Tests** | 53 / 53 PASSING across 5 test suites | Vitest (`tests/*.test.js`) |
 | **Legacy Invariant Verification** | 551 / 551 PASSING (Scenarios A-Y, 500 fuzz tests) | `tests/engine_test.cjs` |
-| **Curriculum Adapter Extensibility** | Verified adapters for Kerala DHSE & CBSE Class 12 | `src/adapters/index.js` |
+| **Curriculum Adapter Extensibility** | Modular adapter framework for external boards | `src/adapters/index.js` |
 | **Chapter Coverage Rate** | 100.0% across all syllabi | `docs/BENCHMARKS.md` |
 | **Duplicate Schedule Rate** | 0.0% | `docs/BENCHMARKS.md` |
 | **Chronological Inversions** | 0 violations (Strict topological prerequisite sort) | `docs/BENCHMARKS.md` |
