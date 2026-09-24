@@ -17,13 +17,13 @@
 | **Stars** | 5 | GitHub Repo API (`stargazers_count`) |
 | **Forks** | 1 | GitHub Repo API (`forks_count`) |
 | **Watchers / Subscribers** | 5 / 1 | GitHub Repo API (`watchers_count`, `subscribers_count`) |
-| **Open Issues** | 0 | GitHub Issues API (`gh issue list --state all`) |
-| **Closed Issues** | 0 | GitHub Issues API |
+| **Open Issues** | 2 | GitHub Issues API (`gh issue list`) — Issues #1 & #2 (`good first issue`) |
+| **Closed Issues** | 1 | GitHub Issues API — Issue #3 (practical lab exam guidance, closed in v6.3.0) |
 | **Open Pull Requests** | 0 | GitHub PR API (`gh pr list --state all`) |
 | **Closed Pull Requests** | 0 | GitHub PR API |
-| **Releases** | 1 | Tag `v6.1.0` ("Deterministic Planning Engine & Empirical Benchmarks", 2026-09-23) |
-| **Total Commits** | 63 | Commit log (`main` branch) |
-| **Contributors** | 1 | `sreyasts` (63 commits) |
+| **Releases** | 3 | `v6.1.0`, `v6.2.0`, `v6.3.0` (Semantic versioning) |
+| **Total Commits** | 71 | Commit log (`main` branch) |
+| **Contributors** | 1 | `sreyasts` (71 commits) |
 | **Views (14-day rolling)** | 162 total / 21 unique | GitHub Traffic API (`/traffic/views`) |
 | **Clones (14-day rolling)** | 465 total / 163 unique* | GitHub Traffic API (`/traffic/clones`) |
 | **Top Referrer** | `github.com` (22 views, 9 unique) | GitHub Traffic API (`/traffic/popular/referrers`) |
@@ -46,8 +46,8 @@
 | **Storage Architecture** | IndexedDB (`plusTwoMissionState_v2`) + LocalStorage fallback | Multi-day state, subject selections, completed tasks |
 | **Cloud Synchronization** | Optional Firebase Auth (Google Sign-In) | Firestore subcollections for cross-device routine sync |
 | **Syllabus Coverage** | Kerala DHSE Class 12 & Plus One Improvement | Physics, Chemistry, Maths, Biology (Botany & Zoology), Computer Science |
-| **Automated Unit Tests** | 35 / 35 PASSING | Vitest suite (`tests/engine.test.js`) |
-| **Legacy Invariant Checks** | 402 / 402 PASSING | `tests/engine_test.cjs` |
+| **Automated Unit Tests** | 53 / 53 PASSING across 5 suites | Vitest suite (`tests/*.test.js`) |
+| **Legacy Invariant Checks** | 551 / 551 PASSING | `tests/engine_test.cjs` |
 | **Empirical Benchmarks** | Measured in `docs/BENCHMARKS.md` | 100% coverage, 0% duplicates, 0 order violations |
 | **Toolchain** | Vite 8 + Tailwind CSS 4 | Zero runtime CDN dependencies |
 

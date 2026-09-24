@@ -17,10 +17,10 @@
 | **Total Git Clones (14d)**| 465 | 2026-09-23 | GitHub Traffic API (`/traffic/clones`) | Aggregate repository clone operations over the past 14 days. |
 | **Unique Visitors (14d)** | 21 | 2026-09-23 | GitHub Traffic API (`/traffic/views`) | Distinct human viewers of the GitHub repository over the past 14 days. |
 | **Repository Views (14d)**| 162 | 2026-09-23 | GitHub Traffic API (`/traffic/views`) | Aggregate page views on the GitHub repository over the past 14 days. |
-| **Official Releases** | 2 | 2026-09-24 | GitHub Releases (`v6.1.0`, `v6.2.0`) | Semantically versioned production releases published on GitHub. |
-| **Total Git Commits** | 65+ | 2026-09-24 | Git log (`main` branch) | Verified commit history on default branch. |
-| **External Contributors** | 0 | 2026-09-23 | GitHub API (`/contributors`) | Non-maintainer contributors merged to `main`. |
-| **Issues Resolved** | 0 | 2026-09-23 | GitHub Issues API | Triage count of community-reported bugs and syllabus corrections. |
+| **Official Releases** | 3 | 2026-09-24 | GitHub Releases (`v6.1.0`, `v6.2.0`, `v6.3.0`) | Semantically versioned production releases published on GitHub. |
+| **Total Git Commits** | 71+ | 2026-09-24 | Git log (`main` branch) | Verified commit history on default branch. |
+| **External Contributors** | 0 | 2026-09-24 | GitHub API (`/contributors`) | Non-maintainer contributors merged to `main`. |
+| **Issues Resolved** | 1 | 2026-09-24 | GitHub Issues API | Triage count of community-reported bugs, docs, and syllabus items (Issue #3). |
 
 *\*Note*: As defined by GitHub, "unique cloners" tracks distinct client IP addresses over a rolling 14-day window. While the raw API reports 163, a significant fraction is attributable to ephemeral GitHub Actions CI/CD runner IPs during frequent commit pushes and automated security scanners. Real organic human viewer interest is conservatively indicated by the **21 unique visitors** and **162 pageviews**.
 
@@ -32,10 +32,10 @@
 | :--- | :--- | :--- | :--- |
 | **Production Domain** | `https://mission-plustwo.web.app/` | Firebase Hosting Console | Primary canonical production endpoint. |
 | **PWA Capability** | Full Offline Support | `sw.js` + Web App Manifest | Installable on Android, iOS, Windows, macOS, and Linux without app stores. |
-| **Syllabus Chapters** | 100% Kerala DHSE Rationalized | `src/data/syllabus.js` | Physics (14), Chemistry (10), Maths (13), Biology (16), Computer Science (11), Commerce & Humanities. |
-| **Stream Coverage** | Bio, CS, Commerce, Humanities | Application Engine | Includes +1 Improvement exam integration for all major subjects. |
-| **Automated Tests** | 35 Passing Unit Tests | Vitest (`tests/engine.test.js`) | Continuous integration test suite ensuring schedule legality. |
-| **Invariant Verifications**| 402 / 402 Passing | `tests/engine_test.cjs` | Zero schedule collisions, zero duplicate chapters, zero deadline overruns. |
+| **Syllabus Chapters** | 100% Kerala DHSE Rationalized + CBSE Class 12 | `src/data/syllabus-plus-two.js`, `src/adapters/` | Physics (14), Chemistry (10), Maths (13), Biology (16), Computer Science (11), Commerce, Humanities & CBSE. |
+| **Stream Coverage** | Bio, CS, Commerce, Humanities, CBSE | Application Engine | Includes +1 Improvement exam integration for all major subjects. |
+| **Automated Tests** | 53 Passing Unit Tests | Vitest (`tests/*.test.js`) | Continuous integration test suite across 5 test suites. |
+| **Invariant Verifications**| 551 / 551 Passing | `tests/engine_test.cjs` | Zero schedule collisions, zero duplicate chapters, zero deadline overruns. |
 
 ---
 
@@ -58,4 +58,6 @@
 - **2026-09-19**: Initial public release of Mission PlusTwo codebase.
 - **2026-09-21**: Offline-first PWA caching and canonical domain unification deployed.
 - **2026-09-23**: Released `v6.1.0` introducing deterministic constraint-propagation scheduler, empirical benchmark suite (`docs/BENCHMARKS.md`), and Vitest test suite.
-- **2026-09-24**: Released `v6.2.0` introducing search acquisition landing pages (`/plus-two-timetable`, `/study-hours-calculator`), product-led CSV export, printable timetable stylesheet, and comprehensive contributor system.
+- **2026-09-24**: Released `v6.2.0` introducing sharing engine (Web Share API, WhatsApp/Telegram fallback), CSV export, `@media print` PDF stylesheet, high-intent landing pages, and Contributor Covenant 2.1 infrastructure.
+- **2026-09-24**: Released `v6.3.0` introducing Curriculum Adapter architecture (`src/adapters/`), CBSE Class 12 adapter, Exam Countdown (`/exam-countdown`) and Backlog Recovery (`/backlog-recovery-planner`) tools, offline vector QR generation (`src/utils/qr.js`), and closing Issue #3.
+
