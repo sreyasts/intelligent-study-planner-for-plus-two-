@@ -724,4 +724,47 @@
         html.dark ::-webkit-scrollbar-thumb:hover {
             background: #334464;
         }
-    </style>
+
+/* ==========================================================================
+   Print Stylesheet (@media print)
+   Optimizes study schedules for high-contrast paper printing & PDF export
+   ========================================================================== */
+@media print {
+    header,
+    nav,
+    footer,
+    #auth-container,
+    #pwa-install-btn,
+    .no-print,
+    button {
+        display: none !important;
+    }
+
+    body, html, main {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        font-size: 11pt !important;
+        line-height: 1.3 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .max-w-5xl, .max-w-4xl, .max-w-3xl, .container {
+        max-width: 100% !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .bg-white, .bg-slate-50 {
+        background: transparent !important;
+        box-shadow: none !important;
+        border-color: #cbd5e1 !important;
+    }
+
+    .print-avoid-break,
+    .task-item-container {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+}

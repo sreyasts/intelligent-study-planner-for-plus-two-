@@ -1014,9 +1014,18 @@ function showToastMessage(text, icon = 'checkCircle') {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
+        function getShareSummaryText() {
+            const stats = (typeof getOverallStats === 'function' && appState?.plan?.length > 0) ? getOverallStats() : null;
+            const streak = typeof getActiveStreak === 'function' ? getActiveStreak() : 0;
+            if (stats && stats.totalCount > 0) {
+                return `📚 Mission PlusTwo — Kerala DHSE Study Planner\n🎯 My Progress: ${stats.percentage}% completed (${stats.completedCount}/${stats.totalCount} tasks)\n🔥 Study Streak: ${streak} days\nPlan your Plus Two & +1 Improvement timetable with built-in revision buffer:`;
+            }
+            return 'Mission PlusTwo: Free intelligent daily study planner for Kerala DHSE Plus Two (+2) & Plus One Improvement students with built-in revision buffer. Set your target date and generate your personalized daily study plan:';
+        }
+
         function shareApp() {
             const shareTitle = 'Mission PlusTwo — Kerala DHSE Study Planner';
-            const shareText = 'Mission PlusTwo: Free intelligent daily study planner for Kerala DHSE Plus Two (+2) & Plus One Improvement students with built-in revision buffer. Plan your syllabus here:';
+            const shareText = getShareSummaryText();
             const shareUrl = 'https://mission-plustwo.web.app/';
 
             if (navigator.share) {
@@ -1025,6 +1034,7 @@ function showToastMessage(text, icon = 'checkCircle') {
                     text: shareText,
                     url: shareUrl
                 }).then(() => {
+                    trackEvent('plan_shared', { channel: 'web_share' });
                     showAppToast("Thanks for sharing!", "fa-circle-check text-emerald-400");
                 }).catch(() => {});
             } else {
@@ -1033,17 +1043,87 @@ function showToastMessage(text, icon = 'checkCircle') {
         }
 
         function shareOnWhatsApp() {
-            const shareText = 'Mission PlusTwo: Free intelligent daily study planner for Kerala DHSE Plus Two (+2) & Plus One Improvement students with built-in revision buffer. Set your target date and generate your personalized daily study plan:';
+            const shareText = getShareSummaryText();
             const shareUrl = 'https://mission-plustwo.web.app/';
+            trackEvent('plan_shared', { channel: 'whatsapp' });
             const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + '\n' + shareUrl)}`;
             window.open(whatsappUrl, '_blank');
         }
 
         function shareOnTelegram() {
-            const shareText = '🎓 Mission PlusTwo — Free intelligent daily study planner for Kerala DHSE Plus Two (+2) & Plus One Improvement students. Generate your personalized study timetable with built-in revision buffer:';
+            const shareText = '🎓 ' + getShareSummaryText();
             const shareUrl = 'https://mission-plustwo.web.app/';
+            trackEvent('plan_shared', { channel: 'telegram' });
             const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
             window.open(telegramUrl, '_blank');
+        }
+
+        function copyShareLink() {
+            const shareUrl = 'https://mission-plustwo.web.app/';
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(shareUrl).then(() => {
+                    trackEvent('plan_shared', { channel: 'copy_link' });
+                    showAppToast("Link copied to clipboard!", "fa-circle-check text-emerald-400");
+                }).catch(() => {
+                    shareApp();
+                });
+            } else {
+                shareApp();
+            }
+        }
+
+        function printTimetable() {
+            trackEvent('plan_exported', { format: 'print' });
+            window.print();
+        }
+
+        function exportTimetableCsv() {
+            if (!appState?.plan || appState.plan.length === 0) {
+                showAppToast("No active plan to export", "fa-circle-exclamation text-amber-500");
+                return;
+            }
+
+            trackEvent('plan_exported', { format: 'csv' });
+            const rows = [["Day", "Date", "Subject", "Grade", "Chapter", "Minutes", "Status"]];
+
+            appState.plan.forEach(day => {
+                if (day.tasks && day.tasks.length > 0) {
+                    day.tasks.forEach(task => {
+                        rows.push([
+                            `Day ${day.dayNumber}`,
+                            day.date,
+                            `"${(task.subject || '').replace(/"/g, '""')}"`,
+                            task.grade || '+2',
+                            `"${(task.chapterTitle || task.title || '').replace(/"/g, '""')}"`,
+                            task.estimatedMinutes || 60,
+                            task.completed ? 'Completed' : 'Pending'
+                        ]);
+                    });
+                } else {
+                    rows.push([
+                        `Day ${day.dayNumber}`,
+                        day.date,
+                        day.isRestDay ? 'Rest Day' : 'Buffer Day',
+                        '-',
+                        '-',
+                        0,
+                        'Completed'
+                    ]);
+                }
+            });
+
+            const csvContent = rows.map(r => r.join(',')).join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', `mission-plustwo-schedule-${appState.stream || 'plan'}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            showAppToast("CSV timetable downloaded!", "fa-circle-check text-emerald-400");
         }
 
         // Safe aliases in case any caller references them
@@ -2864,8 +2944,16 @@ function showToastMessage(text, icon = 'checkCircle') {
                             <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900">${isML ? ML_I18N.plan.title : 'Complete Study Schedule'}</h2>
                             <p class="text-xs text-slate-500">${isML ? ML_I18N.plan.subtitle : 'Every single day planned out until your deadline.'}</p>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <button onclick="window.print()" class="text-xs font-bold bg-white border border-slate-200 hover:bg-slate-50 px-3 sm:px-3.5 py-2 rounded-xl text-slate-700 transition flex items-center gap-1.5 shadow-sm active:scale-95" title="Print schedule or save as PDF">
+                        <div class="flex items-center flex-wrap gap-2">
+                            <button onclick="exportTimetableCsv()" class="text-xs font-bold bg-white border border-slate-200 hover:bg-slate-50 px-3 py-2 rounded-xl text-slate-700 transition flex items-center gap-1.5 shadow-sm active:scale-95" title="Export as CSV spreadsheet">
+                                <i class="fa-solid fa-file-csv text-emerald-600"></i>
+                                <span class="hidden sm:inline">Export CSV</span>
+                            </button>
+                            <button onclick="shareApp()" class="text-xs font-bold bg-white border border-slate-200 hover:bg-slate-50 px-3 py-2 rounded-xl text-slate-700 transition flex items-center gap-1.5 shadow-sm active:scale-95" title="Share plan with friends">
+                                <i class="fa-solid fa-arrow-up-from-bracket text-indigo-600"></i>
+                                <span class="hidden sm:inline">Share</span>
+                            </button>
+                            <button onclick="printTimetable()" class="text-xs font-bold bg-white border border-slate-200 hover:bg-slate-50 px-3 sm:px-3.5 py-2 rounded-xl text-slate-700 transition flex items-center gap-1.5 shadow-sm active:scale-95" title="Print schedule or save as PDF">
                                 <i class="fa-solid fa-print text-blue-600"></i>
                                 <span>${isML ? ML_I18N.plan.printPdf : 'Print / Save PDF'}</span>
                             </button>
@@ -3678,6 +3766,9 @@ if (typeof window !== 'undefined') {
         shareApp,
         shareOnWhatsApp,
         shareOnTelegram,
+        copyShareLink,
+        printTimetable,
+        exportTimetableCsv,
         openShareModal,
         closeShareModal,
         executeShare,

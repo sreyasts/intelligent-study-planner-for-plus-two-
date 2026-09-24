@@ -16,13 +16,41 @@ const STORAGE_KEYS = {
   FIRST_TASK_RECORDED: 'mpt_first_task_recorded',
 };
 
+// Canonical privacy-safe analytics events
+export const EVENTS = {
+  LANDING_VIEW: 'landing_view',
+  ONBOARDING_STARTED: 'onboarding_started',
+  ONBOARDING_COMPLETED: 'onboarding_completed',
+  PLAN_GENERATED: 'plan_generated',
+  PLAN_VIEWED: 'plan_viewed',
+  TASK_COMPLETED: 'task_completed',
+  PLAN_SHARED: 'plan_shared',
+  PLAN_EXPORTED: 'plan_exported',
+  PWA_INSTALLED: 'pwa_installed',
+  RETURN_VISIT: 'return_visit',
+  // Backward-compatible aliases
+  OPENED: 'opened',
+  SETUP_STARTED: 'setup_started',
+  PLAN_CREATED: 'plan_created',
+  FIRST_TASK_CHECKED: 'first_task_checked',
+  RETURNED_DAY3: 'returned_day3',
+};
+
 // Funnel stages in logical sequence
 export const FUNNEL_STAGES = [
   'opened',
+  'landing_view',
   'setup_started',
+  'onboarding_started',
   'plan_created',
+  'plan_generated',
   'first_task_checked',
+  'task_completed',
+  'plan_shared',
+  'plan_exported',
+  'pwa_installed',
   'returned_day3',
+  'return_visit',
 ];
 
 let firebaseAnalyticsInstance = null;
