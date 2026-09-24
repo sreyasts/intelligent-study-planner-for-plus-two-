@@ -138,3 +138,59 @@ For parts with `part > 1`, `prerequisiteId` links strictly to `P{grade}_{SUB}_{c
   - Fast memory state during runtime.
   - Synchronous LocalStorage serialization for immediate recovery.
   - Asynchronous Cloud Firestore sync under `/users/{userId}` for authenticated cross-device sync.
+
+---
+
+## 6. Ecosystem Expansion & Curriculum Adapter Pattern
+
+The core planning engine in `src/engine/planner.js` is architected with a strict separation between the **Constraint-Propagation Scheduling Engine** and the **Curriculum Data Layer**:
+
+```
++-----------------------------------------------------------+
+|              Core Scheduling Engine (planner.js)          |
+|  - Dependency Topological Sort   - Workload Variance Clamping
+|  - Pacing Capacity Balancer      - Revision Buffer Calculator
++-----------------------------+-----------------------------+
+                              |
+              +---------------+---------------+
+              |                               |
+              v                               v
++-----------------------------+ +-----------------------------+
+|    Kerala DHSE Adapter      | |   Generic Curriculum Adapter |
+|  - SCERT Science Syllabus   | |  - CBSE Class 12            |
+|  - +1 Improvement Weaving   | |  - Karnataka PUC / TN HSE   |
++-----------------------------+ +-----------------------------+
+```
+
+### Creating a Custom Curriculum Adapter
+Any state board or curriculum can integrate by supplying an array of task objects matching the standard schema to `buildIntelligentPlan`:
+
+```javascript
+import { buildIntelligentPlan } from './src/engine/planner.js';
+
+const customCurriculumTasks = [
+  {
+    id: "CBSE_12_MTH_01_P1",
+    grade: "12",
+    subject: "Mathematics",
+    chapNumber: 1,
+    chapterName: "Relations and Functions",
+    part: 1,
+    totalParts: 2,
+    topicTitle: "Types of Relations and Equivalence",
+    estimatedMinutes: 60,
+    prerequisiteId: null
+  },
+  // ...additional curriculum units
+];
+
+const customSchedule = buildIntelligentPlan({
+  tasks: customCurriculumTasks,
+  startDateStr: "2026-10-01",
+  endDateStr: "2026-12-15",
+  revisionDaysCount: 7
+});
+```
+
+This permits other educational communities to leverage Mission PlusTwo's verified, bug-free scheduling engine without modifying core codebase algorithms.
+

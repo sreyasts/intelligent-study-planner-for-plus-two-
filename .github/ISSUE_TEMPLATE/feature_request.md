@@ -1,26 +1,28 @@
 ---
 name: Feature Request
-about: Suggest an idea or enhancement for Mission PlusTwo
-title: '[FEAT] '
-labels: enhancement
+about: Suggest a new feature or improvement for Mission PlusTwo
+title: '[FEAT]: '
+labels: ['enhancement']
 assignees: ''
 ---
 
-**Is your feature request related to a problem? Please describe.**
-A clear and concise description of what the problem is. Ex: I'm always frustrated when [...]
+### Is your feature request related to a problem?
+A clear and concise description of what the problem or learning friction is. (e.g. "I find it difficult to track practical exam dates alongside theory preparation...")
 
-**Describe the solution you'd like**
+### Describe the solution you'd like
 A clear and concise description of what you want to happen. How would this help students or teachers?
 
-**Describe alternatives you've considered**
-A clear and concise description of any alternative solutions or features you've considered.
-
-**Target Stream / Audience**
+### Relevant Stream / Audience
 - [ ] Computer Science Stream
 - [ ] Biology Science Stream
+- [ ] Commerce Stream
+- [ ] Humanities Stream
 - [ ] Plus One Improvement Students
 - [ ] Teachers / School Educators
-- [ ] General
+- [ ] General / Cross-Stream
 
-**Additional context**
-Add any other context, screenshots, or mockups about the feature request here.
+### Any alternatives you've considered?
+A description of any alternative solutions or features you've considered.
+
+### Additional context / Mockups
+Add any other context, sketches, or screenshots about the feature request here.

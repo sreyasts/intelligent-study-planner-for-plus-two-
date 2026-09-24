@@ -59,7 +59,7 @@ Dear Respected Teachers & Coordinators,
 
 As Kerala Higher Secondary students prepare for their First Terminal, Half-Yearly (Christmas), and March Board Examinations, many struggle to balance daily study hours across Physics, Chemistry, Mathematics, and Computer Science / Biology.
 
-To support students across government and aided schools, we have developed **Mission PlusTwo** (available free at [https://sreyasts.github.io/intelligent-study-planner-for-plus-two-/](https://sreyasts.github.io/intelligent-study-planner-for-plus-two-/)):
+To support students across government and aided schools, we have developed **Mission PlusTwo** (available free at [https://mission-plustwo.web.app/](https://mission-plustwo.web.app/)):
 
 1. **Strictly Aligned with Kerala SCERT / DHSE Scheme of Work**:
    - Only current rationalized chapters (e.g. 10 Chemistry chapters, 14 Physics chapters).
@@ -85,7 +85,7 @@ Warm regards,
 📚 *Kerala DHSE Plus Two (+2) & +1 Improvement Free Study Planner!*
 
 Struggling to plan daily chapters before exams? Check out **Mission PlusTwo**:
-👉 https://sreyasts.github.io/intelligent-study-planner-for-plus-two-/
+👉 https://mission-plustwo.web.app/
 
 ✨ *Features:*
 • 1-Tap instant timetable tailored to your stream (CS / Bio-Maths)
@@ -106,7 +106,7 @@ Share with your Plus Two classmates! 🔥
 **Mission PlusTwo Planner** automatically weaves your +1 papers before each subject's exam date!
 
 Try it here (Free & No login required):
-👉 https://sreyasts.github.io/intelligent-study-planner-for-plus-two-/
+👉 https://mission-plustwo.web.app/
 ```
 
 ---
@@ -117,4 +117,4 @@ Try it here (Free & No login required):
 **Message**:
 > *"Namaskaram! I am Sreyas, a student and developer from Kerala. I have created an open-source, completely free daily study planner for Kerala Higher Secondary (+2) students: Mission PlusTwo.  
 > It helps students break down the rationalized SCERT syllabus day-by-day and links directly to official question pools. It is entirely ad-free and open-source.  
-> Would you be open to featuring or reviewing it as a helpful resource for Kerala students? Here is the live link: https://sreyasts.github.io/intelligent-study-planner-for-plus-two-/*"
+> Would you be open to featuring or reviewing it as a helpful resource for Kerala students? Here is the live link: https://mission-plustwo.web.app/*"
