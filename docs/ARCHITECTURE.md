@@ -162,8 +162,34 @@ The core planning engine in `src/engine/planner.js` is architected with a strict
 +-----------------------------+ +-----------------------------+
 ```
 
-### Creating a Custom Curriculum Adapter
-Any state board or curriculum can integrate by supplying an array of task objects matching the standard schema to `buildIntelligentPlan`:
+### Implemented Curriculum Adapters (`src/adapters/`)
+Mission PlusTwo includes first-class curriculum adapter implementations located in `src/adapters/`:
+
+1. **`CurriculumAdapter` (`src/adapters/CurriculumAdapter.js`)**: Abstract base class providing task validation (`CurriculumAdapter.validateTask`), subject aggregation, chapter-part hierarchy grouping, and planning payload conversion.
+2. **`KeralaDHSEAdapter` (`src/adapters/KeralaDHSEAdapter.js`)**: Encapsulates the canonical Kerala SCERT syllabus for Science, Commerce, and Humanities streams, including dual-stream +1 Improvement interweaving.
+3. **`CBSEClass12Adapter` (`src/adapters/CBSEClass12Adapter.js`)**: Concrete adapter providing the rationalized NCERT curriculum for CBSE Class 12 Senior School Certificate Examination (Physics, Chemistry, Mathematics, Biology, English Core, Computer Science).
+
+#### Using an Adapter with the Engine
+```javascript
+import { CBSEClass12Adapter } from './src/adapters/index.js';
+import { buildIntelligentPlan } from './src/engine/planner.js';
+
+// Instantiate the CBSE Class 12 Science adapter
+const adapter = new CBSEClass12Adapter({ stream: 'pcm_cs' });
+
+// Generate an intelligent, dependency-preserving day-by-day study schedule
+const schedule = buildIntelligentPlan({
+  adapter,
+  startDateStr: '2026-10-01',
+  deadlineDateStr: '2027-02-15',
+  personalization: {
+    weeklyRhythm: 'weekend_booster'
+  }
+});
+```
+
+#### Raw Task Ingestion
+Direct task objects matching the standard schema can also be scheduled directly without an adapter class:
 
 ```javascript
 import { buildIntelligentPlan } from './src/engine/planner.js';
@@ -174,6 +200,7 @@ const customCurriculumTasks = [
     grade: "12",
     subject: "Mathematics",
     chapNumber: 1,
+    chapId: "CBSE_12_MTH_01",
     chapterName: "Relations and Functions",
     part: 1,
     totalParts: 2,
@@ -181,16 +208,27 @@ const customCurriculumTasks = [
     estimatedMinutes: 60,
     prerequisiteId: null
   },
-  // ...additional curriculum units
+  {
+    id: "CBSE_12_MTH_01_P2",
+    grade: "12",
+    subject: "Mathematics",
+    chapNumber: 1,
+    chapId: "CBSE_12_MTH_01",
+    chapterName: "Relations and Functions",
+    part: 2,
+    totalParts: 2,
+    topicTitle: "One-One, Onto and Bijective Functions",
+    estimatedMinutes: 60,
+    prerequisiteId: "CBSE_12_MTH_01_P1"
+  }
 ];
 
 const customSchedule = buildIntelligentPlan({
   tasks: customCurriculumTasks,
   startDateStr: "2026-10-01",
-  endDateStr: "2026-12-15",
-  revisionDaysCount: 7
+  deadlineDateStr: "2026-12-15"
 });
 ```
 
-This permits other educational communities to leverage Mission PlusTwo's verified, bug-free scheduling engine without modifying core codebase algorithms.
+This permits any educational board or open-source community to leverage Mission PlusTwo's verified, bug-free scheduling engine without modifying core codebase algorithms.
 

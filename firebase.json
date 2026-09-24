@@ -55,6 +55,22 @@
       {
         "source": "/plus-one-improvement-guide",
         "destination": "/pages/plus-one-improvement-guide.html"
+      },
+      {
+        "source": "/exam-countdown",
+        "destination": "/pages/exam-countdown.html"
+      },
+      {
+        "source": "/pages/exam-countdown",
+        "destination": "/pages/exam-countdown.html"
+      },
+      {
+        "source": "/backlog-recovery-planner",
+        "destination": "/pages/backlog-recovery-planner.html"
+      },
+      {
+        "source": "/pages/backlog-recovery-planner",
+        "destination": "/pages/backlog-recovery-planner.html"
       }
     ],
     "headers": [

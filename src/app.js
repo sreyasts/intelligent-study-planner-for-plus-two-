@@ -54,6 +54,9 @@ import {
 import {
   loadFirebaseCompat,
 } from './auth/firebase.js';
+import {
+  generateQrSvg,
+} from './utils/qr.js';
 
 
 function getTaskResourceBadge(task) {
@@ -3015,10 +3018,16 @@ function showToastMessage(text, icon = 'checkCircle') {
                         ${planDaysHTML}
                     </div>
 
-                    <!-- Print-Only Viral Attribution Watermark Footer -->
-                    <div class="print-only mt-8 pt-4 border-t border-slate-300 text-center text-xs text-slate-600">
-                        <p class="font-bold">Generated for free by Mission PlusTwo (https://sreyasts.github.io/intelligent-study-planner-for-plus-two-/)</p>
-                        <p class="text-xs text-slate-500 mt-0.5">Kerala DHSE Class 12 (+2) & +1 Improvement Free Daily Study Planner • Open Source on GitHub</p>
+                    <!-- Print-Only Viral Attribution Watermark Footer with Vector QR -->
+                    <div class="print-only mt-8 pt-4 border-t-2 border-slate-900 text-xs text-slate-800">
+                        <div class="flex items-center justify-between gap-6">
+                            <div>
+                                <p class="font-black text-slate-900 text-sm">Mission PlusTwo — Free Daily Study Planner</p>
+                                <p class="text-xs text-slate-600 mt-0.5">Kerala DHSE Class 12 (+2) & +1 Improvement • Verified SCERT Scheme of Work</p>
+                                <p class="text-[11px] text-slate-500 mt-1">Scan the QR code to load or rebalance this timetable on any phone: <strong>https://mission-plustwo.web.app/</strong></p>
+                            </div>
+                            <div id="printQrCodeContainer" class="shrink-0 w-20 h-20 flex items-center justify-center border border-slate-300 rounded-lg p-1 bg-white"></div>
+                        </div>
                     </div>
 
                     <!-- Subtle Bottom Rebalance -->
@@ -3029,6 +3038,18 @@ function showToastMessage(text, icon = 'checkCircle') {
                         <button onclick="resetApp()" class="text-slate-400 hover:text-red-600 underline">${isML ? ML_I18N.plan.resetPlan : 'Reset Plan'}</button>
                     </div>
                 `;
+
+                const targetStream = appState?.stream || 'cs';
+                const qrTarget = `https://mission-plustwo.web.app/?stream=${encodeURIComponent(targetStream)}`;
+                generateQrSvg(qrTarget, { width: 72, margin: 0 })
+                    .then((svg) => {
+                        const el = document.getElementById('printQrCodeContainer');
+                        if (el && svg) {
+                            el.innerHTML = svg;
+                        }
+                    })
+                    .catch(() => {});
+
                 return;
             }
 

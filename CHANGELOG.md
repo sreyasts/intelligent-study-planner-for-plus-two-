@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [6.3.0] - 2026-09-24
+
+### Added
+- **Curriculum Adapter Framework (`src/adapters/`)**:
+  - `CurriculumAdapter`: Base class providing task schema validation (`CurriculumAdapter.validateTask`), subject grouping, chapter-part hierarchy, and planning options conversion.
+  - `KeralaDHSEAdapter`: Wraps canonical SCERT Plus Two and Plus One syllabi for Science, Commerce, and Humanities streams.
+  - `CBSEClass12Adapter`: Rationalized NCERT curriculum for CBSE Class 12 Senior School Certificate Examination (Physics, Chemistry, Mathematics, Biology, Computer Science, English Core).
+  - Multi-board planning support in `buildIntelligentPlan` via `opts.adapter` or direct custom `opts.tasks` array.
+- **Interactive Standalone Growth Tools**:
+  - `/pages/exam-countdown.html`: Live countdown timer to Kerala DHSE board, model, and practical exams with real-time daily study load and workload feasibility analysis.
+  - `/pages/backlog-recovery-planner.html`: Evidence-based 70/30 interleaved catch-up schedule generator for Class 12 students clearing pending chapters.
+  - Schema.org `WebApplication` and `FAQPage` structured data added to both new tools.
+  - Clean URL rewrites configured in `firebase.json` and updated in `sitemap.xml`.
+- **Product-Led Viral Growth & Offline Sharing**:
+  - Implemented offline vector QR code generator in `src/utils/qr.js` using client-side SVG rendering (zero external network requests).
+  - Integrated printable QR code watermark card in Full Plan view and `@media print` stylesheet for desk-wall study timetables and peer scanning.
+- **Test Suite Expansion**:
+  - Added `tests/curriculum_adapter.test.js` (10 tests) verifying multi-board adapters, schema adherence, and end-to-end CBSE study plan generation.
+  - Added `tests/qr.test.js` (2 tests) verifying client-side vector SVG generation and resilient edge-case handling.
+  - Expanded automated unit test suite to 53 passing Vitest tests (in addition to 551 passing legacy invariant checks).
+
+### Changed
+- Resolved GitHub Issue #3: Added practical lab exam revision guidance and Schema.org FAQPage entry to `/pages/plus-two-timetable.html`.
+- Updated `docs/ARCHITECTURE.md` Section 6 to document the concrete `src/adapters/` package and usage patterns.
+- Updated `docs/CODEX-OSS-EVIDENCE.md` with latest test counts, release tag, and architectural deliverables.
+
+---
+
 ## [6.2.0] - 2026-09-24
 
 ### Added

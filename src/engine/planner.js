@@ -129,7 +129,7 @@ export function validatePlan(planOrDays, originalTasks, options = {}) {
   const applicableTasks = Array.isArray(originalTasks)
     ? options.stream
       ? originalTasks.filter((t) => {
-          if (options.stream === 'imp_only') return true;
+          if (options.stream === 'imp_only' || options.stream === 'custom') return true;
           const allowed = getStreamSubjects(options.stream);
           return allowed.includes(t.subject);
         })
@@ -238,13 +238,15 @@ function _executeCorePlanAlgorithm(
         effectiveStream = 'humanities';
       } else if (['Botany', 'Zoology'].some((s) => taskSubjects.has(s))) {
         effectiveStream = 'bio';
-      } else {
+      } else if (Array.from(taskSubjects).every((s) => ['Physics', 'Chemistry', 'Mathematics', 'Computer Science'].includes(s))) {
         effectiveStream = 'cs';
+      } else {
+        effectiveStream = 'custom';
       }
     }
   }
 
-  const streamSubjects = effectiveStream === 'imp_only'
+  const streamSubjects = (effectiveStream === 'imp_only' || effectiveStream === 'custom')
     ? Array.from(new Set(dedupedTasks.map((t) => t.subject)))
     : getStreamSubjects(effectiveStream);
 
@@ -374,7 +376,7 @@ function _executeCorePlanAlgorithm(
   });
 
   const p1Tasks = sortedTasks.filter((t) => t.grade === '+1');
-  const p2Tasks = sortedTasks.filter((t) => t.grade === '+2');
+  const p2Tasks = sortedTasks.filter((t) => t.grade !== '+1');
 
   // Phase 1: Plus One Improvement Tasks
   if (improvementConfig && improvementConfig.length > 0) {
@@ -610,7 +612,7 @@ function _executeCorePlanAlgorithm(
     planDays.forEach((d) => {
       (d.tasks || []).forEach((t) => {
         if (
-          t.grade === '+2' &&
+          t.grade !== '+1' &&
           t.chapterName &&
           !completedChaptersBySubject[t.subject]?.includes(t.chapterName)
         ) {
@@ -620,6 +622,8 @@ function _executeCorePlanAlgorithm(
         }
       });
     });
+
+    const defaultGrade = isImpOnly ? '+1' : (applicableTasks[0]?.grade || '+2');
 
     for (let r = 0; r < revisionDaysCount; r++) {
       const revDayIndex = syllabusStudyDays + r;
@@ -631,7 +635,7 @@ function _executeCorePlanAlgorithm(
       if (isFinalMock) {
         planDays[revDayIndex].tasks.push({
           id: `REV_DAY_${r + 1}_MOCK`,
-          grade: isImpOnly ? '+1' : '+2',
+          grade: defaultGrade,
           subject: 'All Subjects',
           chapterName: `Final Examination Simulation (Day ${r + 1}/${revisionDaysCount})`,
           topicTitle:
@@ -644,7 +648,7 @@ function _executeCorePlanAlgorithm(
       } else if (isPenultimateMock) {
         planDays[revDayIndex].tasks.push({
           id: `REV_DAY_${r + 1}_PYQ`,
-          grade: isImpOnly ? '+1' : '+2',
+          grade: defaultGrade,
           subject: 'All Subjects',
           chapterName: `Previous Year Questions (PYQ) Sprint (Day ${r + 1}/${revisionDaysCount})`,
           topicTitle:
@@ -661,7 +665,7 @@ function _executeCorePlanAlgorithm(
         const chSummary =
           chaps.length > 0 ? `(${chaps.slice(0, 3).join(', ')}${chaps.length > 3 ? ' & more' : ''})` : '';
 
-        let topicTitle = '';
+        let topicTitle;
         if (activeSub === 'Physics')
           topicTitle = `Comprehensive Derivations, Formula Sheet & Circuit Diagrams ${chSummary}`;
         else if (activeSub === 'Chemistry')
@@ -688,10 +692,14 @@ function _executeCorePlanAlgorithm(
           topicTitle = `Constitutional Provisions, Cold War & Post-Cold War Global Developments ${chSummary}`;
         else if (activeSub === 'Sociology')
           topicTitle = `Social Institutions, Structural Change & Contemporary Social Movements ${chSummary}`;
+        else if (activeSub === 'English Core' || activeSub === 'English')
+          topicTitle = `Reading Comprehension, Writing Formats, Literature Themes & Character Analysis ${chSummary}`;
+        else
+          topicTitle = `Core Principles, Important Problem Sets & High-Yield Rapid Recall ${chSummary}`;
 
         planDays[revDayIndex].tasks.push({
           id: `REV_DAY_${r + 1}_${activeSub.replace(/\s+/g, '_')}`,
-          grade: isImpOnly ? '+1' : '+2',
+          grade: defaultGrade,
           subject: activeSub,
           chapterName: `Targeted Revision: ${activeSub} (Day ${r + 1}/${revisionDaysCount})`,
           topicTitle,
@@ -746,15 +754,18 @@ export function buildIntelligentPlan(
     const deadline = opts.deadlineDateStr || opts.deadlineDate;
     const start = opts.startDateStr || opts.startDate || TODAY_STR;
     const impOnly = Boolean(opts.improvementOnly || opts.stream === 'imp_only');
+    const isCustom = Boolean(opts.tasks || opts.adapter || opts.stream === 'custom');
     const str = opts.stream === 'imp_only'
       ? 'imp_only'
-      : (opts.stream || (opts.plusOneSubjects?.some((s) => s === 'Botany' || s === 'Zoology') ? 'bio' : 'cs'));
+      : (opts.stream || (isCustom ? 'custom' : (opts.plusOneSubjects?.some((s) => s === 'Botany' || s === 'Zoology') ? 'bio' : 'cs')));
     const term = opts.termScope || 3;
     const incP1 = Boolean(opts.includePlusOne || impOnly);
     const p1Subs = opts.plusOneSubjects || [];
     const impDates = opts.improvementDates || {};
     const impConfig = p1Subs.map((s) => ({ subject: s, examDate: impDates[s] || deadline }));
     const tasks =
+      opts.tasks ||
+      (opts.adapter && typeof opts.adapter.getTasks === 'function' ? opts.adapter.getTasks() : null) ||
       tasksToSchedule ||
       getCanonicalTasks({
         stream: str,
