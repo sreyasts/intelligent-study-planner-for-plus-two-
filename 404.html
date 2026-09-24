@@ -10,10 +10,12 @@
     <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
     <link rel="shortcut icon" href="/icon.png">
-    <link rel="stylesheet" href="/src/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        img { max-width: 100%; }
+        .logo-img { width: 36px !important; height: 36px !important; max-width: 36px !important; max-height: 36px !important; object-fit: contain; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col justify-between">
@@ -21,7 +23,7 @@
     <header class="bg-white border-b border-slate-200 py-3 px-4 sm:px-6">
         <div class="max-w-4xl mx-auto flex items-center justify-between">
             <a href="/" class="flex items-center gap-2.5">
-                <img src="/icon.png" alt="Mission PlusTwo Logo" class="w-9 h-9 rounded-xl shadow-xs object-contain">
+                <img src="/icon.png" alt="Mission PlusTwo Logo" width="36" height="36" class="logo-img w-9 h-9 rounded-xl shadow-xs object-contain">
                 <div>
                     <span class="text-base font-black text-slate-900 leading-none">Mission <span class="text-blue-600">PlusTwo</span></span>
                     <span class="block text-[11px] font-medium text-slate-400">Kerala DHSE Intelligent Study System</span>

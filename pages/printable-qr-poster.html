@@ -34,12 +34,15 @@
     <link rel="shortcut icon" href="/icon.png">
 
     <!-- Stylesheets & Fonts -->
-    <link rel="stylesheet" href="/src/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        img { max-width: 100%; }
+        .logo-icon { width: 60px !important; height: 60px !important; max-width: 60px !important; max-height: 60px !important; object-fit: contain; }
+        .nav-logo-icon { width: 32px !important; height: 32px !important; max-width: 32px !important; max-height: 32px !important; object-fit: contain; }
         @media print {
             .no-print { display: none !important; }
             body { background: white !important; color: black !important; padding: 0 !important; margin: 0 !important; }
@@ -65,7 +68,7 @@
         <div class="max-w-4xl mx-auto flex items-center justify-between flex-wrap gap-3">
             <div class="flex items-center gap-3">
                 <a href="/" class="flex items-center gap-2 text-slate-200 hover:text-white transition">
-                    <img src="/icon.png" alt="Mission PlusTwo Logo" class="w-8 h-8 rounded-lg object-contain">
+                    <img src="/icon.png" alt="Mission PlusTwo Logo" width="32" height="32" class="nav-logo-icon w-8 h-8 rounded-lg object-contain">
                     <span class="font-extrabold text-sm tracking-tight">Mission <span class="text-blue-400">PlusTwo</span></span>
                 </a>
                 <span class="text-slate-500 text-xs hidden sm:inline">|</span>
@@ -92,7 +95,7 @@
             <!-- Top Header & Branding -->
             <div class="text-center pt-2 pb-4 border-b-2 border-slate-200">
                 <div class="inline-flex items-center justify-center gap-3 mb-2">
-                    <img src="/icon.png" alt="Mission PlusTwo Logo" class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl shadow-lg shadow-blue-500/20 object-contain">
+                    <img src="/icon.png" alt="Mission PlusTwo Logo" width="60" height="60" class="logo-icon w-14 h-14 sm:w-16 sm:h-16 rounded-2xl shadow-lg shadow-blue-500/20 object-contain">
                     <div class="text-left">
                         <span class="text-xs font-black uppercase tracking-widest text-blue-600 block">KERALA DHSE STATE BOARD</span>
                         <h1 class="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight leading-none">
