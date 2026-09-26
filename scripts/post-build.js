@@ -77,4 +77,16 @@ if (fs.existsSync(distAssetsDir)) {
   });
 }
 
+// Normalize favicon paths in dist/index.html to stable canonical root URLs required by Google Search
+const distIndexHtml = path.join(distDir, 'index.html');
+if (fs.existsSync(distIndexHtml)) {
+  let html = fs.readFileSync(distIndexHtml, 'utf8');
+  html = html.replace(/<link rel="icon" href="[^"]*" sizes="48x48">/g, '<link rel="icon" href="/favicon.ico" sizes="48x48">');
+  html = html.replace(/<link rel="icon" type="image\/png" sizes="48x48" href="[^"]*">/g, '<link rel="icon" type="image/png" sizes="48x48" href="/icon-48.png">');
+  html = html.replace(/<link rel="icon" type="image\/png" sizes="96x96" href="[^"]*">/g, '<link rel="icon" type="image/png" sizes="96x96" href="/icon-96.png">');
+  html = html.replace(/<link rel="shortcut icon" href="[^"]*">/g, '<link rel="shortcut icon" href="/favicon.ico">');
+  fs.writeFileSync(distIndexHtml, html);
+  console.log('[post-build] Normalized favicon paths in dist/index.html to stable root URLs');
+}
+
 console.log('[post-build] All static assets successfully verified in dist/.');
