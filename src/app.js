@@ -952,6 +952,30 @@ function showToastMessage(text, icon = 'checkCircle') {
             } catch(e) {}
         }
 
+        let wakeLockSentinel = null;
+
+        async function requestScreenWakeLock() {
+            try {
+                if (typeof navigator !== 'undefined' && 'wakeLock' in navigator) {
+                    wakeLockSentinel = await navigator.wakeLock.request('screen');
+                    wakeLockSentinel.addEventListener('release', () => {
+                        wakeLockSentinel = null;
+                    });
+                }
+            } catch (err) {
+                console.warn('Wake Lock request:', err);
+            }
+        }
+
+        function releaseScreenWakeLock() {
+            try {
+                if (wakeLockSentinel) {
+                    wakeLockSentinel.release();
+                    wakeLockSentinel = null;
+                }
+            } catch (err) {}
+        }
+
         function toggleFocusTimer(taskId) {
             if (focusTimerState.isRunning && focusOverlayState.isOpen) {
                 pauseFocusTimer();
@@ -960,9 +984,9 @@ function showToastMessage(text, icon = 'checkCircle') {
                     startFocusTimer(taskId);
                 }
                 openFocusOverlay(taskId, 'compact');
-                // Directly launch floating Picture-in-Picture mode and minimize full app
+                // Auto-trigger Picture-in-Picture only if supported by the browser (silent on mobile so no error toast)
                 try {
-                    togglePictureInPicture();
+                    togglePictureInPicture(false);
                 } catch(e) {
                     console.warn('Direct PiP auto-trigger:', e);
                 }
@@ -979,6 +1003,7 @@ function showToastMessage(text, icon = 'checkCircle') {
             updateFocusTimerUI();
             updateFocusOverlayUI();
             syncMediaSessionState();
+            requestScreenWakeLock();
             if (docPipWindow && typeof updateDocumentPipUI === 'function') {
                 updateDocumentPipUI();
             }
@@ -997,6 +1022,7 @@ function showToastMessage(text, icon = 'checkCircle') {
                     focusTimerState.intervalId = null;
                     focusTimerState.isRunning = false;
                     focusTimerState.secondsRemaining = 0;
+                    releaseScreenWakeLock();
                     updateFocusTimerUI();
                     updateFocusOverlayUI();
                     syncMediaSessionState();
@@ -1033,6 +1059,7 @@ function showToastMessage(text, icon = 'checkCircle') {
 
         function pauseFocusTimer() {
             focusTimerState.isRunning = false;
+            releaseScreenWakeLock();
             if (focusTimerState.intervalId) {
                 clearInterval(focusTimerState.intervalId);
                 focusTimerState.intervalId = null;
@@ -1050,6 +1077,7 @@ function showToastMessage(text, icon = 'checkCircle') {
 
         function resetFocusTimer() {
             pauseFocusTimer();
+            releaseScreenWakeLock();
             focusTimerState.secondsRemaining = 25 * 60;
             focusTimerState.totalSeconds = 25 * 60;
             updateFocusTimerUI();
@@ -1164,7 +1192,7 @@ function showToastMessage(text, icon = 'checkCircle') {
             }
         }
 
-        async function togglePictureInPicture() {
+        async function togglePictureInPicture(isExplicit = true) {
             try {
                 if (typeof document === 'undefined') return;
 
@@ -1181,7 +1209,7 @@ function showToastMessage(text, icon = 'checkCircle') {
                     return;
                 }
 
-                // Option A: Document Picture-in-Picture (HTML interactive floating window in Chromium)
+                // Option A: Document Picture-in-Picture (HTML interactive floating window in Chromium desktop)
                 if ('documentPictureInPicture' in window) {
                     try {
                         const pipWin = await window.documentPictureInPicture.requestWindow({
@@ -1265,12 +1293,20 @@ function showToastMessage(text, icon = 'checkCircle') {
                     }
                 }
 
-                // Option B: Standard Video / Canvas PiP with MediaSession Pause/Play controls
+                // Option B: Standard Video / Canvas PiP
                 if (!document.pictureInPictureEnabled) {
-                    const isML = (typeof getAppLanguage === 'function') ? (getAppLanguage() === 'ml') : false;
-                    showAppToast(isML ? "ബ്രൗസറിൽ പിക്ചർ-ഇൻ-പിക്ചർ ലഭ്യമല്ല" : "Picture-in-Picture not supported in this browser", "fa-circle-info text-blue-400");
+                    if (isExplicit) {
+                        const isML = (typeof getAppLanguage === 'function') ? (getAppLanguage() === 'ml') : false;
+                        showAppToast(
+                            isML 
+                                ? "മറ്റ് ആപ്പുകളുടെ മുകളിൽ കാണുന്ന ഫ്ലോട്ടിംഗ് ടൈമർ ഡെസ്ക്ടോപ്പ് ബ്രൗസറുകളിലാണ് (Chrome/Edge) ലഭ്യമാകുന്നത്. മൊബൈലിൽ താഴെയുള്ള ഇൻ-ആപ്പ് ഓവർലേ ടൈമർ സജീവമാണ്!" 
+                                : "Floating timer outside the browser is supported on Desktop (Chrome/Edge). On mobile, the In-App Focus Overlay below is active!", 
+                            "fa-circle-info text-blue-400"
+                        );
+                    }
                     return;
                 }
+
                 if (!pipCanvasEl) {
                     pipCanvasEl = document.createElement('canvas');
                     pipCanvasEl.width = 440;
@@ -1281,6 +1317,13 @@ function showToastMessage(text, icon = 'checkCircle') {
                     pipVideoEl = document.createElement('video');
                     pipVideoEl.muted = true;
                     pipVideoEl.playsInline = true;
+                    pipVideoEl.setAttribute('playsinline', '');
+                    pipVideoEl.setAttribute('webkit-playsinline', '');
+                    pipVideoEl.style.position = 'fixed';
+                    pipVideoEl.style.bottom = '-9999px';
+                    pipVideoEl.style.opacity = '0.001';
+                    pipVideoEl.style.pointerEvents = 'none';
+                    document.body.appendChild(pipVideoEl);
                     const stream = pipCanvasEl.captureStream(2);
                     pipVideoEl.srcObject = stream;
                 }
@@ -1291,6 +1334,15 @@ function showToastMessage(text, icon = 'checkCircle') {
                 showAppToast(isML ? "ഫ്ലോട്ടിംഗ് ടൈമർ ഓണായി! പോസ് ചെയ്യാൻ സ്ക്രീനിൽ ടാപ്പ് ചെയ്യാം" : "Floating timer active! Native Pause/Resume controls enabled", "fa-window-restore text-emerald-400");
             } catch(e) {
                 console.warn('PiP launch issue:', e);
+                if (isExplicit) {
+                    const isML = (typeof getAppLanguage === 'function') ? (getAppLanguage() === 'ml') : false;
+                    showAppToast(
+                        isML 
+                            ? "മൊബൈൽ ബ്രൗസർ ഫ്ലോട്ടിംഗ് വിൻഡോ അനുവദിക്കുന്നില്ല. താഴെയുള്ള ഇൻ-ആപ്പ് ഫോക്കസ് ഓവർലേ സജീവമാണ്!" 
+                            : "Mobile browser restricts external floating windows. The in-app focus overlay below is active!", 
+                        "fa-circle-info text-blue-400"
+                    );
+                }
             }
         }
 
