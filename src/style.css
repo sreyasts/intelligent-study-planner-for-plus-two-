@@ -728,6 +728,18 @@
 /* ==========================================================================
    Focus Sprint Mode & App Minimization Styling
    ========================================================================== */
+body.app-minimized-focus-mode header,
+body.app-minimized-focus-mode #app-container,
+body.app-minimized-focus-mode footer,
+body.app-minimized-focus-mode section,
+body.app-minimized-focus-mode #mobile-nav {
+    opacity: 0.18 !important;
+    filter: blur(6px) grayscale(30%) !important;
+    pointer-events: none !important;
+    transform: scale(0.99);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 body.app-minimized-focus-mode.maximized-mode header,
 body.app-minimized-focus-mode.maximized-mode #app-container,
 body.app-minimized-focus-mode.maximized-mode footer,

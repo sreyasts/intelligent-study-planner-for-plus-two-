@@ -926,6 +926,32 @@ function showToastMessage(text, icon = 'checkCircle') {
             return null;
         }
 
+        function syncMediaSessionState() {
+            if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return;
+            const task = getCurrentFocusTask(focusOverlayState.taskId || focusTimerState.taskId);
+            navigator.mediaSession.metadata = new MediaMetadata({
+                title: task ? (task.chapterName || task.subject || 'Mission PlusTwo Focus') : '25-Min Study Sprint',
+                artist: focusTimerState.isRunning ? '● Sprint Active - Stay Locked In' : '❚❚ Sprint Paused',
+                album: 'Mission PlusTwo • DHSE Kerala'
+            });
+            navigator.mediaSession.playbackState = focusTimerState.isRunning ? 'playing' : 'paused';
+            try {
+                navigator.mediaSession.setActionHandler('play', () => {
+                    if (!focusTimerState.isRunning) {
+                        startFocusTimer(focusOverlayState.taskId || focusTimerState.taskId);
+                    }
+                });
+                navigator.mediaSession.setActionHandler('pause', () => {
+                    if (focusTimerState.isRunning) {
+                        pauseFocusTimer();
+                    }
+                });
+                navigator.mediaSession.setActionHandler('stop', () => {
+                    resetFocusTimer();
+                });
+            } catch(e) {}
+        }
+
         function toggleFocusTimer(taskId) {
             if (focusTimerState.isRunning && focusOverlayState.isOpen) {
                 pauseFocusTimer();
@@ -934,6 +960,12 @@ function showToastMessage(text, icon = 'checkCircle') {
                     startFocusTimer(taskId);
                 }
                 openFocusOverlay(taskId, 'compact');
+                // Directly launch floating Picture-in-Picture mode and minimize full app
+                try {
+                    togglePictureInPicture();
+                } catch(e) {
+                    console.warn('Direct PiP auto-trigger:', e);
+                }
             }
         }
 
@@ -946,12 +978,19 @@ function showToastMessage(text, icon = 'checkCircle') {
             focusTimerState.isRunning = true;
             updateFocusTimerUI();
             updateFocusOverlayUI();
+            syncMediaSessionState();
+            if (docPipWindow && typeof updateDocumentPipUI === 'function') {
+                updateDocumentPipUI();
+            }
 
             if (focusTimerState.intervalId) clearInterval(focusTimerState.intervalId);
             focusTimerState.intervalId = setInterval(() => {
                 focusTimerState.secondsRemaining--;
                 if (typeof updatePipCanvas === 'function' && typeof document !== 'undefined' && document.pictureInPictureElement) {
                     try { updatePipCanvas(); } catch(e) {}
+                }
+                if (docPipWindow && typeof updateDocumentPipUI === 'function') {
+                    try { updateDocumentPipUI(); } catch(e) {}
                 }
                 if (focusTimerState.secondsRemaining <= 0) {
                     clearInterval(focusTimerState.intervalId);
@@ -960,17 +999,31 @@ function showToastMessage(text, icon = 'checkCircle') {
                     focusTimerState.secondsRemaining = 0;
                     updateFocusTimerUI();
                     updateFocusOverlayUI();
+                    syncMediaSessionState();
+
+                    // 1. Award +50 Focus Sprint XP immediately!
+                    if (appState) {
+                        appState.bonusXP = (appState.bonusXP || 0) + 50;
+                        appState.lastModified = new Date().toISOString();
+                        saveAppState();
+                    }
+
+                    // 2. Play celebration sound and trigger multi-burst confetti
                     if (typeof playMilestoneCelebrationSound === 'function') {
                         playMilestoneCelebrationSound();
                     }
                     if (typeof confetti === 'function') {
-                        try { confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } }); } catch(e) {}
+                        try {
+                            confetti({ particleCount: 150, spread: 90, origin: { y: 0.55 } });
+                            setTimeout(() => {
+                                try { confetti({ particleCount: 80, angle: 60, spread: 55, origin: { x: 0 } }); } catch(e) {}
+                                try { confetti({ particleCount: 80, angle: 120, spread: 55, origin: { x: 1 } }); } catch(e) {}
+                            }, 250);
+                        } catch(e) {}
                     }
-                    const isML = (typeof getAppLanguage === 'function') ? (getAppLanguage() === 'ml') : false;
-                    showAppToast(
-                        isML ? "⏰ 25 മിനിറ്റ് ഫോക്കസ് സ്പ്രിന്റ് അവസാനിച്ചു! ടിക്ക് ചെയ്ത് +100 XP നേടൂ!" : "⏰ 25-minute sprint finished! Check this off to collect +100 XP!",
-                        "fa-stopwatch text-amber-400"
-                    );
+
+                    // 3. Trigger the Dopamine Loop Modal with variable rewards & next step choices
+                    showSprintDopamineVictoryModal(focusOverlayState.taskId || focusTimerState.taskId);
                 } else {
                     updateFocusTimerUI();
                     updateFocusOverlayUI();
@@ -987,6 +1040,10 @@ function showToastMessage(text, icon = 'checkCircle') {
             if (typeof updatePipCanvas === 'function' && typeof document !== 'undefined' && document.pictureInPictureElement) {
                 try { updatePipCanvas(); } catch(e) {}
             }
+            if (docPipWindow && typeof updateDocumentPipUI === 'function') {
+                try { updateDocumentPipUI(); } catch(e) {}
+            }
+            syncMediaSessionState();
             updateFocusTimerUI();
             updateFocusOverlayUI();
         }
@@ -997,6 +1054,9 @@ function showToastMessage(text, icon = 'checkCircle') {
             focusTimerState.totalSeconds = 25 * 60;
             updateFocusTimerUI();
             updateFocusOverlayUI();
+            if (docPipWindow && typeof updateDocumentPipUI === 'function') {
+                try { updateDocumentPipUI(); } catch(e) {}
+            }
         }
 
         function addFiveMinutesToFocus() {
@@ -1004,6 +1064,9 @@ function showToastMessage(text, icon = 'checkCircle') {
             focusTimerState.totalSeconds += 5 * 60;
             updateFocusTimerUI();
             updateFocusOverlayUI();
+            if (docPipWindow && typeof updateDocumentPipUI === 'function') {
+                try { updateDocumentPipUI(); } catch(e) {}
+            }
             const isML = (typeof getAppLanguage === 'function') ? (getAppLanguage() === 'ml') : false;
             showAppToast(isML ? "+5 മിനിറ്റ് ചേർത്തു!" : "+5 minutes added!", "fa-clock text-blue-400");
         }
@@ -1018,9 +1081,14 @@ function showToastMessage(text, icon = 'checkCircle') {
 
         let pipVideoEl = null;
         let pipCanvasEl = null;
+        let docPipWindow = null;
 
         function exitPipIfActive() {
             try {
+                if (docPipWindow) {
+                    docPipWindow.close();
+                    docPipWindow = null;
+                }
                 if (typeof document !== 'undefined' && document.pictureInPictureElement) {
                     document.exitPictureInPicture().catch(() => {});
                 }
@@ -1039,44 +1107,165 @@ function showToastMessage(text, icon = 'checkCircle') {
             ctx.fillRect(0, 0, w, h);
 
             // Glowing amber accent border
-            ctx.strokeStyle = '#f59e0b';
+            ctx.strokeStyle = focusTimerState.isRunning ? '#f59e0b' : '#3b82f6';
             ctx.lineWidth = 5;
             ctx.strokeRect(2, 2, w - 4, h - 4);
 
             // Task title
             ctx.fillStyle = '#94a3b8';
-            ctx.font = 'bold 16px sans-serif';
+            ctx.font = 'bold 15px sans-serif';
             ctx.textAlign = 'center';
             const task = getCurrentFocusTask(focusOverlayState.taskId);
             const title = task ? (task.chapterName || task.subject || 'Mission PlusTwo Focus') : 'Mission PlusTwo Focus';
-            ctx.fillText(title.length > 26 ? title.slice(0, 24) + '...' : title, w / 2, 38);
+            ctx.fillText(title.length > 26 ? title.slice(0, 24) + '...' : title, w / 2, 36);
 
             // Timer display
             const mins = Math.floor(focusTimerState.secondsRemaining / 60);
             const secs = focusTimerState.secondsRemaining % 60;
             const formattedTime = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-            ctx.fillStyle = '#fbbf24';
+            ctx.fillStyle = focusTimerState.isRunning ? '#fbbf24' : '#60a5fa';
             ctx.font = '900 62px monospace';
-            ctx.fillText(formattedTime, w / 2, 115);
+            ctx.fillText(formattedTime, w / 2, 110);
 
-            // Running status
+            // Running status & Pause indicator
             ctx.fillStyle = focusTimerState.isRunning ? '#10b981' : '#f59e0b';
-            ctx.font = 'bold 15px sans-serif';
-            ctx.fillText(focusTimerState.isRunning ? '● SPRINT ACTIVE - STAY LOCKED IN' : '❚❚ SPRINT PAUSED', w / 2, 155);
+            ctx.font = 'bold 14px sans-serif';
+            ctx.fillText(focusTimerState.isRunning ? '● SPRINT ACTIVE (TAP ❚❚ TO PAUSE)' : '❚❚ SPRINT PAUSED (TAP ▶ TO RESUME)', w / 2, 150);
 
             // Mission PlusTwo Brand
             ctx.fillStyle = '#60a5fa';
-            ctx.font = 'bold 13px sans-serif';
-            ctx.fillText('Mission PlusTwo • DHSE Kerala', w / 2, 190);
+            ctx.font = 'bold 12px sans-serif';
+            ctx.fillText('Mission PlusTwo • DHSE Kerala', w / 2, 185);
+        }
+
+        function updateDocumentPipUI() {
+            if (!docPipWindow || !docPipWindow.document) return;
+            const timeEl = docPipWindow.document.getElementById('doc-pip-time');
+            const statusEl = docPipWindow.document.getElementById('doc-pip-status');
+            const toggleBtn = docPipWindow.document.getElementById('doc-pip-toggle-btn');
+            const titleEl = docPipWindow.document.getElementById('doc-pip-title');
+
+            const mins = Math.floor(focusTimerState.secondsRemaining / 60);
+            const secs = focusTimerState.secondsRemaining % 60;
+            const formattedTime = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+            if (timeEl) timeEl.innerText = formattedTime;
+            if (statusEl) {
+                statusEl.innerText = focusTimerState.isRunning ? '● Active' : '❚❚ Paused';
+                statusEl.style.color = focusTimerState.isRunning ? '#10b981' : '#f59e0b';
+            }
+            if (toggleBtn) {
+                toggleBtn.innerHTML = focusTimerState.isRunning ? '❚❚ Pause' : '▶ Resume';
+                toggleBtn.style.background = focusTimerState.isRunning ? '#d97706' : '#2563eb';
+            }
+            if (titleEl) {
+                const task = getCurrentFocusTask(focusOverlayState.taskId);
+                if (task) titleEl.innerText = task.chapterName || task.subject;
+            }
         }
 
         async function togglePictureInPicture() {
             try {
                 if (typeof document === 'undefined') return;
+
+                // Close existing Document PiP window if open
+                if (docPipWindow) {
+                    docPipWindow.close();
+                    docPipWindow = null;
+                    return;
+                }
+
+                // Exit video PiP if active
                 if (document.pictureInPictureElement) {
                     await document.exitPictureInPicture();
                     return;
                 }
+
+                // Option A: Document Picture-in-Picture (HTML interactive floating window in Chromium)
+                if ('documentPictureInPicture' in window) {
+                    try {
+                        const pipWin = await window.documentPictureInPicture.requestWindow({
+                            width: 360,
+                            height: 195,
+                        });
+                        docPipWindow = pipWin;
+
+                        const task = getCurrentFocusTask(focusOverlayState.taskId);
+                        const mins = Math.floor(focusTimerState.secondsRemaining / 60);
+                        const secs = focusTimerState.secondsRemaining % 60;
+                        const formattedTime = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+                        pipWin.document.body.style.margin = '0';
+                        pipWin.document.body.style.background = '#090d16';
+                        pipWin.document.body.style.color = '#ffffff';
+                        pipWin.document.body.style.fontFamily = 'system-ui, -apple-system, sans-serif';
+                        pipWin.document.body.style.padding = '12px';
+                        pipWin.document.body.style.userSelect = 'none';
+                        pipWin.document.body.style.boxSizing = 'border-box';
+                        pipWin.document.body.style.overflow = 'hidden';
+
+                        pipWin.document.body.innerHTML = `
+                            <div style="display: flex; flex-direction: column; justify-content: space-between; height: 100%;">
+                                <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                                    <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #fbbf24; background: rgba(245,158,11,0.2); padding: 2px 8px; border-radius: 999px; border: 1px solid rgba(245,158,11,0.4);">
+                                        🔥 25m Focus Sprint
+                                    </span>
+                                    <span id="doc-pip-status" style="font-size: 11px; font-weight: 700; color: ${focusTimerState.isRunning ? '#10b981' : '#f59e0b'};">
+                                        ${focusTimerState.isRunning ? '● Active' : '❚❚ Paused'}
+                                    </span>
+                                </div>
+                                <div id="doc-pip-title" style="font-size: 13px; font-weight: 700; color: #e2e8f0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 4px 0;">
+                                    ${task ? (task.chapterName || task.subject) : 'Mission PlusTwo Focus'}
+                                </div>
+                                <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                                    <div id="doc-pip-time" style="font-size: 38px; font-weight: 900; font-family: monospace; color: #fbbf24; letter-spacing: 2px;">
+                                        ${formattedTime}
+                                    </div>
+                                    <div style="display: flex; gap: 6px;">
+                                        <button id="doc-pip-toggle-btn" style="background: ${focusTimerState.isRunning ? '#d97706' : '#2563eb'}; color: white; border: none; font-weight: 800; font-size: 12px; padding: 7px 12px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                                            ${focusTimerState.isRunning ? '❚❚ Pause' : '▶ Resume'}
+                                        </button>
+                                        <button id="doc-pip-done-btn" style="background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid rgba(16,185,129,0.4); font-weight: 800; font-size: 11px; padding: 7px 10px; border-radius: 10px; cursor: pointer;">
+                                            ✓ Done
+                                        </button>
+                                    </div>
+                                </div>
+                                <div style="font-size: 10px; color: #64748b; font-weight: 600; text-align: right;">
+                                    Mission PlusTwo • DHSE Kerala
+                                </div>
+                            </div>
+                        `;
+
+                        const toggleBtn = pipWin.document.getElementById('doc-pip-toggle-btn');
+                        if (toggleBtn) {
+                            toggleBtn.onclick = () => {
+                                toggleOverlayTimer();
+                            };
+                        }
+                        const doneBtn = pipWin.document.getElementById('doc-pip-done-btn');
+                        if (doneBtn) {
+                            doneBtn.onclick = () => {
+                                completeTaskFromOverlay(focusOverlayState.taskId || focusTimerState.taskId);
+                                if (docPipWindow) {
+                                    docPipWindow.close();
+                                    docPipWindow = null;
+                                }
+                            };
+                        }
+
+                        pipWin.addEventListener('pagehide', () => {
+                            docPipWindow = null;
+                        });
+
+                        const isML = (typeof getAppLanguage === 'function') ? (getAppLanguage() === 'ml') : false;
+                        showAppToast(isML ? "ഫ്ലോട്ടിംഗ് ടൈമർ ഓണായി! പോസ്/റെസ്യും ബട്ടണുകൾ ലഭ്യമാണ്" : "Floating timer active! Interactive Pause/Resume ready", "fa-window-restore text-emerald-400");
+                        return;
+                    } catch(docPipErr) {
+                        console.warn('Document PiP request skipped, using Video PiP:', docPipErr);
+                    }
+                }
+
+                // Option B: Standard Video / Canvas PiP with MediaSession Pause/Play controls
                 if (!document.pictureInPictureEnabled) {
                     const isML = (typeof getAppLanguage === 'function') ? (getAppLanguage() === 'ml') : false;
                     showAppToast(isML ? "ബ്രൗസറിൽ പിക്ചർ-ഇൻ-പിക്ചർ ലഭ്യമല്ല" : "Picture-in-Picture not supported in this browser", "fa-circle-info text-blue-400");
@@ -1096,9 +1285,10 @@ function showToastMessage(text, icon = 'checkCircle') {
                     pipVideoEl.srcObject = stream;
                 }
                 await pipVideoEl.play();
+                syncMediaSessionState();
                 await pipVideoEl.requestPictureInPicture();
                 const isML = (typeof getAppLanguage === 'function') ? (getAppLanguage() === 'ml') : false;
-                showAppToast(isML ? "ഫ്ലോട്ടിംഗ് ടൈമർ ഓണായി! ഫോൺ സ്ക്രീനിലും കാണാം" : "Floating timer active! Stays on top of phone apps", "fa-window-restore text-emerald-400");
+                showAppToast(isML ? "ഫ്ലോട്ടിംഗ് ടൈമർ ഓണായി! പോസ് ചെയ്യാൻ സ്ക്രീനിൽ ടാപ്പ് ചെയ്യാം" : "Floating timer active! Native Pause/Resume controls enabled", "fa-window-restore text-emerald-400");
             } catch(e) {
                 console.warn('PiP launch issue:', e);
             }
@@ -1240,6 +1430,12 @@ function showToastMessage(text, icon = 'checkCircle') {
                                 </span>
                             </div>
                             <div class="flex items-center gap-1.5 shrink-0">
+                                <!-- Restore Full App button -->
+                                <button type="button" onclick="restoreFullApp()" title="${isML ? 'ആപ്പ് സാധാരണ വലുപ്പത്തിലാക്കുക' : 'Restore Full App'}" class="w-8 h-8 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition active:scale-95 border border-slate-700 shadow-sm" aria-label="Restore App">
+                                    <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                                    </svg>
+                                </button>
                                 <!-- Maximize icon button to go to Full Screen -->
                                 <button type="button" onclick="maximizeFocusOverlay()" title="${isML ? 'ഫുൾ സ്ക്രീൻ വലുതാക്കുക' : 'Maximize to Full Screen'}" class="w-8 h-8 rounded-xl bg-slate-800/90 hover:bg-blue-600 text-white flex items-center justify-center transition active:scale-95 border border-slate-700 shadow-sm" aria-label="Maximize Timer">
                                     <i class="fa-solid fa-expand text-xs hidden"></i>
@@ -1297,11 +1493,14 @@ function showToastMessage(text, icon = 'checkCircle') {
                             <div id="compact-progress-bar" class="h-full bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 rounded-full transition-all duration-1000" style="width: ${progressPercent}%;"></div>
                         </div>
 
-                        <!-- Quick Complete Button -->
-                        <button type="button" onclick="completeTaskFromOverlay('${task.id}')" class="w-full py-2.5 px-4 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-600 text-white font-black text-xs sm:text-sm rounded-xl shadow-lg shadow-emerald-600/30 transition active:scale-[0.98] flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-circle-check text-sm"></i>
-                            <span>${isML ? 'പഠിച്ചു കഴിഞ്ഞു (+100 XP നേടൂ)' : 'Mark Chapter Part Complete (+100 XP)'}</span>
-                        </button>
+                        <!-- Compact, Non-Awkward Mark Complete Row (Psychological design) -->
+                        <div class="flex items-center justify-between gap-2 pt-1 border-t border-slate-800/80">
+                            <span class="text-[11px] text-slate-400 font-medium">${isML ? 'പഠനം കഴിഞ്ഞുവോ?' : 'Done studying this part?'}</span>
+                            <button type="button" onclick="completeTaskFromOverlay('${task.id}')" class="py-1.5 px-3 bg-emerald-600/85 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-xs transition active:scale-95 flex items-center gap-1.5">
+                                <i class="fa-solid fa-circle-check text-xs"></i>
+                                <span>${isML ? 'പൂർത്തിയായി (+100 XP)' : 'Mark Done (+100 XP)'}</span>
+                            </button>
+                        </div>
                     </div>
                 `;
             } else {
@@ -1471,7 +1670,92 @@ function showToastMessage(text, icon = 'checkCircle') {
         function getTotalXP() {
             if (!appState || !appState.plan) return 0;
             const completedCount = appState.plan.reduce((sum, d) => sum + d.tasks.filter(t => t.completed).length, 0);
-            return completedCount * 100;
+            return (completedCount * 100) + (appState.bonusXP || 0);
+        }
+
+        function showSprintDopamineVictoryModal(taskId) {
+            const task = getCurrentFocusTask(taskId);
+            const isML = (typeof getAppLanguage === 'function') ? (getAppLanguage() === 'ml') : false;
+            const totalXP = getTotalXP();
+            const userLevel = getUserLevel(totalXP);
+
+            let modalEl = document.getElementById('sprint-victory-modal');
+            if (!modalEl) {
+                modalEl = document.createElement('div');
+                modalEl.id = 'sprint-victory-modal';
+                document.body.appendChild(modalEl);
+            }
+
+            modalEl.className = 'fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-fade-in';
+            modalEl.innerHTML = `
+                <div class="bg-slate-900 border-2 border-amber-500/80 rounded-3xl p-6 sm:p-7 max-w-sm sm:max-w-md w-full text-white shadow-2xl text-center relative overflow-hidden animate-fade-in-up">
+                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-400 text-slate-950 flex items-center justify-center text-2xl font-black mx-auto mb-3 shadow-lg shadow-amber-500/40 animate-bounce">
+                        <i class="fa-solid fa-trophy"></i>
+                    </div>
+
+                    <div class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-black uppercase tracking-wider mb-2">
+                        <span>🔥 ${isML ? '25 മിനിറ്റ് ഫോക്കസ് പൂർത്തിയായി!' : '25-Min Sprint Conquered!'}</span>
+                    </div>
+
+                    <h3 class="text-lg sm:text-xl font-black text-white leading-tight">
+                        ${isML ? 'ഡീപ് ഫോക്കസ് ലക്ഷ്യം നേടി!' : 'Flow State Achieved!'}
+                    </h3>
+
+                    <p class="text-xs text-slate-300 mt-2 font-medium">
+                        ${isML 
+                            ? 'നിങ്ങൾ 25 മിനിറ്റ് തികച്ചും ശ്രദ്ധയോടെ പഠിച്ചു. ഫോർഗെറ്റിംഗ് കർവിനെ പ്രതിരോധിക്കാൻ തലച്ചോർ സജ്ജമായി!' 
+                            : 'You locked in for a full 25 minutes without breaking attention. Working memory consolidated!'}
+                    </p>
+
+                    <div class="bg-black/60 border border-amber-500/30 rounded-2xl p-3 my-3.5 flex items-center justify-around gap-2 shadow-inner">
+                        <div>
+                            <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">${isML ? 'സ്പ്രിന്റ് ബോണസ്' : 'Sprint Bonus'}</div>
+                            <div class="text-lg font-black text-amber-400 font-mono">+50 XP</div>
+                        </div>
+                        <div class="h-7 w-px bg-slate-800"></div>
+                        <div>
+                            <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">${isML ? 'ആകെ XP' : 'Total XP'}</div>
+                            <div class="text-lg font-black text-emerald-400 font-mono">${totalXP}</div>
+                        </div>
+                        <div class="h-7 w-px bg-slate-800"></div>
+                        <div>
+                            <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">${isML ? 'റാങ്ക്' : 'Rank'}</div>
+                            <div class="text-xs font-black text-blue-400">${userLevel.badge}</div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2 pt-1">
+                        <button type="button" onclick="claimSprintAndCompleteChapter('${task ? task.id : ''}')" class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-600 text-white font-black text-xs sm:text-sm shadow-lg shadow-emerald-600/30 transition active:scale-[0.98] flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-circle-check text-base"></i>
+                            <span>${isML ? 'പാഠഭാഗം പൂർത്തിയായി (+100 XP കൂടി നേടൂ)' : 'Mark Chapter Done (+100 XP More)'}</span>
+                        </button>
+
+                        <button type="button" onclick="startFiveMinuteBreather()" class="w-full py-2 px-4 rounded-xl bg-white/10 hover:bg-white/20 text-slate-200 font-extrabold text-xs transition active:scale-[0.98] flex items-center justify-center gap-2 border border-white/10">
+                            <i class="fa-solid fa-mug-hot text-amber-400"></i>
+                            <span>${isML ? '☕ 5 മിനിറ്റ് വിശ്രമം (Smart Breather)' : '☕ Take 5-Min Smart Breather'}</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function claimSprintAndCompleteChapter(taskId) {
+            const modalEl = document.getElementById('sprint-victory-modal');
+            if (modalEl) modalEl.remove();
+            completeTaskFromOverlay(taskId);
+        }
+
+        function startFiveMinuteBreather() {
+            const modalEl = document.getElementById('sprint-victory-modal');
+            if (modalEl) modalEl.remove();
+            focusTimerState.secondsRemaining = 5 * 60;
+            focusTimerState.totalSeconds = 5 * 60;
+            startFocusTimer(focusOverlayState.taskId || focusTimerState.taskId);
+            const isML = (typeof getAppLanguage === 'function') ? (getAppLanguage() === 'ml') : false;
+            showAppToast(
+                isML ? "☕ 5 മിനിറ്റ് ബ്രേക്ക് തുടങ്ങി! വെള്ളം കുടിക്കൂ, കണ്ണുകൾക്ക് വിശ്രമം നൽകൂ." : "☕ 5-min breather started! Hydrate, stretch, and relax your eyes.",
+                "fa-mug-hot text-amber-400"
+            );
         }
 
         function getUserLevel(xp) {
@@ -3632,11 +3916,16 @@ function showToastMessage(text, icon = 'checkCircle') {
                                     </div>
                                 </div>
 
-                                <!-- Big Satisfying Mark Complete Button -->
-                                <button type="button" onclick="toggleTaskDirect('${focusTask.id}')" class="w-full mt-3.5 py-3.5 px-5 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-600 text-white font-black text-sm sm:text-base rounded-2xl shadow-lg shadow-emerald-600/25 transition active:scale-[0.98] flex items-center justify-center gap-2">
-                                    <i class="fa-solid fa-circle-check text-lg"></i>
-                                    <span>${isML ? 'പഠിച്ചു കഴിഞ്ഞു (+100 XP നേടൂ)' : 'Mark Done (+100 XP)'}</span>
-                                </button>
+                                <!-- Subtle, Compact Mark Complete Option (Psychological design: Action-first focus sprint, non-awkward completion) -->
+                                <div class="mt-2.5 flex items-center justify-between gap-2 px-1">
+                                    <span class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                                        ${isML ? 'പഠനം മുൻകൂട്ടി കഴിഞ്ഞുവോ?' : 'Completed this topic already?'}
+                                    </span>
+                                    <button type="button" onclick="toggleTaskDirect('${focusTask.id}')" class="py-1.5 px-3 rounded-xl border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-bold text-xs flex items-center gap-1.5 transition active:scale-95">
+                                        <i class="fa-solid fa-circle-check text-xs text-emerald-600 dark:text-emerald-400"></i>
+                                        <span>${isML ? 'പൂർത്തിയായി (+100 XP)' : 'Mark Done (+100 XP)'}</span>
+                                    </button>
+                                </div>
                             </div>
                         `;
                     }
@@ -4854,6 +5143,9 @@ if (typeof window !== 'undefined') {
         togglePictureInPicture,
         addFiveMinutesToFocus,
         completeTaskFromOverlay,
+        showSprintDopamineVictoryModal,
+        claimSprintAndCompleteChapter,
+        startFiveMinuteBreather,
         renderFocusOverlay,
         updateFocusOverlayUI,
         goToDashboard,
