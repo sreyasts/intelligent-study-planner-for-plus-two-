@@ -1,0 +1,9 @@
+node_modules/
+dist/
+build/
+coverage/
+.firebase/
+.vite/
+package-lock.json
+*.min.js
+*.min.css

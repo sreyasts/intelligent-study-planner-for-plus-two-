@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.0] - 2026-09-26
+
+### Added
+- **Professional Repository Architecture**:
+  - Organized and migrated all loose static web assets (`favicon.ico`, `manifest.json`, `robots.txt`, `sitemap.xml`, `sw.js`, `404.html`, etc.) into `public/`.
+  - Stored canonical high-res brand logos and preview graphics in `assets/`.
+  - Moved PowerShell automation scripts to `scripts/` (`scripts/deploy.ps1`, `scripts/deploy-all.ps1`).
+  - Added `.editorconfig`, `.prettierrc`, `.prettierignore`, and `.gitattributes` for cross-platform repository hygiene.
+- **Exam-Eve Quarantine & Spaced Retrieval**:
+  - Intelligent exam eve subject locking: on the eve before any subject exam, the plan focuses solely on that upcoming paper to prevent cognitive overload.
+  - Mathematical Ebbinghaus Forgetting Curve ($R = e^{-t/S}$) spaced retrieval scheduling.
+- **PC-Only Document Picture-in-Picture Floating Window**:
+  - Interactive Desktop PiP (`window.documentPictureInPicture`) floating widget with live countdown, Pause/Resume, and Mark Done controls.
+  - Native Screen Wake Lock API (`navigator.wakeLock`) on mobile devices.
+  - Cleaned ESLint configuration to 0 warnings and 0 errors.
+
+---
+
 ## [1.1.0] - 2026-09-24
 
 ### Added

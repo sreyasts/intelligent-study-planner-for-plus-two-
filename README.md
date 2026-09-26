@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="icon.png" alt="Mission PlusTwo Logo" width="120" style="border-radius: 28px; box-shadow: 0 10px 25px rgba(37,99,235,0.25);" />
+<img src="assets/icon.png" alt="Mission PlusTwo Logo" width="120" style="border-radius: 28px; box-shadow: 0 10px 25px rgba(37,99,235,0.25);" />
 
 # 🎓 Mission PlusTwo
 ### 🚀 The Intelligent Daily Study Revision Engine for Kerala Higher Secondary (+2) Candidates
@@ -10,7 +10,7 @@
 [![PWA Ready](https://img.shields.io/badge/PWA-Offline%20Ready-8b5cf6?style=for-the-badge&logo=pwa&logoColor=white)](https://mission-plustwo.web.app/)
 [![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-brightgreen?style=for-the-badge&logo=github)](CONTRIBUTING.md)
 [![Board Support](https://img.shields.io/badge/Board-Kerala%20DHSE%20%7C%20SCERT-orange?style=for-the-badge&logo=read-the-docs&logoColor=white)](data/kerala-dhse/)
-[![Tests](https://img.shields.io/badge/Vitest-68%20Passed%20•%20551%20Invariants-10b981?style=for-the-badge&logo=vitest&logoColor=white)](https://github.com/sreyasts/intelligent-study-planner-for-plus-two-)
+[![Tests](https://img.shields.io/badge/Vitest-88%20Passed%20•%20553%20Invariants-10b981?style=for-the-badge&logo=vitest&logoColor=white)](https://github.com/sreyasts/intelligent-study-planner-for-plus-two-)
 
 <br/>
 
@@ -20,7 +20,7 @@
 <br/>
 
 <a href="https://mission-plustwo.web.app/">
-  <img src="og-image.png" alt="Mission PlusTwo — Kerala Plus Two Daily Study Revision Engine" style="border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); max-width: 100%; height: auto;" />
+  <img src="assets/og-image.png" alt="Mission PlusTwo — Kerala Plus Two Daily Study Revision Engine" style="border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); max-width: 100%; height: auto;" />
 </a>
 
 </div>

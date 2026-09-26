@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://mission-plustwo.web.app/sitemap.xml

@@ -5,8 +5,8 @@
 # 2. GitHub Pages (https://sreyasts.github.io/intelligent-study-planner-for-plus-two-/)
 # ==============================================================================
 
-# Ensure we are in project directory
-Set-Location -Path $PSScriptRoot
+# Ensure we are in project root directory
+Set-Location -Path (Split-Path -Parent $PSScriptRoot)
 
 Write-Host "==========================================================" -ForegroundColor Cyan
 Write-Host "  Mission PlusTwo - Zero-Error Dual-Domain Deployment     " -ForegroundColor Cyan
@@ -22,8 +22,8 @@ if ($LASTEXITCODE -ne 0) {
     Exit 1
 }
 
-# Step 2: Run 402 Engine Invariant Tests
-Write-Host "`n[2/4] Running 402 Engine Invariant Tests..." -ForegroundColor Yellow
+# Step 2: Run 550+ Engine Invariant Tests
+Write-Host "`n[2/4] Running Engine Invariant Tests..." -ForegroundColor Yellow
 npm run test:legacy
 if ($LASTEXITCODE -ne 0) {
     Write-Host "`n❌ Invariant tests failed! Deployment aborted." -ForegroundColor Red

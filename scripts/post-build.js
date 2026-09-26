@@ -46,9 +46,11 @@ const rootAssets = [
 ];
 
 rootAssets.forEach((asset) => {
-  const srcPath = path.join(rootDir, asset);
+  const publicPath = path.join(rootDir, 'public', asset);
+  const rootPath = path.join(rootDir, asset);
+  const srcPath = fs.existsSync(publicPath) ? publicPath : rootPath;
   const destPath = path.join(distDir, asset);
-  if (fs.existsSync(srcPath)) {
+  if (fs.existsSync(srcPath) && !fs.existsSync(destPath)) {
     fs.copyFileSync(srcPath, destPath);
   }
 });
@@ -70,7 +72,10 @@ if (fs.existsSync(srcScreenshotsDir)) {
 const distAssetsDir = path.join(distDir, 'assets');
 if (fs.existsSync(distAssetsDir)) {
   ['icon-192.png', 'icon-512.png', 'icon.png', 'icon-maskable-192.png', 'icon-maskable-512.png', 'og-image.png'].forEach((icon) => {
-    const srcPath = path.join(rootDir, icon);
+    const publicPath = path.join(rootDir, 'public', icon);
+    const assetPath = path.join(rootDir, 'assets', icon);
+    const rootPath = path.join(rootDir, icon);
+    const srcPath = fs.existsSync(publicPath) ? publicPath : (fs.existsSync(assetPath) ? assetPath : rootPath);
     if (fs.existsSync(srcPath)) {
       fs.copyFileSync(srcPath, path.join(distAssetsDir, icon));
     }

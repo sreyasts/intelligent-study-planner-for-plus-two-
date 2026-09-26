@@ -929,11 +929,13 @@ function showToastMessage(text, icon = 'checkCircle') {
         function syncMediaSessionState() {
             if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return;
             const task = getCurrentFocusTask(focusOverlayState.taskId || focusTimerState.taskId);
-            navigator.mediaSession.metadata = new MediaMetadata({
-                title: task ? (task.chapterName || task.subject || 'Mission PlusTwo Focus') : '25-Min Study Sprint',
-                artist: focusTimerState.isRunning ? '● Sprint Active - Stay Locked In' : '❚❚ Sprint Paused',
-                album: 'Mission PlusTwo • DHSE Kerala'
-            });
+            if (typeof window !== 'undefined' && 'MediaMetadata' in window) {
+                navigator.mediaSession.metadata = new window.MediaMetadata({
+                    title: task ? (task.chapterName || task.subject || 'Mission PlusTwo Focus') : '25-Min Study Sprint',
+                    artist: focusTimerState.isRunning ? '● Sprint Active - Stay Locked In' : '❚❚ Sprint Paused',
+                    album: 'Mission PlusTwo • DHSE Kerala'
+                });
+            }
             navigator.mediaSession.playbackState = focusTimerState.isRunning ? 'playing' : 'paused';
             try {
                 navigator.mediaSession.setActionHandler('play', () => {
@@ -1106,7 +1108,6 @@ function showToastMessage(text, icon = 'checkCircle') {
             }
         }
 
-        let pipVideoEl = null;
         let pipCanvasEl = null;
         let docPipWindow = null;
 
