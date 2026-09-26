@@ -728,16 +728,21 @@
 /* ==========================================================================
    Focus Sprint Mode & App Minimization Styling
    ========================================================================== */
-body.app-minimized-focus-mode header,
-body.app-minimized-focus-mode #app-container,
-body.app-minimized-focus-mode footer,
-body.app-minimized-focus-mode section,
-body.app-minimized-focus-mode #toast-banner {
+body.app-minimized-focus-mode.maximized-mode header,
+body.app-minimized-focus-mode.maximized-mode #app-container,
+body.app-minimized-focus-mode.maximized-mode footer,
+body.app-minimized-focus-mode.maximized-mode section,
+body.app-minimized-focus-mode.maximized-mode #toast-banner {
     opacity: 0.12 !important;
     filter: blur(10px) grayscale(35%) !important;
     pointer-events: none !important;
     transform: scale(0.985);
     transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body.app-minimized-focus-mode:not(.maximized-mode) #app-container {
+    padding-bottom: 9rem;
+    transition: all 0.3s ease;
 }
 
 @keyframes focusPulseGlow {

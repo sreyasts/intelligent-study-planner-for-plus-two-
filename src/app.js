@@ -950,6 +950,9 @@ function showToastMessage(text, icon = 'checkCircle') {
             if (focusTimerState.intervalId) clearInterval(focusTimerState.intervalId);
             focusTimerState.intervalId = setInterval(() => {
                 focusTimerState.secondsRemaining--;
+                if (typeof updatePipCanvas === 'function' && typeof document !== 'undefined' && document.pictureInPictureElement) {
+                    try { updatePipCanvas(); } catch(e) {}
+                }
                 if (focusTimerState.secondsRemaining <= 0) {
                     clearInterval(focusTimerState.intervalId);
                     focusTimerState.intervalId = null;
@@ -981,6 +984,9 @@ function showToastMessage(text, icon = 'checkCircle') {
                 clearInterval(focusTimerState.intervalId);
                 focusTimerState.intervalId = null;
             }
+            if (typeof updatePipCanvas === 'function' && typeof document !== 'undefined' && document.pictureInPictureElement) {
+                try { updatePipCanvas(); } catch(e) {}
+            }
             updateFocusTimerUI();
             updateFocusOverlayUI();
         }
@@ -1010,6 +1016,94 @@ function showToastMessage(text, icon = 'checkCircle') {
             }
         }
 
+        let pipVideoEl = null;
+        let pipCanvasEl = null;
+
+        function exitPipIfActive() {
+            try {
+                if (typeof document !== 'undefined' && document.pictureInPictureElement) {
+                    document.exitPictureInPicture().catch(() => {});
+                }
+            } catch(e) {}
+        }
+
+        function updatePipCanvas() {
+            if (!pipCanvasEl) return;
+            const ctx = pipCanvasEl.getContext('2d');
+            if (!ctx) return;
+            const w = pipCanvasEl.width;
+            const h = pipCanvasEl.height;
+
+            // Deep background
+            ctx.fillStyle = '#090d16';
+            ctx.fillRect(0, 0, w, h);
+
+            // Glowing amber accent border
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 5;
+            ctx.strokeRect(2, 2, w - 4, h - 4);
+
+            // Task title
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = 'bold 16px sans-serif';
+            ctx.textAlign = 'center';
+            const task = getCurrentFocusTask(focusOverlayState.taskId);
+            const title = task ? (task.chapterName || task.subject || 'Mission PlusTwo Focus') : 'Mission PlusTwo Focus';
+            ctx.fillText(title.length > 26 ? title.slice(0, 24) + '...' : title, w / 2, 38);
+
+            // Timer display
+            const mins = Math.floor(focusTimerState.secondsRemaining / 60);
+            const secs = focusTimerState.secondsRemaining % 60;
+            const formattedTime = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            ctx.fillStyle = '#fbbf24';
+            ctx.font = '900 62px monospace';
+            ctx.fillText(formattedTime, w / 2, 115);
+
+            // Running status
+            ctx.fillStyle = focusTimerState.isRunning ? '#10b981' : '#f59e0b';
+            ctx.font = 'bold 15px sans-serif';
+            ctx.fillText(focusTimerState.isRunning ? '● SPRINT ACTIVE - STAY LOCKED IN' : '❚❚ SPRINT PAUSED', w / 2, 155);
+
+            // Mission PlusTwo Brand
+            ctx.fillStyle = '#60a5fa';
+            ctx.font = 'bold 13px sans-serif';
+            ctx.fillText('Mission PlusTwo • DHSE Kerala', w / 2, 190);
+        }
+
+        async function togglePictureInPicture() {
+            try {
+                if (typeof document === 'undefined') return;
+                if (document.pictureInPictureElement) {
+                    await document.exitPictureInPicture();
+                    return;
+                }
+                if (!document.pictureInPictureEnabled) {
+                    const isML = (typeof getAppLanguage === 'function') ? (getAppLanguage() === 'ml') : false;
+                    showAppToast(isML ? "ബ്രൗസറിൽ പിക്ചർ-ഇൻ-പിക്ചർ ലഭ്യമല്ല" : "Picture-in-Picture not supported in this browser", "fa-circle-info text-blue-400");
+                    return;
+                }
+                if (!pipCanvasEl) {
+                    pipCanvasEl = document.createElement('canvas');
+                    pipCanvasEl.width = 440;
+                    pipCanvasEl.height = 220;
+                }
+                updatePipCanvas();
+                if (!pipVideoEl) {
+                    pipVideoEl = document.createElement('video');
+                    pipVideoEl.muted = true;
+                    pipVideoEl.playsInline = true;
+                    const stream = pipCanvasEl.captureStream(2);
+                    pipVideoEl.srcObject = stream;
+                }
+                await pipVideoEl.play();
+                await pipVideoEl.requestPictureInPicture();
+                const isML = (typeof getAppLanguage === 'function') ? (getAppLanguage() === 'ml') : false;
+                showAppToast(isML ? "ഫ്ലോട്ടിംഗ് ടൈമർ ഓണായി! ഫോൺ സ്ക്രീനിലും കാണാം" : "Floating timer active! Stays on top of phone apps", "fa-window-restore text-emerald-400");
+            } catch(e) {
+                console.warn('PiP launch issue:', e);
+            }
+        }
+
         function openFocusOverlay(taskId, mode = 'compact') {
             focusOverlayState.isOpen = true;
             focusOverlayState.mode = mode || 'compact';
@@ -1017,6 +1111,11 @@ function showToastMessage(text, icon = 'checkCircle') {
                 focusOverlayState.taskId = taskId;
             }
             document.body.classList.add('app-minimized-focus-mode');
+            if (focusOverlayState.mode === 'maximized') {
+                document.body.classList.add('maximized-mode');
+            } else {
+                document.body.classList.remove('maximized-mode');
+            }
             const container = document.getElementById('focus-overlay-container');
             if (container) {
                 container.classList.remove('hidden');
@@ -1028,23 +1127,29 @@ function showToastMessage(text, icon = 'checkCircle') {
         function closeFocusOverlay() {
             focusOverlayState.isOpen = false;
             document.body.classList.remove('app-minimized-focus-mode');
+            document.body.classList.remove('maximized-mode');
             const container = document.getElementById('focus-overlay-container');
             if (container) {
                 container.classList.add('hidden');
             }
             pauseFocusTimer();
+            if (typeof exitPipIfActive === 'function') {
+                exitPipIfActive();
+            }
             const isML = (typeof getAppLanguage === 'function') ? (getAppLanguage() === 'ml') : false;
-            showAppToast(isML ? "ഫോക്കസ് സെഷൻ നിർത്തിവെച്ചു" : "Focus session paused", "fa-circle-pause text-amber-400");
+            showAppToast(isML ? "ഫോക്കസ് ടൈമർ അടച്ചു" : "Focus overlay closed", "fa-circle-pause text-amber-400");
         }
 
         function maximizeFocusOverlay() {
             focusOverlayState.mode = 'maximized';
+            document.body.classList.add('maximized-mode');
             renderFocusOverlay();
             updateFocusOverlayUI();
         }
 
         function minimizeFocusOverlay() {
             focusOverlayState.mode = 'compact';
+            document.body.classList.remove('maximized-mode');
             renderFocusOverlay();
             updateFocusOverlayUI();
         }
@@ -1052,9 +1157,13 @@ function showToastMessage(text, icon = 'checkCircle') {
         function restoreFullApp() {
             focusOverlayState.isOpen = false;
             document.body.classList.remove('app-minimized-focus-mode');
+            document.body.classList.remove('maximized-mode');
             const container = document.getElementById('focus-overlay-container');
             if (container) {
                 container.classList.add('hidden');
+            }
+            if (typeof exitPipIfActive === 'function') {
+                exitPipIfActive();
             }
             const isML = (typeof getAppLanguage === 'function') ? (getAppLanguage() === 'ml') : false;
             showAppToast(
@@ -1097,6 +1206,7 @@ function showToastMessage(text, icon = 'checkCircle') {
         function renderFocusOverlay() {
             const compactEl = document.getElementById('focus-overlay-compact');
             const maxEl = document.getElementById('focus-overlay-maximized');
+            const backdropEl = document.getElementById('focus-overlay-backdrop');
             if (!compactEl || !maxEl) return;
 
             const task = getCurrentFocusTask(focusOverlayState.taskId);
@@ -1112,76 +1222,92 @@ function showToastMessage(text, icon = 'checkCircle') {
             const progressPercent = Math.min(100, Math.max(0, (elapsed / total) * 100));
 
             if (focusOverlayState.mode === 'compact') {
+                if (backdropEl) backdropEl.classList.add('hidden');
+                document.body.classList.remove('maximized-mode');
                 compactEl.classList.remove('hidden');
                 maxEl.classList.add('hidden');
                 maxEl.classList.remove('flex');
 
                 compactEl.innerHTML = `
-                    <div class="bg-slate-900/95 dark:bg-[#070b14]/95 text-white rounded-3xl p-5 sm:p-6 backdrop-blur-2xl border-2 border-amber-500/90 shadow-2xl focus-overlay-active-glow ring-4 ring-amber-500/20 relative overflow-hidden animate-fade-in-up">
-                        <!-- Urgency Top Bar -->
-                        <div class="flex items-center justify-between gap-2 mb-3">
-                            <div class="flex items-center gap-2">
-                                <span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping"></span>
-                                <span class="text-[10px] sm:text-xs font-black uppercase tracking-wider text-amber-300 bg-amber-950/80 border border-amber-500/50 px-2.5 py-0.5 rounded-full flex items-center gap-1.5 shadow-sm">
-                                    <i class="fa-solid fa-fire text-red-500"></i>
-                                    <span>${isML ? 'ഡീപ് ഫോക്കസ് • ഇപ്പോൾ പഠിക്കണം' : 'Deep Focus • Complete Now'}</span>
+                    <div class="bg-slate-900/98 dark:bg-[#070b14]/98 text-white rounded-3xl p-4 sm:p-5 backdrop-blur-2xl border-2 border-amber-500/90 shadow-2xl focus-overlay-active-glow ring-4 ring-amber-500/20 relative overflow-hidden animate-fade-in-up">
+                        <!-- Top Header Bar with Live Indicator & Action Buttons -->
+                        <div class="flex items-center justify-between gap-2 mb-2.5">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping shrink-0"></span>
+                                <span class="text-[10px] sm:text-xs font-black uppercase tracking-wider text-amber-300 bg-amber-950/80 border border-amber-500/50 px-2.5 py-0.5 rounded-full flex items-center gap-1.5 shadow-sm truncate">
+                                    <i class="fa-solid fa-fire text-red-500 text-xs"></i>
+                                    <span>${isML ? 'ഡീപ് ഫോക്കസ് • ഇപ്പോൾ' : 'Deep Focus • Complete Now'}</span>
                                 </span>
                             </div>
-                            <div class="flex items-center gap-1.5">
-                                <!-- Maximize icon button -->
-                                <button type="button" onclick="maximizeFocusOverlay()" title="${isML ? 'വലുതാക്കുക' : 'Maximize Timer'}" class="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition active:scale-95 border border-white/15 shadow-sm" aria-label="Maximize Timer">
-                                    <i class="fa-solid fa-expand text-xs"></i>
+                            <div class="flex items-center gap-1.5 shrink-0">
+                                <!-- Maximize icon button to go to Full Screen -->
+                                <button type="button" onclick="maximizeFocusOverlay()" title="${isML ? 'ഫുൾ സ്ക്രീൻ വലുതാക്കുക' : 'Maximize to Full Screen'}" class="w-8 h-8 rounded-xl bg-slate-800/90 hover:bg-blue-600 text-white flex items-center justify-center transition active:scale-95 border border-slate-700 shadow-sm" aria-label="Maximize Timer">
+                                    <i class="fa-solid fa-expand text-xs hidden"></i>
+                                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+                                    </svg>
+                                </button>
+                                <!-- Floating PiP button -->
+                                <button type="button" onclick="togglePictureInPicture()" title="${isML ? 'ഫോണിൽ ഫ്ലോട്ട് ചെയ്യുക' : 'Float on Phone Screen (PiP)'}" class="w-8 h-8 rounded-xl bg-slate-800/90 hover:bg-indigo-600 text-white flex items-center justify-center transition active:scale-95 border border-slate-700 shadow-sm" aria-label="Float Timer">
+                                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                                    </svg>
                                 </button>
                                 <!-- Small Close icon button -->
-                                <button type="button" onclick="closeFocusOverlay()" title="${isML ? 'അടയ്ക്കുക' : 'Close'}" class="w-8 h-8 rounded-xl bg-white/10 hover:bg-rose-600 text-white flex items-center justify-center transition active:scale-95 border border-white/15 shadow-sm" aria-label="Close Timer">
-                                    <i class="fa-solid fa-xmark text-xs"></i>
+                                <button type="button" onclick="closeFocusOverlay()" title="${isML ? 'അടയ്ക്കുക' : 'Close Timer'}" class="w-8 h-8 rounded-xl bg-slate-800/90 hover:bg-rose-600 text-white flex items-center justify-center transition active:scale-95 border border-slate-700 shadow-sm" aria-label="Close Timer">
+                                    <i class="fa-solid fa-xmark text-xs hidden"></i>
+                                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Task Details: Clear & Urgently Framed -->
-                        <div class="mb-3 text-left">
-                            <div class="flex flex-wrap items-center gap-1.5 mb-1.5">
+                        <!-- Chapter Header (Compact & Clear) -->
+                        <div class="mb-2 text-left">
+                            <div class="flex flex-wrap items-center gap-1.5 mb-1">
                                 <span class="text-[11px] font-bold px-2 py-0.5 rounded-md ${subjectBadgeClass}">${task.subject}</span>
                                 ${renderTaskGradeBadge(task)}
                                 ${renderTaskPartBadge(task)}
                                 ${task.isFocusSubject ? '<span class="text-[11px] font-black px-2 py-0.5 rounded-md bg-rose-950 text-rose-300 border border-rose-800"><i class="fa-solid fa-bullseye mr-1"></i>Focus Priority</span>' : ''}
                             </div>
-                            <h4 class="text-base sm:text-lg font-black text-white leading-snug line-clamp-1">${getTaskChapterTitle(task)}</h4>
-                            <p class="text-xs text-slate-300 mt-0.5 font-medium line-clamp-2">${formatTaskTopicTitle(task)}</p>
+                            <h4 class="text-sm sm:text-base font-black text-white leading-tight line-clamp-1">${getTaskChapterTitle(task)}</h4>
+                            <p class="text-[11px] sm:text-xs text-slate-300 font-medium line-clamp-1 mt-0.5">${formatTaskTopicTitle(task)}</p>
                         </div>
 
-                        <!-- Urgency Countdown Card -->
-                        <div class="p-3.5 rounded-2xl bg-black/60 border border-amber-500/40 my-3 flex items-center justify-between gap-3 shadow-inner">
+                        <!-- Countdown & Pause/Resume Control -->
+                        <div class="p-3 rounded-2xl bg-black/70 border border-amber-500/40 my-2.5 flex items-center justify-between gap-3 shadow-inner">
                             <div class="text-left">
                                 <div class="text-3xl sm:text-4xl font-black font-mono tracking-widest text-amber-400 drop-shadow-[0_0_12px_rgba(251,191,36,0.6)]" id="compact-timer-display">${formattedTime}</div>
-                                <div class="text-[10px] sm:text-[11px] text-amber-200/90 font-bold flex items-center gap-1 mt-0.5">
+                                <div class="text-[10px] text-amber-200/90 font-bold flex items-center gap-1 mt-0.5">
                                     <i class="fa-solid fa-bolt text-amber-400 animate-bounce"></i>
                                     <span>${isML ? 'ശ്രദ്ധ മാറ്റരുത് • ഈ ഭാഗം പൂർത്തിയാക്കൂ!' : 'Lock in! Complete this topic before 00:00'}</span>
                                 </div>
                             </div>
                             <div class="flex items-center gap-1.5">
-                                <button type="button" onclick="toggleOverlayTimer()" id="compact-timer-toggle-btn" class="py-2 px-3 rounded-xl ${focusTimerState.isRunning ? 'bg-amber-600 hover:bg-amber-500' : 'bg-blue-600 hover:bg-blue-500'} text-white font-extrabold text-xs flex items-center gap-1.5 transition active:scale-95 shadow-md">
+                                <button type="button" onclick="toggleOverlayTimer()" id="compact-timer-toggle-btn" class="py-2 px-3.5 rounded-xl ${focusTimerState.isRunning ? 'bg-amber-600 hover:bg-amber-500' : 'bg-blue-600 hover:bg-blue-500'} text-white font-extrabold text-xs flex items-center gap-1.5 transition active:scale-95 shadow-md">
                                     <i class="fa-solid ${focusTimerState.isRunning ? 'fa-pause' : 'fa-play'} text-xs"></i>
                                     <span>${focusTimerState.isRunning ? (isML ? 'പോസ്' : 'Pause') : (isML ? 'തുടങ്ങുക' : 'Resume')}</span>
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Visual Elapsed Progress Bar -->
-                        <div class="h-2 w-full bg-slate-800 rounded-full overflow-hidden p-0.5 border border-slate-700/60 mb-3">
+                        <!-- Progress Bar -->
+                        <div class="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden p-0.5 border border-slate-700/60 mb-2.5">
                             <div id="compact-progress-bar" class="h-full bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 rounded-full transition-all duration-1000" style="width: ${progressPercent}%;"></div>
                         </div>
 
-                        <!-- Satisfying Complete Button -->
-                        <button type="button" onclick="completeTaskFromOverlay('${task.id}')" class="w-full py-3 px-4 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-600 text-white font-black text-xs sm:text-sm rounded-2xl shadow-lg shadow-emerald-600/30 transition active:scale-[0.98] flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-circle-check text-base"></i>
+                        <!-- Quick Complete Button -->
+                        <button type="button" onclick="completeTaskFromOverlay('${task.id}')" class="w-full py-2.5 px-4 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-600 text-white font-black text-xs sm:text-sm rounded-xl shadow-lg shadow-emerald-600/30 transition active:scale-[0.98] flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-circle-check text-sm"></i>
                             <span>${isML ? 'പഠിച്ചു കഴിഞ്ഞു (+100 XP നേടൂ)' : 'Mark Chapter Part Complete (+100 XP)'}</span>
                         </button>
                     </div>
                 `;
             } else {
-                // Maximized Mode
+                // Maximized Fullscreen Mode
+                if (backdropEl) backdropEl.classList.remove('hidden');
+                document.body.classList.add('maximized-mode');
                 compactEl.classList.add('hidden');
                 maxEl.classList.remove('hidden');
                 maxEl.classList.add('flex');
@@ -1205,16 +1331,25 @@ function showToastMessage(text, icon = 'checkCircle') {
                         <div class="flex items-center gap-2">
                             <!-- Option to Open Full App as requested -->
                             <button type="button" onclick="restoreFullApp()" class="flex items-center gap-2 py-2 px-3 sm:px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-blue-600/30 transition active:scale-95 border border-blue-400/40">
-                                <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+                                <i class="fa-solid fa-arrow-up-right-from-square text-xs hidden"></i>
+                                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                                </svg>
                                 <span>${isML ? 'ആപ്പ് തുറക്കുക (Open Full App)' : 'Open Full App'}</span>
                             </button>
                             <!-- Minimize to compact overlay -->
-                            <button type="button" onclick="minimizeFocusOverlay()" title="${isML ? 'ചെറുതാക്കുക' : 'Minimize to compact overlay'}" class="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition active:scale-95 border border-white/15" aria-label="Minimize timer">
-                                <i class="fa-solid fa-compress text-sm"></i>
+                            <button type="button" onclick="minimizeFocusOverlay()" title="${isML ? 'ചെറുതാക്കുക' : 'Minimize to compact overlay'}" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition active:scale-95 border border-slate-700" aria-label="Minimize timer">
+                                <i class="fa-solid fa-compress text-sm hidden"></i>
+                                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25" />
+                                </svg>
                             </button>
                             <!-- Small Close icon -->
-                            <button type="button" onclick="closeFocusOverlay()" title="${isML ? 'അടയ്ക്കുക' : 'Exit Focus'}" class="w-9 h-9 rounded-xl bg-white/10 hover:bg-rose-600 text-white flex items-center justify-center transition active:scale-95 border border-white/15" aria-label="Close timer">
-                                <i class="fa-solid fa-xmark text-sm"></i>
+                            <button type="button" onclick="closeFocusOverlay()" title="${isML ? 'അടയ്ക്കുക' : 'Exit Focus'}" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-rose-600 text-white flex items-center justify-center transition active:scale-95 border border-slate-700" aria-label="Close timer">
+                                <i class="fa-solid fa-xmark text-sm hidden"></i>
+                                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
                             </button>
                         </div>
                     </div>
@@ -4716,6 +4851,7 @@ if (typeof window !== 'undefined') {
         minimizeFocusOverlay,
         restoreFullApp,
         toggleOverlayTimer,
+        togglePictureInPicture,
         addFiveMinutesToFocus,
         completeTaskFromOverlay,
         renderFocusOverlay,
