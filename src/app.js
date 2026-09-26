@@ -2791,8 +2791,11 @@ function showToastMessage(text, icon = 'checkCircle') {
                                     <span id="summary-date-badge" class="font-bold text-slate-700 dark:text-slate-200"></span>
                                 </div>
                                 <div class="flex items-center justify-between text-xs">
-                                    <span class="text-slate-500 dark:text-slate-400 font-medium">${isML ? 'പൂർത്തിയാക്കിയവ' : 'Completed'}</span>
-                                    <span id="summary-completed-badge" class="font-bold text-emerald-600 dark:text-emerald-400"></span>
+                                    <span class="text-slate-500 dark:text-slate-400 font-medium">${isML ? 'പൂർത്തിയാക്കിയവ' : 'Completed Chapters'}</span>
+                                    <div class="flex items-center gap-2">
+                                        <span id="summary-completed-badge" class="font-bold text-emerald-600 dark:text-emerald-400"></span>
+                                        <button type="button" onclick="goToSetupStep(3)" class="text-[11px] text-blue-600 dark:text-blue-400 hover:underline font-bold">${isML ? 'മാറ്റുക' : 'Edit'}</button>
+                                    </div>
                                 </div>
                             </div>
 
@@ -2802,14 +2805,28 @@ function showToastMessage(text, icon = 'checkCircle') {
                                 <i class="fa-solid fa-rocket"></i>
                             </button>
 
-                            <!-- Advanced Customization Accordion (Clean title: No "Exclusions", No "(Optional)") -->
+                            <!-- Customize Study Hours & Routine Accordion -->
                             <details id="setup-advanced-accordion" class="group bg-slate-50 dark:bg-[#101726] rounded-2xl border border-slate-200 dark:border-slate-800 p-4 transition-all text-left">
                                 <summary class="cursor-pointer font-bold text-xs sm:text-sm text-slate-700 dark:text-slate-200 flex items-center justify-between select-none list-none">
-                                    <div class="flex items-center gap-2">
-                                        <i class="fa-solid fa-sliders text-blue-600 dark:text-blue-400"></i>
-                                        <span>⚙️ ${isML ? 'കൂടുതൽ ക്രമീകരണങ്ങൾ' : 'Advanced Customization'}</span>
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center text-sm shrink-0">
+                                            <i class="fa-solid fa-sliders"></i>
+                                        </div>
+                                        <div>
+                                            <span class="block font-black text-slate-900 dark:text-white text-xs sm:text-sm">
+                                                ${isML ? 'പഠന സമയവും രീതിയും ക്രമീകരിക്കുക' : 'Customize Study Hours & Routine'}
+                                            </span>
+                                            <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                                                ${isML ? 'ദിവസേനയുള്ള പഠന സമയം, വിശ്രമ ദിനം, സിലബസ് വ്യാപ്തി' : 'Daily study hours, weekly rest day & exam portions'}
+                                            </span>
+                                        </div>
                                     </div>
-                                    <i class="fa-solid fa-chevron-down text-xs text-slate-400 group-open:rotate-180 transition-transform"></i>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-[11px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded-lg border border-blue-200/50 dark:border-blue-800/50 hidden sm:inline-block">
+                                            ${isML ? 'ക്രമീകരിക്കുക' : 'Customize'}
+                                        </span>
+                                        <i class="fa-solid fa-chevron-down text-xs text-slate-400 group-open:rotate-180 transition-transform"></i>
+                                    </div>
                                 </summary>
 
                                 <div class="mt-4 pt-4 border-t border-slate-200/80 dark:border-slate-700/80 space-y-5 text-left">
