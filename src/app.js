@@ -1495,8 +1495,8 @@ function showToastMessage(text, icon = 'checkCircle') {
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
                                     </svg>
                                 </button>
-                                <!-- Floating PiP button -->
-                                <button type="button" onclick="togglePictureInPicture()" title="${isML ? 'ഫോണിൽ ഫ്ലോട്ട് ചെയ്യുക' : 'Float on Phone Screen (PiP)'}" class="w-8 h-8 rounded-xl bg-slate-800/90 hover:bg-indigo-600 text-white flex items-center justify-center transition active:scale-95 border border-slate-700 shadow-sm" aria-label="Float Timer">
+                                <!-- Floating PiP button (Desktop only) -->
+                                <button type="button" onclick="togglePictureInPicture(true)" title="${isML ? 'ഡെസ്ക്ടോപ്പിൽ ഫ്ലോട്ട് ചെയ്യുക' : 'Float on Desktop Screen (PiP)'}" class="w-8 h-8 rounded-xl bg-slate-800/90 hover:bg-indigo-600 text-white items-center justify-center transition active:scale-95 border border-slate-700 shadow-sm hidden sm:flex" aria-label="Float Timer">
                                     <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
                                     </svg>

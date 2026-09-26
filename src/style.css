@@ -728,16 +728,28 @@
 /* ==========================================================================
    Focus Sprint Mode & App Minimization Styling
    ========================================================================== */
-body.app-minimized-focus-mode header,
-body.app-minimized-focus-mode #app-container,
-body.app-minimized-focus-mode footer,
-body.app-minimized-focus-mode section,
-body.app-minimized-focus-mode #mobile-nav {
-    opacity: 0.18 !important;
-    filter: blur(6px) grayscale(30%) !important;
-    pointer-events: none !important;
-    transform: scale(0.99);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+/* On desktop, minimize background app when focus mode is active */
+@media (min-width: 641px) {
+    body.app-minimized-focus-mode header,
+    body.app-minimized-focus-mode #app-container,
+    body.app-minimized-focus-mode footer,
+    body.app-minimized-focus-mode section {
+        opacity: 0.22 !important;
+        filter: blur(5px) grayscale(25%) !important;
+        pointer-events: none !important;
+        transform: scale(0.99);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+}
+
+/* On mobile, seamlessly hide bottom navigation to let the focus overlay dock cleanly */
+@media (max-width: 640px) {
+    body.app-minimized-focus-mode #mobile-nav {
+        display: none !important;
+    }
+    body.app-minimized-focus-mode:not(.maximized-mode) #app-container {
+        padding-bottom: 11rem;
+    }
 }
 
 body.app-minimized-focus-mode.maximized-mode header,
