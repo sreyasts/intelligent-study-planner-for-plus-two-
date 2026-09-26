@@ -977,18 +977,17 @@ function showToastMessage(text, icon = 'checkCircle') {
         }
 
         function toggleFocusTimer(taskId) {
-            if (focusTimerState.isRunning && focusOverlayState.isOpen) {
+            if (focusTimerState.isRunning) {
                 pauseFocusTimer();
             } else {
-                if (!focusTimerState.isRunning) {
-                    startFocusTimer(taskId);
-                }
-                openFocusOverlay(taskId, 'compact');
-                // Auto-trigger Picture-in-Picture only if supported by the browser (silent on mobile so no error toast)
-                try {
-                    togglePictureInPicture(false);
-                } catch(e) {
-                    console.warn('Direct PiP auto-trigger:', e);
+                startFocusTimer(taskId);
+                // PC ONLY: Automatically trigger Document Picture-in-Picture floating window
+                if (typeof window !== 'undefined' && 'documentPictureInPicture' in window) {
+                    try {
+                        togglePictureInPicture(false);
+                    } catch(e) {
+                        console.warn('PC Document PiP auto-trigger:', e);
+                    }
                 }
             }
         }
@@ -1203,14 +1202,8 @@ function showToastMessage(text, icon = 'checkCircle') {
                     return;
                 }
 
-                // Exit video PiP if active
-                if (document.pictureInPictureElement) {
-                    await document.exitPictureInPicture();
-                    return;
-                }
-
-                // Option A: Document Picture-in-Picture (HTML interactive floating window in Chromium desktop)
-                if ('documentPictureInPicture' in window) {
+                // PC Only: Document Picture-in-Picture (HTML interactive floating window in Chromium desktop)
+                if (typeof window !== 'undefined' && 'documentPictureInPicture' in window) {
                     try {
                         const pipWin = await window.documentPictureInPicture.requestWindow({
                             width: 360,
@@ -1218,7 +1211,7 @@ function showToastMessage(text, icon = 'checkCircle') {
                         });
                         docPipWindow = pipWin;
 
-                        const task = getCurrentFocusTask(focusOverlayState.taskId);
+                        const task = getCurrentFocusTask(focusOverlayState.taskId || focusTimerState.taskId);
                         const mins = Math.floor(focusTimerState.secondsRemaining / 60);
                         const secs = focusTimerState.secondsRemaining % 60;
                         const formattedTime = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
@@ -1289,60 +1282,22 @@ function showToastMessage(text, icon = 'checkCircle') {
                         showAppToast(isML ? "ഫ്ലോട്ടിംഗ് ടൈമർ ഓണായി! പോസ്/റെസ്യും ബട്ടണുകൾ ലഭ്യമാണ്" : "Floating timer active! Interactive Pause/Resume ready", "fa-window-restore text-emerald-400");
                         return;
                     } catch(docPipErr) {
-                        console.warn('Document PiP request skipped, using Video PiP:', docPipErr);
+                        console.warn('Document PiP request error:', docPipErr);
                     }
                 }
 
-                // Option B: Standard Video / Canvas PiP
-                if (!document.pictureInPictureEnabled) {
-                    if (isExplicit) {
-                        const isML = (typeof getAppLanguage === 'function') ? (getAppLanguage() === 'ml') : false;
-                        showAppToast(
-                            isML 
-                                ? "മറ്റ് ആപ്പുകളുടെ മുകളിൽ കാണുന്ന ഫ്ലോട്ടിംഗ് ടൈമർ ഡെസ്ക്ടോപ്പ് ബ്രൗസറുകളിലാണ് (Chrome/Edge) ലഭ്യമാകുന്നത്. മൊബൈലിൽ താഴെയുള്ള ഇൻ-ആപ്പ് ഓവർലേ ടൈമർ സജീവമാണ്!" 
-                                : "Floating timer outside the browser is supported on Desktop (Chrome/Edge). On mobile, the In-App Focus Overlay below is active!", 
-                            "fa-circle-info text-blue-400"
-                        );
-                    }
-                    return;
-                }
-
-                if (!pipCanvasEl) {
-                    pipCanvasEl = document.createElement('canvas');
-                    pipCanvasEl.width = 440;
-                    pipCanvasEl.height = 220;
-                }
-                updatePipCanvas();
-                if (!pipVideoEl) {
-                    pipVideoEl = document.createElement('video');
-                    pipVideoEl.muted = true;
-                    pipVideoEl.playsInline = true;
-                    pipVideoEl.setAttribute('playsinline', '');
-                    pipVideoEl.setAttribute('webkit-playsinline', '');
-                    pipVideoEl.style.position = 'fixed';
-                    pipVideoEl.style.bottom = '-9999px';
-                    pipVideoEl.style.opacity = '0.001';
-                    pipVideoEl.style.pointerEvents = 'none';
-                    document.body.appendChild(pipVideoEl);
-                    const stream = pipCanvasEl.captureStream(2);
-                    pipVideoEl.srcObject = stream;
-                }
-                await pipVideoEl.play();
-                syncMediaSessionState();
-                await pipVideoEl.requestPictureInPicture();
-                const isML = (typeof getAppLanguage === 'function') ? (getAppLanguage() === 'ml') : false;
-                showAppToast(isML ? "ഫ്ലോട്ടിംഗ് ടൈമർ ഓണായി! പോസ് ചെയ്യാൻ സ്ക്രീനിൽ ടാപ്പ് ചെയ്യാം" : "Floating timer active! Native Pause/Resume controls enabled", "fa-window-restore text-emerald-400");
-            } catch(e) {
-                console.warn('PiP launch issue:', e);
+                // If on mobile or unsupported browser and clicked explicitly
                 if (isExplicit) {
                     const isML = (typeof getAppLanguage === 'function') ? (getAppLanguage() === 'ml') : false;
                     showAppToast(
                         isML 
-                            ? "മൊബൈൽ ബ്രൗസർ ഫ്ലോട്ടിംഗ് വിൻഡോ അനുവദിക്കുന്നില്ല. താഴെയുള്ള ഇൻ-ആപ്പ് ഫോക്കസ് ഓവർലേ സജീവമാണ്!" 
-                            : "Mobile browser restricts external floating windows. The in-app focus overlay below is active!", 
+                            ? "മറ്റ് ആപ്പുകളുടെ മുകളിൽ കാണുന്ന ഫ്ലോട്ടിംഗ് ടൈമർ പിസി ബ്രൗസറുകളിലാണ് (Chrome/Edge) ലഭ്യമാകുന്നത്." 
+                            : "Floating Picture-in-Picture window is a PC-only feature (Chrome/Edge).", 
                         "fa-circle-info text-blue-400"
                     );
                 }
+            } catch(e) {
+                console.warn('PiP launch issue:', e);
             }
         }
 
@@ -3964,6 +3919,10 @@ function showToastMessage(text, icon = 'checkCircle') {
                                         </button>
                                         <button type="button" onclick="resetFocusTimer()" class="py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs transition" title="Reset Timer">
                                             <i class="fa-solid fa-rotate-left"></i>
+                                        </button>
+                                        <button id="focus-pip-btn" type="button" onclick="togglePictureInPicture(true)" class="py-2 px-3 rounded-xl bg-slate-800 hover:bg-indigo-600 text-slate-300 hover:text-white text-xs transition hidden sm:inline-flex items-center gap-1.5 border border-slate-700/80" title="${isML ? 'പിസി ഫ്ലോട്ടിംഗ് വിൻഡോ' : 'Float on PC (Picture-in-Picture)'}">
+                                            <i class="fa-solid fa-window-restore text-xs"></i>
+                                            <span class="hidden md:inline">${isML ? 'ഫ്ലോട്ട്' : 'Float (PC)'}</span>
                                         </button>
                                     </div>
                                 </div>
