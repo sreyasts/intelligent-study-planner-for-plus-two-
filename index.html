@@ -541,95 +541,109 @@
         </details>
     </section>
 
-    <!-- Rich Navigation Footer for Google Sitelinks & Quick Student Access -->
-    <footer class="border-t border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-[#0c1220]/60 py-10 px-4 sm:px-6 mb-16 sm:mb-0 text-xs text-slate-500 dark:text-slate-400 no-print">
-        <div class="max-w-5xl mx-auto space-y-8">
-            <!-- 3 Column Quick Nav Grid -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 text-left">
-                <!-- Column 1: Study Planners -->
-                <div class="space-y-3">
-                    <h4 class="font-bold text-slate-900 dark:text-slate-200 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
-                        <span class="text-blue-600 dark:text-blue-400">⚡</span> Timetables & Planners
-                    </h4>
-                    <ul class="space-y-2">
-                        <li>
-                            <a href="/pages/plus-two-timetable.html" class="hover:text-blue-600 dark:hover:text-blue-400 transition flex items-center gap-1.5 font-medium">
-                                <span>Plus Two Study Timetable (30 Days)</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/pages/plus-one-improvement-guide.html" class="hover:text-blue-600 dark:hover:text-blue-400 transition flex items-center gap-1.5 font-medium">
-                                <span>Plus One Improvement Study Plan Builder</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/pages/syllabus-plus-two.html" class="hover:text-blue-600 dark:hover:text-blue-400 transition flex items-center gap-1.5 font-medium">
-                                <span>Kerala Higher Secondary Syllabus Planner</span>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
+    <!-- Rich Navigation Footer for Google Sitelinks & Quick Student Access (Collapsed by default for a clean, minimal UI) -->
+    <footer class="border-t border-slate-200 dark:border-slate-800/80 bg-white/40 dark:bg-[#0c1220]/40 py-3 px-4 sm:px-6 mb-16 sm:mb-0 text-xs text-slate-500 dark:text-slate-400 no-print">
+        <div class="max-w-5xl mx-auto space-y-3">
+            <!-- Collapsible Quick Directory Drawer -->
+            <details class="group bg-slate-50/70 dark:bg-[#111827]/70 hover:bg-slate-100/80 dark:hover:bg-[#151f33]/80 rounded-xl border border-slate-200/70 dark:border-slate-800/70 p-2.5 transition">
+                <summary class="font-bold text-[11px] sm:text-xs text-slate-600 dark:text-slate-300 flex items-center justify-between select-none cursor-pointer">
+                    <span class="flex items-center gap-1.5">
+                        <span class="text-blue-600 dark:text-blue-400">⚡</span>
+                        <span>Timetables, Tools & Study Guides Directory (9 Pages)</span>
+                    </span>
+                    <span class="flex items-center gap-1 text-[10px] text-slate-400 dark:text-slate-400 font-normal">
+                        <span class="group-open:hidden">Tap to view</span>
+                        <svg class="w-3.5 h-3.5 inline-block text-slate-400 group-open:rotate-180 transition" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+                    </span>
+                </summary>
 
-                <!-- Column 2: Tools & Calculators -->
-                <div class="space-y-3">
-                    <h4 class="font-bold text-slate-900 dark:text-slate-200 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
-                        <span class="text-emerald-600 dark:text-emerald-400">⏱️</span> Tools & Calculators
-                    </h4>
-                    <ul class="space-y-2">
-                        <li>
-                            <a href="/pages/study-hours-calculator.html" class="hover:text-blue-600 dark:hover:text-blue-400 transition flex items-center gap-1.5 font-medium">
-                                <span>Study Hours & Revision Buffer Calculator</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/pages/backlog-recovery-planner.html" class="hover:text-blue-600 dark:hover:text-blue-400 transition flex items-center gap-1.5 font-medium">
-                                <span>Backlog Recovery Catch-Up Planner</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/pages/exam-countdown.html" class="hover:text-blue-600 dark:hover:text-blue-400 transition flex items-center gap-1.5 font-medium">
-                                <span>Kerala Plus Two Exam Countdown</span>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
+                <!-- 3 Column Quick Nav Grid (Clean & Expanded on demand) -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 text-left pt-4 mt-3 border-t border-slate-200/60 dark:border-slate-800/60">
+                    <!-- Column 1: Study Planners -->
+                    <div class="space-y-2">
+                        <h4 class="font-bold text-slate-900 dark:text-slate-200 uppercase tracking-wider text-[10px] flex items-center gap-1.5">
+                            <span class="text-blue-600 dark:text-blue-400">⚡</span> Timetables & Planners
+                        </h4>
+                        <ul class="space-y-1.5 text-xs">
+                            <li>
+                                <a href="/pages/plus-two-timetable.html" class="hover:text-blue-600 dark:hover:text-blue-400 transition flex items-center gap-1.5 font-medium">
+                                    <span>Plus Two Study Timetable (30 Days)</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/pages/plus-one-improvement-guide.html" class="hover:text-blue-600 dark:hover:text-blue-400 transition flex items-center gap-1.5 font-medium">
+                                    <span>Plus One Improvement Study Plan Builder</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/pages/syllabus-plus-two.html" class="hover:text-blue-600 dark:hover:text-blue-400 transition flex items-center gap-1.5 font-medium">
+                                    <span>Kerala Higher Secondary Syllabus Planner</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
 
-                <!-- Column 3: Community & School -->
-                <div class="space-y-3">
-                    <h4 class="font-bold text-slate-900 dark:text-slate-200 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
-                        <span class="text-indigo-600 dark:text-indigo-400">🏫</span> Classroom & Notice Board
-                    </h4>
-                    <ul class="space-y-2">
-                        <li>
-                            <a href="/pages/school-poster.html" class="hover:text-blue-600 dark:hover:text-blue-400 transition flex items-center gap-1.5 font-bold text-blue-600 dark:text-blue-400">
-                                <span>🖨️ Printable School Notice Board Poster</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/pages/stats.html" class="hover:text-blue-600 dark:hover:text-blue-400 transition flex items-center gap-1.5 font-medium">
-                                <span>📊 Public Audit & Usage Stats</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="https://github.com/sreyasts/intelligent-study-planner-for-plus-two-" target="_blank" rel="noopener noreferrer" class="hover:text-slate-900 dark:hover:text-white transition flex items-center gap-1.5 font-medium">
-                                <span>⭐ GitHub Open Source (Apache 2.0)</span>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
+                    <!-- Column 2: Tools & Calculators -->
+                    <div class="space-y-2">
+                        <h4 class="font-bold text-slate-900 dark:text-slate-200 uppercase tracking-wider text-[10px] flex items-center gap-1.5">
+                            <span class="text-emerald-600 dark:text-emerald-400">⏱️</span> Tools & Calculators
+                        </h4>
+                        <ul class="space-y-1.5 text-xs">
+                            <li>
+                                <a href="/pages/study-hours-calculator.html" class="hover:text-blue-600 dark:hover:text-blue-400 transition flex items-center gap-1.5 font-medium">
+                                    <span>Study Hours & Revision Buffer Calculator</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/pages/backlog-recovery-planner.html" class="hover:text-blue-600 dark:hover:text-blue-400 transition flex items-center gap-1.5 font-medium">
+                                    <span>Backlog Recovery Catch-Up Planner</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/pages/exam-countdown.html" class="hover:text-blue-600 dark:hover:text-blue-400 transition flex items-center gap-1.5 font-medium">
+                                    <span>Kerala Plus Two Exam Countdown</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
 
-            <!-- Bottom Sub-Footer Row -->
-            <div class="pt-6 border-t border-slate-200/80 dark:border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-slate-500 dark:text-slate-400">
-                <div class="flex items-center gap-2">
+                    <!-- Column 3: Community & School -->
+                    <div class="space-y-2">
+                        <h4 class="font-bold text-slate-900 dark:text-slate-200 uppercase tracking-wider text-[10px] flex items-center gap-1.5">
+                            <span class="text-indigo-600 dark:text-indigo-400">🏫</span> Classroom & Notice Board
+                        </h4>
+                        <ul class="space-y-1.5 text-xs">
+                            <li>
+                                <a href="/pages/printable-qr-poster.html" class="hover:text-blue-600 dark:hover:text-blue-400 transition flex items-center gap-1.5 font-bold text-blue-600 dark:text-blue-400">
+                                    <span>🖨️ Printable School Notice Board Poster</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/pages/stats.html" class="hover:text-blue-600 dark:hover:text-blue-400 transition flex items-center gap-1.5 font-medium">
+                                    <span>📊 Public Audit & Usage Stats</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="https://github.com/sreyasts/intelligent-study-planner-for-plus-two-" target="_blank" rel="noopener noreferrer" class="hover:text-slate-900 dark:hover:text-white transition flex items-center gap-1.5 font-medium">
+                                    <span>⭐ GitHub Open Source (Apache 2.0)</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </details>
+
+            <!-- Bottom Sub-Footer Row (Ultra compact 1-line text) -->
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
+                <div class="flex items-center gap-1.5 text-center sm:text-left">
                     <span class="font-bold text-slate-700 dark:text-slate-300">Mission PlusTwo</span>
                     <span>•</span>
-                    <span>Free & Open Source for Kerala Higher Secondary (DHSE)</span>
+                    <span>Free & Open Source (Kerala DHSE)</span>
                 </div>
-                <div class="flex items-center gap-4 text-xs">
-                    <a href="/pages/privacy.html" class="hover:underline">Privacy Policy</a>
+                <div class="flex items-center gap-3 text-[11px]">
+                    <a href="/pages/privacy.html" class="hover:underline">Privacy</a>
                     <span>•</span>
-                    <a href="/pages/terms.html" class="hover:underline">Terms of Service</a>
+                    <a href="/pages/terms.html" class="hover:underline">Terms</a>
                     <span>•</span>
                     <a href="https://github.com/sreyasts/intelligent-study-planner-for-plus-two-/issues" target="_blank" rel="noopener noreferrer" class="hover:underline">Report Issue</a>
                 </div>
@@ -1015,13 +1029,13 @@
         </div>
     </div>
 
-    <!-- Focus Sprint Timer Overlay (Compact & Maximized) -->
+    <!-- Focus Sprint Timer Overlay (Compact Floating & Maximized Fullscreen) -->
     <div id="focus-overlay-container" class="hidden">
-        <!-- Overlay backdrop for minimized app -->
-        <div id="focus-overlay-backdrop" onclick="minimizeFocusOverlay()" class="fixed inset-0 bg-slate-950/80 dark:bg-black/90 backdrop-blur-md z-40 transition-opacity duration-300"></div>
+        <!-- Overlay backdrop: ONLY active for full-screen maximized mode, hidden in compact floating mode -->
+        <div id="focus-overlay-backdrop" onclick="minimizeFocusOverlay()" class="fixed inset-0 bg-slate-950/80 dark:bg-black/90 backdrop-blur-md z-40 transition-opacity duration-300 hidden"></div>
 
-        <!-- 1. Compact Floating Overlay Card -->
-        <div id="focus-overlay-compact" class="fixed z-50 transition-all duration-300 inset-x-4 top-1/2 -translate-y-1/2 sm:top-auto sm:translate-y-0 sm:bottom-6 sm:right-6 sm:left-auto sm:w-[430px] max-w-lg mx-auto sm:mx-0"></div>
+        <!-- 1. Compact Floating Overlay Card: Docked over the app at bottom-right/bottom -->
+        <div id="focus-overlay-compact" class="fixed z-50 transition-all duration-300 bottom-4 left-3 right-3 sm:bottom-6 sm:right-6 sm:left-auto sm:w-[420px] max-w-lg mx-auto sm:mx-0 shadow-2xl"></div>
 
         <!-- 2. Maximized Deep Focus Theater (Full-screen) -->
         <div id="focus-overlay-maximized" class="fixed inset-0 z-50 hidden bg-slate-950/98 backdrop-blur-2xl text-white flex-col justify-between p-4 sm:p-8 md:p-10 overflow-y-auto animate-fade-in"></div>
