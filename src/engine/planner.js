@@ -475,6 +475,15 @@ function _executeCorePlanAlgorithm(
       const isWeekend = day.dayOfWeek === 0 || day.dayOfWeek === 6;
       w = isWeekend ? 1.6 : 0.8;
     }
+
+    // Heavy importance to +1 Improvement:
+    // If improvement tasks are scheduled on this day, prioritize them by reducing P2 study load
+    // so students can dedicate their primary study hours to upcoming improvement exams.
+    const hasImpTasks = day.tasks && day.tasks.some((t) => t.isImprovement);
+    if (hasImpTasks) {
+      w = Math.max(0.2, w * 0.4);
+    }
+
     dayCapacityWeights.push(w);
     totalActiveWeight += w;
   }
@@ -714,6 +723,13 @@ function _executeCorePlanAlgorithm(
   }
 
   planDays.forEach((d) => {
+    if (d.tasks && d.tasks.length > 1) {
+      d.tasks.sort((a, b) => {
+        if (a.isImprovement && !b.isImprovement) return -1;
+        if (!a.isImprovement && b.isImprovement) return 1;
+        return 0;
+      });
+    }
     if (!d.isRevisionDay && (!d.tasks || d.tasks.length === 0)) {
       d.isRestDay = true;
     }

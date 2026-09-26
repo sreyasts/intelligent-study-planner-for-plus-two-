@@ -1454,12 +1454,17 @@ function showToastMessage(text, icon = 'checkCircle') {
             });
         }
 
-        function getPersonalizationConfig() {
+        function getPersonalizationConfig(activeImpSubjects = []) {
             const weights = {};
             const subs = getStreamSubjects(selectedStream);
             subs.forEach(s => {
                 weights[s] = 1.0;
             });
+            if (Array.isArray(activeImpSubjects) && activeImpSubjects.length > 0) {
+                activeImpSubjects.forEach(s => {
+                    weights[s] = 1.4;
+                });
+            }
 
             return {
                 subjectWeights: weights,
@@ -2139,7 +2144,8 @@ function showToastMessage(text, icon = 'checkCircle') {
             }
 
             animatePlanGeneration({ mode: 'create', isLateEvening: smartStart.isLateEvening }, () => {
-                const personalization = getPersonalizationConfig();
+                const impSubs = (improvementConfig || []).map(c => c.subject);
+                const personalization = getPersonalizationConfig(impSubs);
                 const planResult = buildIntelligentPlan(deadlineInput, tasksToPlan, effectiveStartDate, improvementConfig, selectedStream, {
                     intensity: studyIntensity,
                     personalization: personalization,
@@ -2579,10 +2585,10 @@ function showToastMessage(text, icon = 'checkCircle') {
                                 <div class="p-4 bg-amber-50/60 dark:bg-amber-950/30 rounded-2xl border border-amber-300 dark:border-amber-600/50 space-y-3 animate-fade-in-up">
                                     <div class="text-left">
                                         <h4 class="font-black text-slate-900 dark:text-white text-sm flex items-center gap-1.5">
-                                            <i class="fa-solid fa-graduation-cap text-amber-600"></i>
+                                            <i class="fa-solid fa-fire text-amber-600 dark:text-amber-400"></i>
                                             <span>${isML ? '+1 ഇംപ്രൂവ്മെന്റ് വിഷയങ്ങളും പരീക്ഷാ തീയതിയും' : 'Select +1 Improvement Subjects & Exam Dates'}</span>
                                         </h4>
-                                        <p class="text-xs text-slate-500 dark:text-slate-300 mt-0.5">${isML ? 'നിങ്ങൾ എഴുതുന്ന വിഷയങ്ങൾ ടിക്ക് ചെയ്യുക:' : 'Check the papers you are appearing for:'}</p>
+                                        <p class="text-xs text-amber-800 dark:text-amber-300 font-semibold mt-0.5">${isML ? 'ഇംപ്രൂവ്മെന്റ് പരീക്ഷകൾ അടുത്തതിനാൽ ഉയർന്ന മുൻഗണനയോടെ തയ്യാറാക്കിയ ക്രാഷ് ഷെഡ്യൂൾ ലഭിക്കും:' : 'Improvement exams are near! Prioritized crash scheduling with active recall is activated:'}</p>
                                     </div>
                                     <div id="improvement-subject-items-container" class="space-y-2">
                                         ${renderImprovementSubjectItems()}
@@ -2720,6 +2726,10 @@ function showToastMessage(text, icon = 'checkCircle') {
                                                 </div>
                                             </div>
                                             <div id="improvement-options" class="hidden mt-3 p-3 bg-white dark:bg-[#101726] rounded-2xl border border-amber-300 dark:border-amber-500/40 shadow-xs space-y-2">
+                                                <div class="p-2.5 rounded-xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800/60 flex items-start gap-2 text-xs text-amber-900 dark:text-amber-200 leading-relaxed">
+                                                    <i class="fa-solid fa-fire text-amber-600 dark:text-amber-400 mt-0.5 shrink-0"></i>
+                                                    <span>${isML ? '<b>ഇംപ്രൂവ്മെന്റ് പരീക്ഷകൾ അടുത്തു!</b> ഈ പേപ്പറുകൾക്ക് ഷെഡ്യൂളിൽ ഉയർന്ന മുൻഗണന നൽകുകയും, ആ ദിവസങ്ങളിൽ +2 ഭാരം കുറയ്ക്കുകയും, ഡെയ്‌ലി ടാസ്കുകളിൽ ഏറ്റവും മുകളിൽ ഉൾപ്പെടുത്തുകയും ചെയ്യും.' : '<b>Improvement Exams are Near!</b> Selected papers receive elevated priority, reduced +2 workload on exam prep days, and appear at the very top of daily tasks.'}</span>
+                                                </div>
                                                 <div id="improvement-subject-items-container" class="space-y-2">
                                                     ${renderImprovementSubjectItems()}
                                                 </div>
@@ -3551,7 +3561,7 @@ function showToastMessage(text, icon = 'checkCircle') {
                 return `<span class="text-xs font-bold px-1.5 py-0.5 rounded-md bg-purple-100 text-purple-800 border border-purple-200/70 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800/60">Revision</span>`;
             }
             if (task.grade === '+1') {
-                return `<span class="text-xs font-extrabold px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-800 border border-amber-300/80 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-700/60 flex items-center gap-1 shadow-xs"><i class="fa-solid fa-arrow-up-right-dots text-xs text-amber-600"></i> +1 Imp</span>`;
+                return `<span class="text-xs font-extrabold px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-900 border border-amber-300/80 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-700/60 flex items-center gap-1 shadow-xs"><i class="fa-solid fa-fire text-amber-600 dark:text-amber-400"></i> +1 Imp (High Priority)</span>`;
             }
             // Plus Two (+2)
             return `

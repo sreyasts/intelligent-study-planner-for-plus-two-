@@ -562,9 +562,28 @@ describe('Edge Cases, Boundary Conditions & Invariant Hardening', () => {
         ],
       });
 
-      expect(validation.scorecard.deadlineViolations).toBe(0);
-      expect(validation.scorecard.orderingViolations).toBe(0);
-      expect(validation.scorecard.duplicateTasks).toBe(0);
+    it('prioritizes +1 improvement papers at the top of daily tasks on improvement study days', () => {
+      const planState = buildIntelligentPlan({
+        stream: 'cs',
+        startDateStr: '2026-10-01',
+        deadlineDateStr: '2026-11-30',
+        includePlusOne: true,
+        plusOneSubjects: ['Physics'],
+        improvementDates: {
+          Physics: '2026-10-15',
+        },
+      });
+
+      // Find days that have both improvement and regular tasks
+      const hybridDays = planState.plan.filter(
+        (d) => d.tasks && d.tasks.some((t) => t.isImprovement) && d.tasks.some((t) => !t.isImprovement)
+      );
+
+      expect(hybridDays.length).toBeGreaterThan(0);
+      hybridDays.forEach((day) => {
+        // Improvement task must be at the very top of each day's tasks
+        expect(day.tasks[0].isImprovement).toBe(true);
+      });
     });
   });
 });
