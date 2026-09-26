@@ -562,6 +562,11 @@ describe('Edge Cases, Boundary Conditions & Invariant Hardening', () => {
         ],
       });
 
+      expect(validation.scorecard.deadlineViolations).toBe(0);
+      expect(validation.scorecard.orderingViolations).toBe(0);
+      expect(validation.scorecard.duplicateTasks).toBe(0);
+    });
+
     it('prioritizes +1 improvement papers at the top of daily tasks on improvement study days', () => {
       const planState = buildIntelligentPlan({
         stream: 'cs',
