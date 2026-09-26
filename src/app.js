@@ -892,7 +892,7 @@ function showToastMessage(text, icon = 'checkCircle') {
 }
 
 /* ==========================================================================
-           5. FOCUS SPRINT TIMER & SHORT-ATTENTION GAMIFICATION ENGINE
+           5. FOCUS SPRINT TIMER & SHORT-ATTENTION GAMIFICATION ENGINE (OVERLAY SYSTEM)
            ========================================================================== */
         let focusTimerState = {
             intervalId: null,
@@ -902,21 +902,50 @@ function showToastMessage(text, icon = 'checkCircle') {
             taskId: null
         };
 
+        let focusOverlayState = {
+            isOpen: false,
+            mode: 'compact', // 'compact' | 'maximized'
+            taskId: null
+        };
+
+        function getCurrentFocusTask(fallbackTaskId) {
+            if (!appState || !appState.plan) return null;
+            const targetId = fallbackTaskId || focusOverlayState.taskId || focusTimerState.taskId;
+            if (targetId) {
+                for (const day of appState.plan) {
+                    if (!day.tasks) continue;
+                    const found = day.tasks.find(t => t.id === targetId);
+                    if (found) return found;
+                }
+            }
+            const activeDayNum = getActiveMissionDayNumber();
+            const todayPlan = appState.plan.find(d => d.dayNumber === activeDayNum) || appState.plan[0];
+            if (todayPlan && todayPlan.tasks) {
+                return todayPlan.tasks.find(t => !t.completed) || todayPlan.tasks[0] || null;
+            }
+            return null;
+        }
+
         function toggleFocusTimer(taskId) {
-            if (focusTimerState.isRunning) {
+            if (focusTimerState.isRunning && focusOverlayState.isOpen) {
                 pauseFocusTimer();
             } else {
-                startFocusTimer(taskId);
+                if (!focusTimerState.isRunning) {
+                    startFocusTimer(taskId);
+                }
+                openFocusOverlay(taskId, 'compact');
             }
         }
 
         function startFocusTimer(taskId) {
             if (focusTimerState.taskId !== taskId) {
                 focusTimerState.secondsRemaining = 25 * 60;
+                focusTimerState.totalSeconds = 25 * 60;
                 focusTimerState.taskId = taskId;
             }
             focusTimerState.isRunning = true;
             updateFocusTimerUI();
+            updateFocusOverlayUI();
 
             if (focusTimerState.intervalId) clearInterval(focusTimerState.intervalId);
             focusTimerState.intervalId = setInterval(() => {
@@ -927,15 +956,21 @@ function showToastMessage(text, icon = 'checkCircle') {
                     focusTimerState.isRunning = false;
                     focusTimerState.secondsRemaining = 0;
                     updateFocusTimerUI();
+                    updateFocusOverlayUI();
                     if (typeof playMilestoneCelebrationSound === 'function') {
                         playMilestoneCelebrationSound();
                     }
                     if (typeof confetti === 'function') {
-                        try { confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } }); } catch(e) {}
+                        try { confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } }); } catch(e) {}
                     }
-                    showAppToast("⏰ 25-minute sprint finished! Check this off to collect +100 XP!", "fa-stopwatch text-amber-400");
+                    const isML = (typeof getAppLanguage === 'function') ? (getAppLanguage() === 'ml') : false;
+                    showAppToast(
+                        isML ? "⏰ 25 മിനിറ്റ് ഫോക്കസ് സ്പ്രിന്റ് അവസാനിച്ചു! ടിക്ക് ചെയ്ത് +100 XP നേടൂ!" : "⏰ 25-minute sprint finished! Check this off to collect +100 XP!",
+                        "fa-stopwatch text-amber-400"
+                    );
                 } else {
                     updateFocusTimerUI();
+                    updateFocusOverlayUI();
                 }
             }, 1000);
         }
@@ -947,12 +982,95 @@ function showToastMessage(text, icon = 'checkCircle') {
                 focusTimerState.intervalId = null;
             }
             updateFocusTimerUI();
+            updateFocusOverlayUI();
         }
 
         function resetFocusTimer() {
             pauseFocusTimer();
             focusTimerState.secondsRemaining = 25 * 60;
+            focusTimerState.totalSeconds = 25 * 60;
             updateFocusTimerUI();
+            updateFocusOverlayUI();
+        }
+
+        function addFiveMinutesToFocus() {
+            focusTimerState.secondsRemaining += 5 * 60;
+            focusTimerState.totalSeconds += 5 * 60;
+            updateFocusTimerUI();
+            updateFocusOverlayUI();
+            const isML = (typeof getAppLanguage === 'function') ? (getAppLanguage() === 'ml') : false;
+            showAppToast(isML ? "+5 മിനിറ്റ് ചേർത്തു!" : "+5 minutes added!", "fa-clock text-blue-400");
+        }
+
+        function toggleOverlayTimer() {
+            if (focusTimerState.isRunning) {
+                pauseFocusTimer();
+            } else {
+                startFocusTimer(focusOverlayState.taskId || focusTimerState.taskId);
+            }
+        }
+
+        function openFocusOverlay(taskId, mode = 'compact') {
+            focusOverlayState.isOpen = true;
+            focusOverlayState.mode = mode || 'compact';
+            if (taskId) {
+                focusOverlayState.taskId = taskId;
+            }
+            document.body.classList.add('app-minimized-focus-mode');
+            const container = document.getElementById('focus-overlay-container');
+            if (container) {
+                container.classList.remove('hidden');
+            }
+            renderFocusOverlay();
+            updateFocusOverlayUI();
+        }
+
+        function closeFocusOverlay() {
+            focusOverlayState.isOpen = false;
+            document.body.classList.remove('app-minimized-focus-mode');
+            const container = document.getElementById('focus-overlay-container');
+            if (container) {
+                container.classList.add('hidden');
+            }
+            pauseFocusTimer();
+            const isML = (typeof getAppLanguage === 'function') ? (getAppLanguage() === 'ml') : false;
+            showAppToast(isML ? "ഫോക്കസ് സെഷൻ നിർത്തിവെച്ചു" : "Focus session paused", "fa-circle-pause text-amber-400");
+        }
+
+        function maximizeFocusOverlay() {
+            focusOverlayState.mode = 'maximized';
+            renderFocusOverlay();
+            updateFocusOverlayUI();
+        }
+
+        function minimizeFocusOverlay() {
+            focusOverlayState.mode = 'compact';
+            renderFocusOverlay();
+            updateFocusOverlayUI();
+        }
+
+        function restoreFullApp() {
+            focusOverlayState.isOpen = false;
+            document.body.classList.remove('app-minimized-focus-mode');
+            const container = document.getElementById('focus-overlay-container');
+            if (container) {
+                container.classList.add('hidden');
+            }
+            const isML = (typeof getAppLanguage === 'function') ? (getAppLanguage() === 'ml') : false;
+            showAppToast(
+                isML ? "ആപ്പ് തുറന്നു. ഫോക്കസ് ടൈമർ ബാക്ക്ഗ്രൗണ്ടിൽ പ്രവർത്തിക്കുന്നു." : "App restored. Focus timer continues in background.",
+                "fa-arrow-up-right-from-square text-blue-400"
+            );
+        }
+
+        function completeTaskFromOverlay(taskId) {
+            const id = taskId || focusOverlayState.taskId || focusTimerState.taskId;
+            if (id) {
+                toggleTaskDirect(id);
+            }
+            resetFocusTimer();
+            restoreFullApp();
+            renderApp();
         }
 
         function updateFocusTimerUI() {
@@ -964,13 +1082,254 @@ function showToastMessage(text, icon = 'checkCircle') {
                 display.innerText = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
             }
             if (btn) {
+                const isML = (typeof getAppLanguage === 'function') ? (getAppLanguage() === 'ml') : false;
                 if (focusTimerState.isRunning) {
-                    btn.innerHTML = `<i class="fa-solid fa-pause text-xs"></i><span>Pause</span>`;
+                    btn.innerHTML = `<i class="fa-solid fa-pause text-xs"></i><span>${isML ? 'പോസ്' : 'Pause'}</span>`;
                     btn.className = 'flex-1 sm:flex-none py-2 px-4 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 transition active:scale-95 shadow-md shadow-amber-600/30';
                 } else {
-                    btn.innerHTML = `<i class="fa-solid fa-play text-xs"></i><span>${focusTimerState.secondsRemaining < 25 * 60 ? 'Resume' : 'Start Focus'}</span>`;
+                    const label = focusTimerState.secondsRemaining < 25 * 60 ? (isML ? 'തുടങ്ങുക' : 'Resume') : (isML ? 'തുടങ്ങുക' : 'Start Focus');
+                    btn.innerHTML = `<i class="fa-solid fa-play text-xs"></i><span>${label}</span>`;
                     btn.className = 'flex-1 sm:flex-none py-2 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 transition active:scale-95 shadow-md shadow-blue-600/30';
                 }
+            }
+        }
+
+        function renderFocusOverlay() {
+            const compactEl = document.getElementById('focus-overlay-compact');
+            const maxEl = document.getElementById('focus-overlay-maximized');
+            if (!compactEl || !maxEl) return;
+
+            const task = getCurrentFocusTask(focusOverlayState.taskId);
+            if (!task) return;
+
+            const isML = (typeof getAppLanguage === 'function') ? (getAppLanguage() === 'ml') : false;
+            const subjectBadgeClass = getSubjectColorBadge(task.subject);
+            const mins = Math.floor(focusTimerState.secondsRemaining / 60);
+            const secs = focusTimerState.secondsRemaining % 60;
+            const formattedTime = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            const total = focusTimerState.totalSeconds || (25 * 60);
+            const elapsed = Math.max(0, total - focusTimerState.secondsRemaining);
+            const progressPercent = Math.min(100, Math.max(0, (elapsed / total) * 100));
+
+            if (focusOverlayState.mode === 'compact') {
+                compactEl.classList.remove('hidden');
+                maxEl.classList.add('hidden');
+                maxEl.classList.remove('flex');
+
+                compactEl.innerHTML = `
+                    <div class="bg-slate-900/95 dark:bg-[#070b14]/95 text-white rounded-3xl p-5 sm:p-6 backdrop-blur-2xl border-2 border-amber-500/90 shadow-2xl focus-overlay-active-glow ring-4 ring-amber-500/20 relative overflow-hidden animate-fade-in-up">
+                        <!-- Urgency Top Bar -->
+                        <div class="flex items-center justify-between gap-2 mb-3">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping"></span>
+                                <span class="text-[10px] sm:text-xs font-black uppercase tracking-wider text-amber-300 bg-amber-950/80 border border-amber-500/50 px-2.5 py-0.5 rounded-full flex items-center gap-1.5 shadow-sm">
+                                    <i class="fa-solid fa-fire text-red-500"></i>
+                                    <span>${isML ? 'ഡീപ് ഫോക്കസ് • ഇപ്പോൾ പഠിക്കണം' : 'Deep Focus • Complete Now'}</span>
+                                </span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <!-- Maximize icon button -->
+                                <button type="button" onclick="maximizeFocusOverlay()" title="${isML ? 'വലുതാക്കുക' : 'Maximize Timer'}" class="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition active:scale-95 border border-white/15 shadow-sm" aria-label="Maximize Timer">
+                                    <i class="fa-solid fa-expand text-xs"></i>
+                                </button>
+                                <!-- Small Close icon button -->
+                                <button type="button" onclick="closeFocusOverlay()" title="${isML ? 'അടയ്ക്കുക' : 'Close'}" class="w-8 h-8 rounded-xl bg-white/10 hover:bg-rose-600 text-white flex items-center justify-center transition active:scale-95 border border-white/15 shadow-sm" aria-label="Close Timer">
+                                    <i class="fa-solid fa-xmark text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Task Details: Clear & Urgently Framed -->
+                        <div class="mb-3 text-left">
+                            <div class="flex flex-wrap items-center gap-1.5 mb-1.5">
+                                <span class="text-[11px] font-bold px-2 py-0.5 rounded-md ${subjectBadgeClass}">${task.subject}</span>
+                                ${renderTaskGradeBadge(task)}
+                                ${renderTaskPartBadge(task)}
+                                ${task.isFocusSubject ? '<span class="text-[11px] font-black px-2 py-0.5 rounded-md bg-rose-950 text-rose-300 border border-rose-800"><i class="fa-solid fa-bullseye mr-1"></i>Focus Priority</span>' : ''}
+                            </div>
+                            <h4 class="text-base sm:text-lg font-black text-white leading-snug line-clamp-1">${getTaskChapterTitle(task)}</h4>
+                            <p class="text-xs text-slate-300 mt-0.5 font-medium line-clamp-2">${formatTaskTopicTitle(task)}</p>
+                        </div>
+
+                        <!-- Urgency Countdown Card -->
+                        <div class="p-3.5 rounded-2xl bg-black/60 border border-amber-500/40 my-3 flex items-center justify-between gap-3 shadow-inner">
+                            <div class="text-left">
+                                <div class="text-3xl sm:text-4xl font-black font-mono tracking-widest text-amber-400 drop-shadow-[0_0_12px_rgba(251,191,36,0.6)]" id="compact-timer-display">${formattedTime}</div>
+                                <div class="text-[10px] sm:text-[11px] text-amber-200/90 font-bold flex items-center gap-1 mt-0.5">
+                                    <i class="fa-solid fa-bolt text-amber-400 animate-bounce"></i>
+                                    <span>${isML ? 'ശ്രദ്ധ മാറ്റരുത് • ഈ ഭാഗം പൂർത്തിയാക്കൂ!' : 'Lock in! Complete this topic before 00:00'}</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <button type="button" onclick="toggleOverlayTimer()" id="compact-timer-toggle-btn" class="py-2 px-3 rounded-xl ${focusTimerState.isRunning ? 'bg-amber-600 hover:bg-amber-500' : 'bg-blue-600 hover:bg-blue-500'} text-white font-extrabold text-xs flex items-center gap-1.5 transition active:scale-95 shadow-md">
+                                    <i class="fa-solid ${focusTimerState.isRunning ? 'fa-pause' : 'fa-play'} text-xs"></i>
+                                    <span>${focusTimerState.isRunning ? (isML ? 'പോസ്' : 'Pause') : (isML ? 'തുടങ്ങുക' : 'Resume')}</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Visual Elapsed Progress Bar -->
+                        <div class="h-2 w-full bg-slate-800 rounded-full overflow-hidden p-0.5 border border-slate-700/60 mb-3">
+                            <div id="compact-progress-bar" class="h-full bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 rounded-full transition-all duration-1000" style="width: ${progressPercent}%;"></div>
+                        </div>
+
+                        <!-- Satisfying Complete Button -->
+                        <button type="button" onclick="completeTaskFromOverlay('${task.id}')" class="w-full py-3 px-4 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-600 text-white font-black text-xs sm:text-sm rounded-2xl shadow-lg shadow-emerald-600/30 transition active:scale-[0.98] flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-circle-check text-base"></i>
+                            <span>${isML ? 'പഠിച്ചു കഴിഞ്ഞു (+100 XP നേടൂ)' : 'Mark Chapter Part Complete (+100 XP)'}</span>
+                        </button>
+                    </div>
+                `;
+            } else {
+                // Maximized Mode
+                compactEl.classList.add('hidden');
+                maxEl.classList.remove('hidden');
+                maxEl.classList.add('flex');
+
+                const circumference = 440;
+                const dashOffset = Math.max(0, circumference - (circumference * (focusTimerState.secondsRemaining / total)));
+
+                maxEl.innerHTML = `
+                    <!-- Top Navigation Bar -->
+                    <div class="max-w-4xl mx-auto w-full flex items-center justify-between gap-3 pb-4 border-b border-white/10 shrink-0">
+                        <div class="flex items-center gap-3">
+                            <img src="/icon.png" alt="Mission PlusTwo" class="w-9 h-9 rounded-xl shadow-md shadow-blue-500/30 object-contain">
+                            <div class="text-left">
+                                <h2 class="text-sm sm:text-base font-extrabold text-white tracking-tight leading-none">Mission <span class="text-blue-400">PlusTwo</span></h2>
+                                <span class="text-[11px] text-amber-400 font-bold flex items-center gap-1 mt-0.5">
+                                    <i class="fa-solid fa-fire text-xs text-amber-500"></i>
+                                    <span>${isML ? 'ഡീപ് ഫോക്കസ് തിയേറ്റർ' : 'Deep Focus Immersion Mode'}</span>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <!-- Option to Open Full App as requested -->
+                            <button type="button" onclick="restoreFullApp()" class="flex items-center gap-2 py-2 px-3 sm:px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-blue-600/30 transition active:scale-95 border border-blue-400/40">
+                                <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+                                <span>${isML ? 'ആപ്പ് തുറക്കുക (Open Full App)' : 'Open Full App'}</span>
+                            </button>
+                            <!-- Minimize to compact overlay -->
+                            <button type="button" onclick="minimizeFocusOverlay()" title="${isML ? 'ചെറുതാക്കുക' : 'Minimize to compact overlay'}" class="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition active:scale-95 border border-white/15" aria-label="Minimize timer">
+                                <i class="fa-solid fa-compress text-sm"></i>
+                            </button>
+                            <!-- Small Close icon -->
+                            <button type="button" onclick="closeFocusOverlay()" title="${isML ? 'അടയ്ക്കുക' : 'Exit Focus'}" class="w-9 h-9 rounded-xl bg-white/10 hover:bg-rose-600 text-white flex items-center justify-center transition active:scale-95 border border-white/15" aria-label="Close timer">
+                                <i class="fa-solid fa-xmark text-sm"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Center Stage Focus Immersion -->
+                    <div class="max-w-2xl mx-auto w-full my-auto py-6 text-center space-y-6">
+                        <!-- Circular Animated SVG Countdown Ring -->
+                        <div class="relative w-56 h-56 sm:w-64 sm:h-64 mx-auto flex items-center justify-center">
+                            <svg class="w-full h-full transform -rotate-90" viewBox="0 0 160 160">
+                                <circle cx="80" cy="80" r="70" stroke="currentColor" stroke-width="8" class="text-slate-800" fill="transparent" />
+                                <circle id="maximized-svg-ring" cx="80" cy="80" r="70" stroke="url(#focus-gradient-max)" stroke-width="8" stroke-dasharray="440" stroke-dashoffset="${dashOffset}" stroke-linecap="round" fill="transparent" class="transition-all duration-1000 ease-linear" />
+                                <defs>
+                                    <linearGradient id="focus-gradient-max" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stop-color="#f59e0b" />
+                                        <stop offset="50%" stop-color="#ea580c" />
+                                        <stop offset="100%" stop-color="#ef4444" />
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                            <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+                                <div class="text-4xl sm:text-5xl font-black font-mono tracking-widest text-amber-400 drop-shadow-[0_0_20px_rgba(245,158,11,0.6)]" id="maximized-timer-display">${formattedTime}</div>
+                                <span class="text-[10px] sm:text-xs uppercase tracking-widest font-black text-amber-200/90 mt-1">${focusTimerState.isRunning ? 'RUNNING SPRINT' : 'PAUSED'}</span>
+                            </div>
+                        </div>
+
+                        <!-- High Urgency Motivating Headline -->
+                        <div class="space-y-1">
+                            <h3 class="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-fire text-amber-400"></i>
+                                <span>${isML ? 'ലക്ഷ്യത്തിൽ മാത്രം ശ്രദ്ധിക്കുക!' : 'Stay Locked In • Complete This Portion'}</span>
+                            </h3>
+                            <p class="text-xs sm:text-sm text-slate-300 max-w-md mx-auto">
+                                ${isML ? 'ഫോൺ മാറ്റി വെക്കുക. ഈ ഭാഗം പഠിച്ചു തീർത്ത് ലക്ഷ്യത്തിലേക്ക് മുന്നേറുക.' : 'Silence external distractions. Focus deeply to conquer this topic.'}
+                            </p>
+                        </div>
+
+                        <!-- Rich Task Card in Maximized View -->
+                        <div class="bg-white/5 border border-white/15 rounded-3xl p-5 text-left backdrop-blur-lg space-y-2.5">
+                            <div class="flex flex-wrap items-center gap-1.5">
+                                <span class="text-xs font-bold px-2.5 py-0.5 rounded-lg ${subjectBadgeClass}">${task.subject}</span>
+                                ${renderTaskGradeBadge(task)}
+                                ${renderTaskPartBadge(task)}
+                                ${task.isFocusSubject ? '<span class="text-xs font-black px-2 py-0.5 rounded-md bg-rose-950 text-rose-300 border border-rose-800"><i class="fa-solid fa-bullseye mr-1"></i>Focus Priority</span>' : ''}
+                            </div>
+                            <h4 class="text-base sm:text-lg font-black text-white leading-snug">${getTaskChapterTitle(task)}</h4>
+                            <p class="text-xs sm:text-sm text-slate-300 font-medium">${formatTaskTopicTitle(task)}</p>
+                            <div class="pt-1">
+                                ${getTaskDeepLinksHtml(task)}
+                            </div>
+                        </div>
+
+                        <!-- Timer Action Controls -->
+                        <div class="flex items-center justify-center gap-3">
+                            <button type="button" onclick="toggleOverlayTimer()" id="maximized-timer-toggle-btn" class="py-3 px-6 rounded-2xl ${focusTimerState.isRunning ? 'bg-amber-600 hover:bg-amber-500' : 'bg-blue-600 hover:bg-blue-500'} text-white font-black text-sm flex items-center gap-2 transition active:scale-95 shadow-lg shadow-amber-600/30">
+                                <i class="fa-solid ${focusTimerState.isRunning ? 'fa-pause' : 'fa-play'} text-sm"></i>
+                                <span>${focusTimerState.isRunning ? (isML ? 'പോസ്' : 'Pause Sprint') : (isML ? 'തുടങ്ങുക' : 'Resume Sprint')}</span>
+                            </button>
+                            <button type="button" onclick="addFiveMinutesToFocus()" class="py-3 px-4 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition active:scale-95 border border-white/15" title="Add 5 Minutes">
+                                <i class="fa-solid fa-plus text-xs mr-1"></i> 5 Mins
+                            </button>
+                            <button type="button" onclick="resetFocusTimer()" class="py-3 px-4 rounded-2xl bg-white/10 hover:bg-white/20 text-slate-300 font-bold text-xs transition active:scale-95 border border-white/15" title="Reset Timer">
+                                <i class="fa-solid fa-rotate-left"></i>
+                            </button>
+                        </div>
+
+                        <!-- Big Satisfying Mark Complete Button -->
+                        <button type="button" onclick="completeTaskFromOverlay('${task.id}')" class="w-full py-4 px-6 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-600 text-white font-black text-sm sm:text-base rounded-2xl shadow-xl shadow-emerald-600/40 transition active:scale-[0.98] flex items-center justify-center gap-2.5">
+                            <i class="fa-solid fa-circle-check text-lg"></i>
+                            <span>${isML ? 'പഠിച്ചു കഴിഞ്ഞു (+100 XP നേടൂ)' : 'Mark Chapter Part Complete (+100 XP)'}</span>
+                        </button>
+                    </div>
+
+                    <!-- Bottom Motivational Strategy -->
+                    <div class="max-w-2xl mx-auto w-full pt-3 text-center text-xs text-slate-400 border-t border-white/10 shrink-0">
+                        <span>💡 <strong>Kerala DHSE Board Strategy:</strong> Solve textbook back questions and previous year questions (PYQs) without looking at notes.</span>
+                    </div>
+                `;
+            }
+        }
+
+        function updateFocusOverlayUI() {
+            if (!focusOverlayState.isOpen) return;
+
+            const isML = (typeof getAppLanguage === 'function') ? (getAppLanguage() === 'ml') : false;
+            const mins = Math.floor(focusTimerState.secondsRemaining / 60);
+            const secs = focusTimerState.secondsRemaining % 60;
+            const formattedTime = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            const total = focusTimerState.totalSeconds || (25 * 60);
+            const elapsed = Math.max(0, total - focusTimerState.secondsRemaining);
+            const progressPercent = Math.min(100, Math.max(0, (elapsed / total) * 100));
+
+            // Compact mode updates
+            const compactDisplay = document.getElementById('compact-timer-display');
+            const compactBar = document.getElementById('compact-progress-bar');
+            const compactToggleBtn = document.getElementById('compact-timer-toggle-btn');
+            if (compactDisplay) compactDisplay.innerText = formattedTime;
+            if (compactBar) compactBar.style.width = `${progressPercent}%`;
+            if (compactToggleBtn) {
+                compactToggleBtn.className = `py-2 px-3 rounded-xl ${focusTimerState.isRunning ? 'bg-amber-600 hover:bg-amber-500' : 'bg-blue-600 hover:bg-blue-500'} text-white font-extrabold text-xs flex items-center gap-1.5 transition active:scale-95 shadow-md`;
+                compactToggleBtn.innerHTML = `<i class="fa-solid ${focusTimerState.isRunning ? 'fa-pause' : 'fa-play'} text-xs"></i><span>${focusTimerState.isRunning ? (isML ? 'പോസ്' : 'Pause') : (isML ? 'തുടങ്ങുക' : 'Resume')}</span>`;
+            }
+
+            // Maximized mode updates
+            const maxDisplay = document.getElementById('maximized-timer-display');
+            const maxRing = document.getElementById('maximized-svg-ring');
+            const maxToggleBtn = document.getElementById('maximized-timer-toggle-btn');
+            if (maxDisplay) maxDisplay.innerText = formattedTime;
+            if (maxRing) {
+                const circumference = 440;
+                const dashOffset = Math.max(0, circumference - (circumference * (focusTimerState.secondsRemaining / total)));
+                maxRing.style.strokeDashoffset = dashOffset;
+            }
+            if (maxToggleBtn) {
+                maxToggleBtn.className = `py-3 px-6 rounded-2xl ${focusTimerState.isRunning ? 'bg-amber-600 hover:bg-amber-500' : 'bg-blue-600 hover:bg-blue-500'} text-white font-black text-sm flex items-center gap-2 transition active:scale-95 shadow-lg shadow-amber-600/30`;
+                maxToggleBtn.innerHTML = `<i class="fa-solid ${focusTimerState.isRunning ? 'fa-pause' : 'fa-play'} text-sm"></i><span>${focusTimerState.isRunning ? (isML ? 'പോസ്' : 'Pause Sprint') : (isML ? 'തുടങ്ങുക' : 'Resume Sprint')}</span>`;
             }
         }
 
@@ -4306,6 +4665,17 @@ if (typeof window !== 'undefined') {
         getUserLevel,
         getActiveMissionDayNumber,
         focusTimerState,
+        focusOverlayState,
+        openFocusOverlay,
+        closeFocusOverlay,
+        maximizeFocusOverlay,
+        minimizeFocusOverlay,
+        restoreFullApp,
+        toggleOverlayTimer,
+        addFiveMinutesToFocus,
+        completeTaskFromOverlay,
+        renderFocusOverlay,
+        updateFocusOverlayUI,
         goToDashboard,
         goToPlan,
         goToSyllabusView,

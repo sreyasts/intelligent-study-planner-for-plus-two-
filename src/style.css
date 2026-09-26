@@ -726,6 +726,34 @@
         }
 
 /* ==========================================================================
+   Focus Sprint Mode & App Minimization Styling
+   ========================================================================== */
+body.app-minimized-focus-mode header,
+body.app-minimized-focus-mode #app-container,
+body.app-minimized-focus-mode footer,
+body.app-minimized-focus-mode section,
+body.app-minimized-focus-mode #toast-banner {
+    opacity: 0.12 !important;
+    filter: blur(10px) grayscale(35%) !important;
+    pointer-events: none !important;
+    transform: scale(0.985);
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes focusPulseGlow {
+    0%, 100% {
+        box-shadow: 0 0 25px rgba(245, 158, 11, 0.35), 0 0 50px rgba(239, 68, 68, 0.2);
+    }
+    50% {
+        box-shadow: 0 0 45px rgba(245, 158, 11, 0.7), 0 0 90px rgba(239, 68, 68, 0.45);
+    }
+}
+
+.focus-overlay-active-glow {
+    animation: focusPulseGlow 2.5s infinite;
+}
+
+/* ==========================================================================
    Print Stylesheet (@media print)
    Optimizes study schedules for high-contrast paper printing & PDF export
    ========================================================================== */
