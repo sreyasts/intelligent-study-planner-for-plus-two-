@@ -1718,12 +1718,12 @@ function showToastMessage(text, icon = 'checkCircle') {
             const p1Count = Array.from(selectedCompletedChapters).filter(id => id.startsWith('+1_')).length;
             const total = selectedCompletedChapters.size;
             if (total === 0) {
-                badge.innerHTML = isML ? '0 ഒഴിവാക്കി' : '0 excluded';
+                badge.innerHTML = isML ? '0 പൂർത്തിയായി' : '0 completed';
                 badge.className = 'text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-[#162137] text-slate-500 dark:text-slate-300';
             } else {
                 badge.innerHTML = isML
-                    ? `<i class="fa-solid fa-check mr-1"></i>${total} ഒഴിവാക്കി (${p2Count} +2-ലും, ${p1Count} +1-ലും)`
-                    : `<i class="fa-solid fa-check mr-1"></i>${total} excluded (${p2Count} in +2, ${p1Count} in +1)`;
+                    ? `<i class="fa-solid fa-check mr-1"></i>${total} പൂർത്തിയായി (${p2Count} +2, ${p1Count} +1)`
+                    : `<i class="fa-solid fa-check mr-1"></i>${total} completed (${p2Count} in +2, ${p1Count} in +1)`;
                 badge.className = 'text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-600/50';
             }
         }
@@ -1734,7 +1734,7 @@ function showToastMessage(text, icon = 'checkCircle') {
             const chaps = sourceSyllabus.filter(t => t.subject === subject);
             const uniqueChaps = [...new Map(chaps.map(item => [item.chapId, item])).values()];
             const markedCount = uniqueChaps.filter(c => selectedCompletedChapters.has(c.chapId)).length;
-            const excludedText = isML ? `(${markedCount}/${uniqueChaps.length} ഒഴിവാക്കി)` : `(${markedCount}/${uniqueChaps.length} excluded)`;
+            const completedText = isML ? `(${markedCount}/${uniqueChaps.length} പൂർത്തിയായി)` : `(${markedCount}/${uniqueChaps.length} completed)`;
             const selectAllText = isML ? 'എല്ലാം തിരഞ്ഞെടുക്കുക' : 'Select All';
             const clearText = isML ? 'ഒഴിവാക്കുക' : 'Clear';
             const studyPartsLabel = isML ? 'പഠന ഭാഗങ്ങൾ' : 'study parts';
@@ -1745,7 +1745,7 @@ function showToastMessage(text, icon = 'checkCircle') {
                         <span class="text-xs font-bold text-slate-700 dark:text-slate-200">
                             ${grade === '+1' ? '<span class="text-amber-700 dark:text-amber-300 font-extrabold bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded border border-amber-200/60 dark:border-amber-700/60">+1 Improvement</span>' : '<span class="text-blue-700 dark:text-blue-300 font-extrabold bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded border border-blue-200/60 dark:border-blue-700/60">+2 Regular</span>'} • ${subject}
                         </span>
-                        <span class="text-xs text-slate-400 dark:text-slate-400 font-medium">${excludedText}</span>
+                        <span class="text-xs text-slate-400 dark:text-slate-400 font-medium">${completedText}</span>
                     </div>
                     <div class="flex gap-2">
                         <button type="button" onclick="toggleAllSubjectChapters('${grade}', '${subject}', true)" class="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline">${selectAllText}</button>
@@ -2054,6 +2054,7 @@ function showToastMessage(text, icon = 'checkCircle') {
         }
 
         function handleInitialSetup() {
+            const isML = getAppLanguage() === 'ml';
             const deadlineInput = document.getElementById('deadline-date')?.value;
             const targetTerm = parseInt(document.getElementById('target-term')?.value || "2");
             const studyIntensity = document.getElementById('study-intensity')?.value || 'balanced';
@@ -2136,8 +2137,8 @@ function showToastMessage(text, icon = 'checkCircle') {
 
             if (tasksToPlan.length === 0) {
                 showAppAlert({
-                    title: "All Chapters Excluded",
-                    message: "All chapters in the selected scope were marked finished! Please uncheck some chapters or select additional subjects.",
+                    title: isML ? "എല്ലാ അധ്യായങ്ങളും പൂർത്തിയായി" : "All Chapters Marked Completed",
+                    message: isML ? "എല്ലാ അധ്യായങ്ങളും പൂർത്തിയായി എന്ന് അടയാളപ്പെടുത്തിയിരിക്കുന്നു. ഷെഡ്യൂൾ ചെയ്യാൻ കുറഞ്ഞത് ഒരു അധ്യായമെങ്കിലും ടിക്ക് ഒഴിവാക്കുക." : "All chapters in the selected scope were marked completed. Please uncheck at least one chapter to schedule your daily timetable.",
                     icon: "fa-circle-info text-blue-500"
                 });
                 return;
@@ -2409,10 +2410,47 @@ function showToastMessage(text, icon = 'checkCircle') {
         let setupCurrentStep = 1;
 
         function goToSetupStep(stepNum) {
+            if (stepNum < 1 || stepNum > 4) return;
             setupCurrentStep = stepNum;
-            const accordion = document.getElementById('setup-advanced-accordion');
-            if (accordion && stepNum > 1) {
-                accordion.open = true;
+
+            for (let i = 1; i <= 4; i++) {
+                const stepEl = document.getElementById(`setup-step-${i}`);
+                if (stepEl) {
+                    if (i === stepNum) {
+                        stepEl.classList.remove('hidden');
+                        stepEl.classList.add('animate-fade-in-up');
+                    } else {
+                        stepEl.classList.add('hidden');
+                        stepEl.classList.remove('animate-fade-in-up');
+                    }
+                }
+                const pill = document.getElementById(`setup-step-pill-${i}`);
+                if (pill) {
+                    if (i === stepNum) {
+                        pill.className = 'w-7 h-7 rounded-full bg-blue-600 text-white font-black scale-110 shadow-sm shadow-blue-500/30 text-xs flex items-center justify-center transition';
+                        pill.innerHTML = `${i}`;
+                    } else if (i < stepNum) {
+                        pill.className = 'w-7 h-7 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-black border border-emerald-300/60 text-xs flex items-center justify-center transition';
+                        pill.innerHTML = '<i class="fa-solid fa-check text-[10px]"></i>';
+                    } else {
+                        pill.className = 'w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 font-bold text-xs flex items-center justify-center transition';
+                        pill.innerHTML = `${i}`;
+                    }
+                }
+            }
+
+            const progressBar = document.getElementById('setup-progress-bar');
+            const stepBadge = document.getElementById('setup-step-badge');
+            const isML = getAppLanguage() === 'ml';
+            if (progressBar) {
+                progressBar.style.width = `${stepNum * 25}%`;
+            }
+            if (stepBadge) {
+                stepBadge.innerText = `${isML ? 'ഘട്ടം' : 'Step'} ${stepNum} / 4`;
+            }
+
+            if (stepNum === 2) {
+                updateDeadlinePreview();
             }
             if (stepNum === 3) {
                 updateCompletedChaptersCountBadge();
@@ -2422,8 +2460,28 @@ function showToastMessage(text, icon = 'checkCircle') {
                 if (chapsContainer) chapsContainer.innerHTML = renderSetupSubjectChapters(activeSetupSubjectTab, activeSetupGradeTab);
             }
             if (stepNum === 4) {
-                updateDeadlinePreview();
+                const streamBadge = document.getElementById('summary-stream-badge');
+                if (streamBadge) {
+                    const streamNames = {
+                        cs: 'Computer Science (+2)',
+                        bio: 'Biology Science (+2)',
+                        commerce: 'Commerce (+2)',
+                        humanities: 'Humanities (+2)',
+                        imp_only: '+1 Improvement Only'
+                    };
+                    streamBadge.innerText = streamNames[selectedStream] || selectedStream;
+                }
+                const dateBadge = document.getElementById('summary-date-badge');
+                const dateInput = document.getElementById('deadline-date');
+                if (dateBadge && dateInput && dateInput.value) {
+                    dateBadge.innerText = dateInput.value;
+                }
+                const completedBadge = document.getElementById('summary-completed-badge');
+                if (completedBadge) {
+                    completedBadge.innerText = `${selectedCompletedChapters.size} ${isML ? 'പൂർത്തിയായി' : 'completed'}`;
+                }
             }
+
             const wizardCard = document.getElementById('setup-wizard-card');
             if (wizardCard) {
                 wizardCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -2431,7 +2489,7 @@ function showToastMessage(text, icon = 'checkCircle') {
         }
 
         function nextSetupStep() {
-            goToSetupStep(Math.min(5, setupCurrentStep + 1));
+            goToSetupStep(Math.min(4, setupCurrentStep + 1));
         }
 
         function prevSetupStep() {
@@ -2457,130 +2515,136 @@ function showToastMessage(text, icon = 'checkCircle') {
 
                 container.innerHTML = `
                     <div id="setup-wizard-card" class="max-w-2xl mx-auto bg-white dark:bg-[#0e1422] rounded-3xl p-5 sm:p-8 shadow-xl border border-slate-100 dark:border-slate-800/80 animate-fade-in-up">
-                        <!-- Hero Header -->
-                        <div class="text-center sm:text-left mb-6">
-                            <div class="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-purple-500/10 border border-blue-200 dark:border-blue-800/60 rounded-full px-3 py-1 text-xs font-black text-blue-700 dark:text-blue-300 mb-2">
-                                <i class="fa-solid fa-bolt text-amber-500"></i>
-                                <span>${isML ? 'തത്സമയ പഠന പ്ലാൻ ജനറേറ്റർ' : 'Instant 5-Second Setup'}</span>
+                        <!-- Stepper Indicator -->
+                        <div class="mb-6">
+                            <div class="flex items-center justify-between mb-2">
+                                <span id="setup-step-badge" class="text-xs font-black uppercase tracking-wider text-blue-600 dark:text-blue-400">
+                                    ${isML ? 'ഘട്ടം' : 'Step'} ${setupCurrentStep} / 4
+                                </span>
+                                <div class="flex items-center gap-1.5">
+                                    ${[1, 2, 3, 4].map(step => `
+                                        <button type="button" id="setup-step-pill-${step}" onclick="goToSetupStep(${step})" class="w-7 h-7 rounded-full ${step === setupCurrentStep ? 'bg-blue-600 text-white font-black scale-110 shadow-sm shadow-blue-500/30' : (step < setupCurrentStep ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-black border border-emerald-300/60' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 font-bold')} text-xs flex items-center justify-center transition">
+                                            ${step < setupCurrentStep ? '<i class="fa-solid fa-check text-[10px]"></i>' : step}
+                                        </button>
+                                    `).join('')}
+                                </div>
                             </div>
-                            <h2 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-                                ${isML ? 'നിങ്ങളുടെ പ്ലസ് ടു പഠന പ്ലാൻ തയ്യാറാക്കൂ' : 'Create Your Plus Two Study Plan'}
-                            </h2>
-                            <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-300 mt-1">
-                                ${isML ? 'സ്ട്രീമും പരീക്ഷാ തീയതിയും തിരഞ്ഞെടുക്കുക. ആദ്യ ദിന പഠനം ഉടൻ ആരംഭിക്കാം.' : 'Pick your stream & target date. Instant timetable ready for Day 1.'}
-                            </p>
+                            <div class="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+                                <div id="setup-progress-bar" class="bg-gradient-to-r from-blue-600 to-indigo-600 h-full rounded-full transition-all duration-300" style="width: ${setupCurrentStep * 25}%"></div>
+                            </div>
                         </div>
 
                         <!-- Form state inputs preserved for engine compatibility -->
                         <input type="hidden" id="target-term" value="2">
                         <input type="checkbox" id="has-improvement" class="hidden" ${selectedStream === 'imp_only' ? 'checked' : ''}>
 
-                        <div class="space-y-6">
-                            <!-- 1. Stream Selection -->
-                            <div>
-                                <div class="flex items-center justify-between mb-2.5">
-                                    <span class="text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
-                                        <span class="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 flex items-center justify-center text-[10px] font-black">1</span>
-                                        <span>${isML ? 'സ്ട്രീം തിരഞ്ഞെടുക്കുക' : 'Select Your Stream'}</span>
-                                    </span>
+                        <!-- STEP 1: Stream Selection -->
+                        <div id="setup-step-1" class="${setupCurrentStep === 1 ? '' : 'hidden'} space-y-5 animate-fade-in-up">
+                            <div class="text-left">
+                                <h3 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                                    ${isML ? 'സ്ട്രീം തിരഞ്ഞെടുക്കുക' : 'Select Your Stream'}
+                                </h3>
+                                <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-300 mt-1">
+                                    ${isML ? 'നിങ്ങൾ പഠിക്കുന്ന വിഷയം തിരഞ്ഞെടുക്കുക. സിലബസ് ഉടൻ തയ്യാറാകും.' : 'Choose your stream to load the official DHSE syllabus.'}
+                                </p>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                <!-- Option 1: Computer Science -->
+                                <div id="stream-card-cs" onclick="setStreamSelection('cs')" class="cursor-pointer p-3.5 rounded-2xl border-2 ${selectedStream === 'cs' ? 'border-blue-600 dark:border-blue-500 bg-blue-50/70 dark:bg-blue-950/40 ring-2 ring-blue-500/20 shadow-sm' : 'border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#0e1526] hover:border-slate-300 dark:hover:border-slate-600'} transition text-left flex flex-col justify-between">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-2.5">
+                                            <div class="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 flex items-center justify-center text-base font-bold shrink-0">
+                                                <i class="fa-solid fa-laptop-code"></i>
+                                            </div>
+                                            <div>
+                                                <h4 class="font-black text-slate-900 dark:text-white text-sm">${isML ? ML_I18N.setup.csTitle : 'Computer Science (+2)'}</h4>
+                                                <span class="text-[11px] font-semibold text-blue-700 dark:text-blue-300">Physics • Chem • Maths • CS</span>
+                                            </div>
+                                        </div>
+                                        <span class="w-5 h-5 rounded-full ${selectedStream === 'cs' ? 'bg-blue-600 text-white' : 'border border-slate-300 dark:border-slate-600'} flex items-center justify-center text-xs">
+                                            ${selectedStream === 'cs' ? '<i class="fa-solid fa-check text-[10px]"></i>' : ''}
+                                        </span>
+                                    </div>
                                 </div>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                                    <!-- Option 1: Computer Science -->
-                                    <div id="stream-card-cs" onclick="setStreamSelection('cs')" class="cursor-pointer p-3.5 rounded-2xl border-2 ${selectedStream === 'cs' ? 'border-blue-600 dark:border-blue-500 bg-blue-50/70 dark:bg-blue-950/40 ring-2 ring-blue-500/20 shadow-sm' : 'border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#0e1526] hover:border-slate-300 dark:hover:border-slate-600'} transition text-left flex flex-col justify-between">
-                                        <div class="flex items-center justify-between">
-                                            <div class="flex items-center gap-2.5">
-                                                <div class="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 flex items-center justify-center text-base font-bold shrink-0">
-                                                    <i class="fa-solid fa-laptop-code"></i>
-                                                </div>
-                                                <div>
-                                                    <h4 class="font-black text-slate-900 dark:text-white text-sm">${isML ? ML_I18N.setup.csTitle : 'Computer Science (+2)'}</h4>
-                                                    <span class="text-[11px] font-semibold text-blue-700 dark:text-blue-300">Physics • Chem • Maths • CS</span>
-                                                </div>
-                                            </div>
-                                            <span class="w-5 h-5 rounded-full ${selectedStream === 'cs' ? 'bg-blue-600 text-white' : 'border border-slate-300 dark:border-slate-600'} flex items-center justify-center text-xs">
-                                                ${selectedStream === 'cs' ? '<i class="fa-solid fa-check text-[10px]"></i>' : ''}
-                                            </span>
-                                        </div>
-                                    </div>
 
-                                    <!-- Option 2: Biology Science -->
-                                    <div id="stream-card-bio" onclick="setStreamSelection('bio')" class="cursor-pointer p-3.5 rounded-2xl border-2 ${selectedStream === 'bio' ? 'border-emerald-600 dark:border-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/40 ring-2 ring-emerald-500/20 shadow-sm' : 'border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#0e1526] hover:border-slate-300 dark:hover:border-slate-600'} transition text-left flex flex-col justify-between">
-                                        <div class="flex items-center justify-between">
-                                            <div class="flex items-center gap-2.5">
-                                                <div class="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 flex items-center justify-center text-base font-bold shrink-0">
-                                                    <i class="fa-solid fa-seedling"></i>
-                                                </div>
-                                                <div>
-                                                    <h4 class="font-black text-slate-900 dark:text-white text-sm">${isML ? ML_I18N.setup.bioTitle : 'Biology Science (+2)'}</h4>
-                                                    <span class="text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">Physics • Chem • Maths • Bio</span>
-                                                </div>
+                                <!-- Option 2: Biology Science -->
+                                <div id="stream-card-bio" onclick="setStreamSelection('bio')" class="cursor-pointer p-3.5 rounded-2xl border-2 ${selectedStream === 'bio' ? 'border-emerald-600 dark:border-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/40 ring-2 ring-emerald-500/20 shadow-sm' : 'border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#0e1526] hover:border-slate-300 dark:hover:border-slate-600'} transition text-left flex flex-col justify-between">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-2.5">
+                                            <div class="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 flex items-center justify-center text-base font-bold shrink-0">
+                                                <i class="fa-solid fa-seedling"></i>
                                             </div>
-                                            <span class="w-5 h-5 rounded-full ${selectedStream === 'bio' ? 'bg-emerald-600 text-white' : 'border border-slate-300 dark:border-slate-600'} flex items-center justify-center text-xs">
-                                                ${selectedStream === 'bio' ? '<i class="fa-solid fa-check text-[10px]"></i>' : ''}
-                                            </span>
+                                            <div>
+                                                <h4 class="font-black text-slate-900 dark:text-white text-sm">${isML ? ML_I18N.setup.bioTitle : 'Biology Science (+2)'}</h4>
+                                                <span class="text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">Physics • Chem • Maths • Bio</span>
+                                            </div>
                                         </div>
+                                        <span class="w-5 h-5 rounded-full ${selectedStream === 'bio' ? 'bg-emerald-600 text-white' : 'border border-slate-300 dark:border-slate-600'} flex items-center justify-center text-xs">
+                                            ${selectedStream === 'bio' ? '<i class="fa-solid fa-check text-[10px]"></i>' : ''}
+                                        </span>
                                     </div>
+                                </div>
 
-                                    <!-- Option 3: Commerce -->
-                                    <div id="stream-card-commerce" onclick="setStreamSelection('commerce')" class="cursor-pointer p-3.5 rounded-2xl border-2 ${selectedStream === 'commerce' ? 'border-purple-600 dark:border-purple-500 bg-purple-50/70 dark:bg-purple-950/40 ring-2 ring-purple-500/20 shadow-sm' : 'border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#0e1526] hover:border-slate-300 dark:hover:border-slate-600'} transition text-left flex flex-col justify-between">
-                                        <div class="flex items-center justify-between">
-                                            <div class="flex items-center gap-2.5">
-                                                <div class="w-9 h-9 rounded-xl bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 flex items-center justify-center text-base font-bold shrink-0">
-                                                    <i class="fa-solid fa-chart-line"></i>
-                                                </div>
-                                                <div>
-                                                    <h4 class="font-black text-slate-900 dark:text-white text-sm">${isML ? ML_I18N.setup.commerceTitle : 'Commerce (+2)'}</h4>
-                                                    <span class="text-[11px] font-semibold text-purple-700 dark:text-purple-300">Accountancy • Business • Econ</span>
-                                                </div>
+                                <!-- Option 3: Commerce -->
+                                <div id="stream-card-commerce" onclick="setStreamSelection('commerce')" class="cursor-pointer p-3.5 rounded-2xl border-2 ${selectedStream === 'commerce' ? 'border-purple-600 dark:border-purple-500 bg-purple-50/70 dark:bg-purple-950/40 ring-2 ring-purple-500/20 shadow-sm' : 'border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#0e1526] hover:border-slate-300 dark:hover:border-slate-600'} transition text-left flex flex-col justify-between">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-2.5">
+                                            <div class="w-9 h-9 rounded-xl bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 flex items-center justify-center text-base font-bold shrink-0">
+                                                <i class="fa-solid fa-chart-line"></i>
                                             </div>
-                                            <span class="w-5 h-5 rounded-full ${selectedStream === 'commerce' ? 'bg-purple-600 text-white' : 'border border-slate-300 dark:border-slate-600'} flex items-center justify-center text-xs">
-                                                ${selectedStream === 'commerce' ? '<i class="fa-solid fa-check text-[10px]"></i>' : ''}
-                                            </span>
+                                            <div>
+                                                <h4 class="font-black text-slate-900 dark:text-white text-sm">${isML ? ML_I18N.setup.commerceTitle : 'Commerce (+2)'}</h4>
+                                                <span class="text-[11px] font-semibold text-purple-700 dark:text-purple-300">Accountancy • Business • Econ</span>
+                                            </div>
                                         </div>
+                                        <span class="w-5 h-5 rounded-full ${selectedStream === 'commerce' ? 'bg-purple-600 text-white' : 'border border-slate-300 dark:border-slate-600'} flex items-center justify-center text-xs">
+                                            ${selectedStream === 'commerce' ? '<i class="fa-solid fa-check text-[10px]"></i>' : ''}
+                                        </span>
                                     </div>
+                                </div>
 
-                                    <!-- Option 4: Humanities -->
-                                    <div id="stream-card-humanities" onclick="setStreamSelection('humanities')" class="cursor-pointer p-3.5 rounded-2xl border-2 ${selectedStream === 'humanities' ? 'border-rose-600 dark:border-rose-500 bg-rose-50/70 dark:bg-rose-950/40 ring-2 ring-rose-500/20 shadow-sm' : 'border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#0e1526] hover:border-slate-300 dark:hover:border-slate-600'} transition text-left flex flex-col justify-between">
-                                        <div class="flex items-center justify-between">
-                                            <div class="flex items-center gap-2.5">
-                                                <div class="w-9 h-9 rounded-xl bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 flex items-center justify-center text-base font-bold shrink-0">
-                                                    <i class="fa-solid fa-landmark"></i>
-                                                </div>
-                                                <div>
-                                                    <h4 class="font-black text-slate-900 dark:text-white text-sm">${isML ? ML_I18N.setup.humanitiesTitle : 'Humanities (+2)'}</h4>
-                                                    <span class="text-[11px] font-semibold text-rose-700 dark:text-rose-300">History • Pol Science • Sociology</span>
-                                                </div>
+                                <!-- Option 4: Humanities -->
+                                <div id="stream-card-humanities" onclick="setStreamSelection('humanities')" class="cursor-pointer p-3.5 rounded-2xl border-2 ${selectedStream === 'humanities' ? 'border-rose-600 dark:border-rose-500 bg-rose-50/70 dark:bg-rose-950/40 ring-2 ring-rose-500/20 shadow-sm' : 'border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#0e1526] hover:border-slate-300 dark:hover:border-slate-600'} transition text-left flex flex-col justify-between">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-2.5">
+                                            <div class="w-9 h-9 rounded-xl bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 flex items-center justify-center text-base font-bold shrink-0">
+                                                <i class="fa-solid fa-landmark"></i>
                                             </div>
-                                            <span class="w-5 h-5 rounded-full ${selectedStream === 'humanities' ? 'bg-rose-600 text-white' : 'border border-slate-300 dark:border-slate-600'} flex items-center justify-center text-xs">
-                                                ${selectedStream === 'humanities' ? '<i class="fa-solid fa-check text-[10px]"></i>' : ''}
-                                            </span>
+                                            <div>
+                                                <h4 class="font-black text-slate-900 dark:text-white text-sm">${isML ? ML_I18N.setup.humanitiesTitle : 'Humanities (+2)'}</h4>
+                                                <span class="text-[11px] font-semibold text-rose-700 dark:text-rose-300">History • Pol Science • Sociology</span>
+                                            </div>
                                         </div>
+                                        <span class="w-5 h-5 rounded-full ${selectedStream === 'humanities' ? 'bg-rose-600 text-white' : 'border border-slate-300 dark:border-slate-600'} flex items-center justify-center text-xs">
+                                            ${selectedStream === 'humanities' ? '<i class="fa-solid fa-check text-[10px]"></i>' : ''}
+                                        </span>
                                     </div>
+                                </div>
 
-                                    <!-- Option 5: Plus One (+1) Improvement Only -->
-                                    <div id="stream-card-imp" onclick="setStreamSelection('imp_only')" class="cursor-pointer p-3.5 rounded-2xl border-2 ${selectedStream === 'imp_only' ? 'border-amber-500 dark:border-amber-400 bg-amber-50/80 dark:bg-amber-950/40 ring-2 ring-amber-400/25 shadow-sm' : 'border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#0e1526] hover:border-slate-300 dark:hover:border-slate-600'} transition text-left flex flex-col justify-between sm:col-span-2">
-                                        <div class="flex items-center justify-between">
-                                            <div class="flex items-center gap-2.5">
-                                                <div class="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 flex items-center justify-center text-base font-bold shrink-0">
-                                                    <i class="fa-solid fa-graduation-cap"></i>
-                                                </div>
-                                                <div>
-                                                    <div class="flex items-center gap-2">
-                                                        <h4 class="font-black text-slate-900 dark:text-white text-sm">${isML ? ML_I18N.setup.impOnlyTitle : 'Plus One (+1) Improvement Only'}</h4>
-                                                        <span class="text-[10px] font-black bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-200 px-2 py-0.5 rounded-full uppercase">Improvement</span>
-                                                    </div>
-                                                    <span class="text-[11px] font-semibold text-amber-700 dark:text-amber-300">${isML ? ML_I18N.setup.impOnlySub : 'Dedicated +1 Timetable • Zero +2 Content'}</span>
-                                                </div>
+                                <!-- Option 5: Plus One (+1) Improvement Only -->
+                                <div id="stream-card-imp" onclick="setStreamSelection('imp_only')" class="cursor-pointer p-3.5 rounded-2xl border-2 ${selectedStream === 'imp_only' ? 'border-amber-500 dark:border-amber-400 bg-amber-50/80 dark:bg-amber-950/40 ring-2 ring-amber-400/25 shadow-sm' : 'border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#0e1526] hover:border-slate-300 dark:hover:border-slate-600'} transition text-left flex flex-col justify-between sm:col-span-2">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-2.5">
+                                            <div class="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 flex items-center justify-center text-base font-bold shrink-0">
+                                                <i class="fa-solid fa-graduation-cap"></i>
                                             </div>
-                                            <span class="w-5 h-5 rounded-full ${selectedStream === 'imp_only' ? 'bg-amber-600 text-white' : 'border border-slate-300 dark:border-slate-600'} flex items-center justify-center text-xs">
-                                                ${selectedStream === 'imp_only' ? '<i class="fa-solid fa-check text-[10px]"></i>' : ''}
-                                            </span>
+                                            <div>
+                                                <div class="flex items-center gap-2">
+                                                    <h4 class="font-black text-slate-900 dark:text-white text-sm">${isML ? ML_I18N.setup.impOnlyTitle : 'Plus One (+1) Improvement Only'}</h4>
+                                                    <span class="text-[10px] font-black bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-200 px-2 py-0.5 rounded-full uppercase">Improvement</span>
+                                                </div>
+                                                <span class="text-[11px] font-semibold text-amber-700 dark:text-amber-300">${isML ? ML_I18N.setup.impOnlySub : 'Dedicated +1 Timetable • Zero +2 Content'}</span>
+                                            </div>
                                         </div>
+                                        <span class="w-5 h-5 rounded-full ${selectedStream === 'imp_only' ? 'bg-amber-600 text-white' : 'border border-slate-300 dark:border-slate-600'} flex items-center justify-center text-xs">
+                                            ${selectedStream === 'imp_only' ? '<i class="fa-solid fa-check text-[10px]"></i>' : ''}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- 1.1 If Improvement Only is picked, show papers directly -->
+                            <!-- If Improvement Only is picked, show papers directly -->
                             ${selectedStream === 'imp_only' ? `
                                 <div class="p-4 bg-amber-50/60 dark:bg-amber-950/30 rounded-2xl border border-amber-300 dark:border-amber-600/50 space-y-3 animate-fade-in-up">
                                     <div class="text-left">
@@ -2596,68 +2660,156 @@ function showToastMessage(text, icon = 'checkCircle') {
                                 </div>
                             ` : ''}
 
-                            <!-- 2. Target Exam / Pacing -->
-                            <div>
-                                <div class="flex items-center justify-between mb-2.5">
-                                    <span class="text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
-                                        <span class="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 flex items-center justify-center text-[10px] font-black">2</span>
-                                        <span>${isML ? 'ലക്ഷ്യ പരീക്ഷ / തീയതി' : 'Target Exam & Pacing'}</span>
-                                    </span>
-                                </div>
-
-                                <!-- Fast Presets -->
-                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
-                                    <button type="button" onclick="setDeadlinePreset('${getRelativePresetDate(30)}')" class="py-2.5 px-3 rounded-xl bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-700 dark:text-blue-300 text-xs font-bold border border-blue-200 dark:border-blue-700/80 transition flex flex-col items-center justify-center text-center gap-1 shadow-xs active:scale-95">
-                                        <span class="text-amber-500 text-sm">⚡</span>
-                                        <span>${isML ? '30 ദിവസത്തെ പ്ലാൻ' : '30-Day Sprint'}</span>
-                                        <span class="text-[10px] text-slate-400">Fast Crash</span>
-                                    </button>
-                                    <button type="button" onclick="setDeadlinePreset('${getPresetDate(12, 20)}')" class="py-2.5 px-3 rounded-xl bg-slate-100 dark:bg-[#162137] hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-700 dark:hover:text-blue-300 text-slate-700 dark:text-slate-200 text-xs font-bold border border-slate-200 dark:border-slate-700/80 transition flex flex-col items-center justify-center text-center gap-1 active:scale-95">
-                                        <span class="text-emerald-500 text-sm">🎄</span>
-                                        <span>${isML ? 'ക്രിസ്മസ് പരീക്ഷ' : 'Dec 20 Xmas'}</span>
-                                        <span class="text-[10px] text-slate-400">Term 1 & 2</span>
-                                    </button>
-                                    <button type="button" onclick="setDeadlinePreset('${getPresetDate(2, 28, true)}')" class="py-2.5 px-3 rounded-xl bg-slate-100 dark:bg-[#162137] hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-700 dark:hover:text-blue-300 text-slate-700 dark:text-slate-200 text-xs font-bold border border-slate-200 dark:border-slate-700/80 transition flex flex-col items-center justify-center text-center gap-1 active:scale-95">
-                                        <span class="text-purple-500 text-sm">🎯</span>
-                                        <span>${isML ? 'പബ്ലിക് പരീക്ഷ' : 'Feb 28 Board'}</span>
-                                        <span class="text-[10px] text-slate-400">Full Syllabus</span>
-                                    </button>
-                                    <button type="button" onclick="setDeadlinePreset('${getPresetDate(11, 30)}')" class="py-2.5 px-3 rounded-xl bg-slate-100 dark:bg-[#162137] hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-700 dark:hover:text-blue-300 text-slate-700 dark:text-slate-200 text-xs font-bold border border-slate-200 dark:border-slate-700/80 transition flex flex-col items-center justify-center text-center gap-1 active:scale-95">
-                                        <span class="text-blue-500 text-sm">📅</span>
-                                        <span>${isML ? 'നവം 30' : 'Nov 30 Term 2'}</span>
-                                        <span class="text-[10px] text-slate-400">Half-Yearly</span>
-                                    </button>
-                                </div>
-
-                                <!-- Date Picker -->
-                                <div class="relative">
-                                    <input type="date" id="deadline-date" value="${getLocalDateStr(defaultTarget)}" onchange="updateDeadlinePreview()" oninput="updateDeadlinePreview()" class="w-full border-2 border-slate-200 dark:border-slate-700 rounded-2xl p-3 text-sm font-bold text-slate-800 dark:text-white bg-slate-50 dark:bg-[#101726] focus:bg-white dark:focus:bg-[#141d30] focus:border-blue-600 outline-none transition">
-                                </div>
-                                <!-- Live Calculation Feedback Box -->
-                                <div id="deadline-calc-label" class="mt-2 p-3 rounded-2xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-800/40 text-xs text-slate-600 dark:text-slate-200"></div>
-                            </div>
-
-                            <!-- 3. Primary CTA Button -->
-                            <div>
-                                <button type="button" onclick="handleInitialSetup()" class="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-black py-4 px-6 rounded-2xl shadow-xl shadow-blue-500/25 transform active:scale-[0.98] transition flex items-center justify-center gap-2.5 text-base sm:text-lg">
-                                    <span>${isML ? '🚀 പ്ലാൻ തയ്യാറാക്കൂ (Day 1 ആരംഭിക്കാം)' : '🚀 Generate My Daily Plan (Start Day 1)'}</span>
-                                    <i class="fa-solid fa-rocket"></i>
+                            <!-- Step 1 Navigation (Strictly "Next", No extra clutter) -->
+                            <div class="pt-5 flex justify-end">
+                                <button type="button" onclick="nextSetupStep()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-sm py-3 px-8 rounded-2xl shadow-md shadow-blue-500/20 transition flex items-center justify-center gap-2 active:scale-95">
+                                    <span>${isML ? 'തുടരുക' : 'Next'}</span>
+                                    <i class="fa-solid fa-arrow-right text-xs"></i>
                                 </button>
-                                <p class="text-center text-[11px] text-slate-400 mt-2 font-medium">
-                                    ${isML ? 'സൗജന്യം • ഓഫ്‌ലൈനിലും പ്രവർത്തിക്കും • കൃത്യമായ റിവിഷൻ ദിവസങ്ങൾ' : '100% Free • Works Offline • Smart Buffer Days Built In'}
+                            </div>
+                        </div>
+
+                        <!-- STEP 2: Target Exam / Date -->
+                        <div id="setup-step-2" class="${setupCurrentStep === 2 ? '' : 'hidden'} space-y-5 animate-fade-in-up">
+                            <div class="text-left">
+                                <h3 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                                    ${isML ? 'ലക്ഷ്യ പരീക്ഷ / തീയതി' : 'Target Exam & Date'}
+                                </h3>
+                                <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-300 mt-1">
+                                    ${isML ? 'പരീക്ഷാ തീയതി തിരഞ്ഞെടുക്കുക. ദിവസങ്ങൾക്കനുസരിച്ച് ഷെഡ്യൂൾ ചെയ്യാം.' : 'Pick an exam preset or select your target completion date.'}
                                 </p>
                             </div>
 
-                            <!-- 4. Advanced / Customization Accordion (Preserves ALL existing features) -->
-                            <details id="setup-advanced-accordion" class="group bg-slate-50 dark:bg-[#101726] rounded-2xl border border-slate-200 dark:border-slate-800 p-4 transition-all">
+                            <!-- Fast Presets -->
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
+                                <button type="button" onclick="setDeadlinePreset('${getRelativePresetDate(30)}')" class="py-2.5 px-3 rounded-xl bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-700 dark:text-blue-300 text-xs font-bold border border-blue-200 dark:border-blue-700/80 transition flex flex-col items-center justify-center text-center gap-1 shadow-xs active:scale-95">
+                                    <span class="text-amber-500 text-sm">⚡</span>
+                                    <span>${isML ? '30 ദിവസത്തെ പ്ലാൻ' : '30-Day Sprint'}</span>
+                                    <span class="text-[10px] text-slate-400">Fast Crash</span>
+                                </button>
+                                <button type="button" onclick="setDeadlinePreset('${getPresetDate(12, 20)}')" class="py-2.5 px-3 rounded-xl bg-slate-100 dark:bg-[#162137] hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-700 dark:hover:text-blue-300 text-slate-700 dark:text-slate-200 text-xs font-bold border border-slate-200 dark:border-slate-700/80 transition flex flex-col items-center justify-center text-center gap-1 active:scale-95">
+                                    <span class="text-emerald-500 text-sm">🎄</span>
+                                    <span>${isML ? 'ക്രിസ്മസ് പരീക്ഷ' : 'Dec 20 Xmas'}</span>
+                                    <span class="text-[10px] text-slate-400">Term 1 & 2</span>
+                                </button>
+                                <button type="button" onclick="setDeadlinePreset('${getPresetDate(2, 28, true)}')" class="py-2.5 px-3 rounded-xl bg-slate-100 dark:bg-[#162137] hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-700 dark:hover:text-blue-300 text-slate-700 dark:text-slate-200 text-xs font-bold border border-slate-200 dark:border-slate-700/80 transition flex flex-col items-center justify-center text-center gap-1 active:scale-95">
+                                    <span class="text-purple-500 text-sm">🎯</span>
+                                    <span>${isML ? 'പബ്ലിക് പരീക്ഷ' : 'Feb 28 Board'}</span>
+                                    <span class="text-[10px] text-slate-400">Full Syllabus</span>
+                                </button>
+                                <button type="button" onclick="setDeadlinePreset('${getPresetDate(11, 30)}')" class="py-2.5 px-3 rounded-xl bg-slate-100 dark:bg-[#162137] hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-700 dark:hover:text-blue-300 text-slate-700 dark:text-slate-200 text-xs font-bold border border-slate-200 dark:border-slate-700/80 transition flex flex-col items-center justify-center text-center gap-1 active:scale-95">
+                                    <span class="text-blue-500 text-sm">📅</span>
+                                    <span>${isML ? 'നവം 30' : 'Nov 30 Term 2'}</span>
+                                    <span class="text-[10px] text-slate-400">Half-Yearly</span>
+                                </button>
+                            </div>
+
+                            <!-- Date Picker -->
+                            <div class="relative">
+                                <input type="date" id="deadline-date" value="${getLocalDateStr(defaultTarget)}" onchange="updateDeadlinePreview()" oninput="updateDeadlinePreview()" class="w-full border-2 border-slate-200 dark:border-slate-700 rounded-2xl p-3 text-sm font-bold text-slate-800 dark:text-white bg-slate-50 dark:bg-[#101726] focus:bg-white dark:focus:bg-[#141d30] focus:border-blue-600 outline-none transition">
+                            </div>
+                            <!-- Live Calculation Feedback Box -->
+                            <div id="deadline-calc-label" class="p-3 rounded-2xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-800/40 text-xs text-slate-600 dark:text-slate-200"></div>
+
+                            <!-- Step 2 Navigation -->
+                            <div class="pt-5 flex items-center justify-between gap-3">
+                                <button type="button" onclick="prevSetupStep()" class="py-2.5 px-5 rounded-2xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center gap-1.5 active:scale-95">
+                                    <i class="fa-solid fa-arrow-left text-xs"></i>
+                                    <span>${isML ? 'പിന്നോട്ട്' : 'Back'}</span>
+                                </button>
+                                <button type="button" onclick="nextSetupStep()" class="bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-sm py-2.5 px-8 rounded-2xl shadow-md shadow-blue-500/20 transition flex items-center gap-2 active:scale-95">
+                                    <span>${isML ? 'തുടരുക' : 'Next'}</span>
+                                    <i class="fa-solid fa-arrow-right text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- STEP 3: Completed Chapters -->
+                        <div id="setup-step-3" class="${setupCurrentStep === 3 ? '' : 'hidden'} space-y-4 animate-fade-in-up">
+                            <div class="flex items-center justify-between pb-1">
+                                <div class="text-left">
+                                    <h3 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                                        ${isML ? 'പൂർത്തിയാക്കിയ അധ്യായങ്ങൾ' : 'Completed Chapters'}
+                                    </h3>
+                                    <p class="text-xs text-slate-500 dark:text-slate-300 mt-0.5">
+                                        ${isML ? 'പഠിച്ചു കഴിഞ്ഞ അധ്യായങ്ങൾ ഇവിടെ ടിക്ക് ചെയ്യാം. അവ ഒഴിവാക്കി ബാക്കിയുള്ളവ ഷെഡ്യൂൾ ചെയ്യും.' : 'Mark chapters you already finished in school or tuition to skip them.'}
+                                    </p>
+                                </div>
+                                <span id="completed-chaps-badge" class="text-xs font-bold px-2.5 py-1 rounded-full bg-slate-100 dark:bg-[#162137] text-slate-500 dark:text-slate-300 shrink-0">0 completed</span>
+                            </div>
+
+                            <!-- Grade Switcher (+2 vs +1) -->
+                            ${selectedStream !== 'imp_only' ? `
+                                <div class="flex bg-slate-100 dark:bg-[#162137] p-1 rounded-xl gap-1">
+                                    <button type="button" id="grade-tab-p2" onclick="switchSetupGrade('+2')" class="flex-1 py-1.5 px-3 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-sm transition">📘 Plus Two (+2)</button>
+                                    <button type="button" id="grade-tab-p1" onclick="switchSetupGrade('+1')" class="flex-1 py-1.5 px-3 text-xs font-bold rounded-lg bg-slate-100 dark:bg-[#121a2c] text-slate-600 dark:text-slate-300 transition">📙 +1 Improvement</button>
+                                </div>
+                            ` : ''}
+
+                            <!-- Subject Tabs Switcher -->
+                            <div id="setup-subject-tabs-container" class="flex flex-wrap gap-1.5 pt-1">
+                                ${renderSetupSubjectTabs()}
+                            </div>
+
+                            <!-- Chapter List Container -->
+                            <div id="setup-subject-chapters-list" class="bg-slate-50/70 dark:bg-[#101726] p-3 rounded-2xl border border-slate-200/80 dark:border-slate-700/80">
+                                ${renderSetupSubjectChapters(activeSetupSubjectTab, activeSetupGradeTab)}
+                            </div>
+
+                            <!-- Step 3 Navigation -->
+                            <div class="pt-5 flex items-center justify-between gap-3">
+                                <button type="button" onclick="prevSetupStep()" class="py-2.5 px-5 rounded-2xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center gap-1.5 active:scale-95">
+                                    <i class="fa-solid fa-arrow-left text-xs"></i>
+                                    <span>${isML ? 'പിന്നോട്ട്' : 'Back'}</span>
+                                </button>
+                                <button type="button" onclick="nextSetupStep()" class="bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-sm py-2.5 px-8 rounded-2xl shadow-md shadow-blue-500/20 transition flex items-center gap-2 active:scale-95">
+                                    <span>${isML ? 'തുടരുക' : 'Next'}</span>
+                                    <i class="fa-solid fa-arrow-right text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- STEP 4: Start Plan & Advanced Customization -->
+                        <div id="setup-step-4" class="${setupCurrentStep === 4 ? '' : 'hidden'} space-y-5 animate-fade-in-up">
+                            <div class="text-left">
+                                <h3 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                                    ${isML ? 'പഠനം ആരംഭിക്കാം!' : 'Ready to Start!'}
+                                </h3>
+                                <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-300 mt-1">
+                                    ${isML ? 'ഒരു ക്ലിക്കിൽ നിങ്ങളുടെ ഡെയ്‌ലി ടൈംടേബിൾ തയ്യാറാക്കാം.' : 'One click to generate your personalized daily timetable for Day 1.'}
+                                </p>
+                            </div>
+
+                            <!-- Quick Summary Card -->
+                            <div class="p-3.5 bg-slate-50 dark:bg-[#101726] rounded-2xl border border-slate-200 dark:border-slate-800 space-y-2">
+                                <div class="flex items-center justify-between text-xs">
+                                    <span class="text-slate-500 dark:text-slate-400 font-medium">${isML ? 'സ്ട്രീം' : 'Stream'}</span>
+                                    <span id="summary-stream-badge" class="font-extrabold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded-lg border border-blue-200/60 dark:border-blue-800/60"></span>
+                                </div>
+                                <div class="flex items-center justify-between text-xs">
+                                    <span class="text-slate-500 dark:text-slate-400 font-medium">${isML ? 'പരീക്ഷാ തീയതി' : 'Target Date'}</span>
+                                    <span id="summary-date-badge" class="font-bold text-slate-700 dark:text-slate-200"></span>
+                                </div>
+                                <div class="flex items-center justify-between text-xs">
+                                    <span class="text-slate-500 dark:text-slate-400 font-medium">${isML ? 'പൂർത്തിയാക്കിയവ' : 'Completed'}</span>
+                                    <span id="summary-completed-badge" class="font-bold text-emerald-600 dark:text-emerald-400"></span>
+                                </div>
+                            </div>
+
+                            <!-- Primary Start Button -->
+                            <button type="button" onclick="handleInitialSetup()" class="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-black py-4 px-6 rounded-2xl shadow-xl shadow-blue-500/25 transform active:scale-[0.98] transition flex items-center justify-center gap-2.5 text-base sm:text-lg">
+                                <span>${isML ? '🚀 പ്ലാൻ തയ്യാറാക്കൂ (Day 1 ആരംഭിക്കാം)' : '🚀 Start Day 1'}</span>
+                                <i class="fa-solid fa-rocket"></i>
+                            </button>
+
+                            <!-- Advanced Customization Accordion (Clean title: No "Exclusions", No "(Optional)") -->
+                            <details id="setup-advanced-accordion" class="group bg-slate-50 dark:bg-[#101726] rounded-2xl border border-slate-200 dark:border-slate-800 p-4 transition-all text-left">
                                 <summary class="cursor-pointer font-bold text-xs sm:text-sm text-slate-700 dark:text-slate-200 flex items-center justify-between select-none list-none">
                                     <div class="flex items-center gap-2">
                                         <i class="fa-solid fa-sliders text-blue-600 dark:text-blue-400"></i>
-                                        <span>${isML ? 'വിപുലമായ ക്രമീകരണങ്ങൾ (അധ്യായങ്ങൾ, +1 വിഷയങ്ങൾ, സമയം)' : 'Customize Chapters & Routine (Optional)'}</span>
+                                        <span>⚙️ ${isML ? 'കൂടുതൽ ക്രമീകരണങ്ങൾ' : 'Advanced Customization'}</span>
                                     </div>
-                                    <span class="text-xs text-blue-600 dark:text-blue-400 font-semibold group-open:rotate-180 transition-transform">
-                                        <i class="fa-solid fa-chevron-down"></i>
-                                    </span>
+                                    <i class="fa-solid fa-chevron-down text-xs text-slate-400 group-open:rotate-180 transition-transform"></i>
                                 </summary>
 
                                 <div class="mt-4 pt-4 border-t border-slate-200/80 dark:border-slate-700/80 space-y-5 text-left">
@@ -2737,39 +2889,7 @@ function showToastMessage(text, icon = 'checkCircle') {
                                         </div>
                                     ` : ''}
 
-                                    <!-- C. Finished Chapters Selection (Exclude already completed) -->
-                                    <div class="pt-3 border-t border-slate-200/80 dark:border-slate-700/80">
-                                        <div class="flex items-center justify-between pb-2">
-                                            <div class="flex items-center gap-2">
-                                                <i class="fa-solid fa-check-double text-emerald-600"></i>
-                                                <span class="text-xs font-extrabold text-slate-800 dark:text-white">${isML ? 'പഠിച്ചു കഴിഞ്ഞ അധ്യായങ്ങൾ ഒഴിവാക്കുക' : 'Exclude Finished Chapters'}</span>
-                                            </div>
-                                            <span id="completed-chaps-badge" class="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-[#162137] text-slate-500 dark:text-slate-300">0 excluded</span>
-                                        </div>
-                                        <p class="text-[11px] text-slate-400 mb-2">
-                                            ${isML ? 'സ്കൂളിലോ ട്യൂഷനിലോ ഇതിനകം പഠിച്ച അധ്യായങ്ങൾ ഇവിടെ ടിക്ക് ചെയ്ത് ഒഴിവാക്കാം.' : 'Check chapters you already studied to exclude them from your daily schedule.'}
-                                        </p>
-
-                                        <!-- Grade Switcher (+2 vs +1) -->
-                                        ${selectedStream !== 'imp_only' ? `
-                                            <div class="flex bg-slate-100 dark:bg-[#162137] p-1 rounded-xl gap-1 mb-2">
-                                                <button type="button" id="grade-tab-p2" onclick="switchSetupGrade('+2')" class="flex-1 py-1.5 px-3 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-sm transition">📘 Plus Two (+2)</button>
-                                                <button type="button" id="grade-tab-p1" onclick="switchSetupGrade('+1')" class="flex-1 py-1.5 px-3 text-xs font-bold rounded-lg bg-slate-100 dark:bg-[#121a2c] text-slate-600 dark:text-slate-300 transition">📙 +1 Improvement</button>
-                                            </div>
-                                        ` : ''}
-
-                                        <!-- Subject Tabs Switcher -->
-                                        <div id="setup-subject-tabs-container" class="flex flex-wrap gap-1.5 pt-1">
-                                            ${renderSetupSubjectTabs()}
-                                        </div>
-
-                                        <!-- Chapter List Container -->
-                                        <div id="setup-subject-chapters-list" class="bg-slate-50/70 dark:bg-[#101726] p-3 rounded-xl border border-slate-200/80 dark:border-slate-700/80 mt-2">
-                                            ${renderSetupSubjectChapters(activeSetupSubjectTab, activeSetupGradeTab)}
-                                        </div>
-                                    </div>
-
-                                    <!-- D. Weekly Rhythm & Hours -->
+                                    <!-- C. Weekly Rhythm & Hours -->
                                     <div class="pt-3 border-t border-slate-200/80 dark:border-slate-700/80 space-y-3">
                                         <span class="text-xs font-extrabold text-slate-700 dark:text-slate-200 uppercase tracking-wider block">
                                             ${isML ? ML_I18N.setup.rhythmTitle : 'Weekly Study Rhythm & Rest Day'}
@@ -2813,13 +2933,23 @@ function showToastMessage(text, icon = 'checkCircle') {
                                     </div>
                                 </div>
                             </details>
+
+                            <!-- Step 4 Navigation -->
+                            <div class="pt-5 flex items-center justify-between gap-3">
+                                <button type="button" onclick="prevSetupStep()" class="py-2.5 px-5 rounded-2xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center gap-1.5 active:scale-95">
+                                    <i class="fa-solid fa-arrow-left text-xs"></i>
+                                    <span>${isML ? 'പിന്നോട്ട്' : 'Back'}</span>
+                                </button>
+                                <button type="button" onclick="handleInitialSetup()" class="bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-sm py-2.5 px-8 rounded-2xl shadow-md shadow-blue-500/20 transition flex items-center gap-2 active:scale-95">
+                                    <span>${isML ? '🚀 ആരംഭിക്കാം' : '🚀 Start Day 1'}</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 `;
 
                 setTimeout(() => {
-                    updateDeadlinePreview();
-                    updateCompletedChaptersCountBadge();
+                    goToSetupStep(setupCurrentStep || 1);
                 }, 0);
                 return;
             }
