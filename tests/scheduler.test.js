@@ -229,4 +229,103 @@ describe('Mission PlusTwo Core Scheduler Engine', () => {
       expect(result.startDate).toBe('2026-10-16');
     });
   });
+
+  describe('7. Exam Eve Quarantines & Ebbinghaus Forgetting Curve Spaced Retrieval', () => {
+    it('strictly isolates exam eve day for upcoming subject (Maths Oct 12, Physics Oct 14)', () => {
+      const schedule = generateSchedule({
+        stream: 'cs',
+        startDate: '2026-10-01',
+        examDate: '2026-11-30',
+        includePlusOne: true,
+        plusOneSubjects: ['Mathematics', 'Physics'],
+        improvementDates: {
+          Mathematics: '2026-10-12',
+          Physics: '2026-10-14',
+        },
+      });
+
+      const oct11 = schedule.plan.find((d) => d.date === '2026-10-11');
+      const oct13 = schedule.plan.find((d) => d.date === '2026-10-13');
+
+      expect(oct11).toBeDefined();
+      expect(oct11.isExamEve).toBe(true);
+      expect(oct11.exclusiveSubject).toBe('Mathematics');
+      expect(oct11.tasks.every((t) => t.subject === 'Mathematics')).toBe(true);
+
+      expect(oct13).toBeDefined();
+      expect(oct13.isExamEve).toBe(true);
+      expect(oct13.exclusiveSubject).toBe('Physics');
+      expect(oct13.tasks.every((t) => t.subject === 'Physics')).toBe(true);
+
+      expect(schedule.diagnostics.cognitiveModel.forgettingCurveApplied).toBe(true);
+    });
+
+    it('embeds Ebbinghaus spacing intervals on multi-pass improvement runways', () => {
+      const schedule = generateSchedule({
+        stream: 'cs',
+        startDate: '2026-10-01',
+        examDate: '2026-11-30',
+        includePlusOne: true,
+        plusOneSubjects: ['Mathematics'],
+        improvementDates: {
+          Mathematics: '2026-10-25',
+        },
+      });
+
+      const allCurveReviews = schedule.plan
+        .flatMap((d) => d.tasks)
+        .filter((t) => t.isForgettingCurveReview);
+
+      expect(allCurveReviews.length).toBeGreaterThan(0);
+
+      // Improvement-level Ebbinghaus reviews carry spacingInterval metadata
+      const recallTasks = allCurveReviews.filter((t) => t.spacingInterval);
+      expect(recallTasks.length).toBeGreaterThan(0);
+      expect(recallTasks[0].spacingInterval).toBeDefined();
+      expect(recallTasks[0].spacingInterval).toMatch(/^T\+\d+$/);
+    });
+  });
+
+  describe('8. Chapter Part Spacing & Tight Timetable Consolidation', () => {
+    it('spreads Part 1/2 and Part 2/2 across different days when user has ample time (loose timetable)', () => {
+      const schedule = generateSchedule({
+        stream: 'bio',
+        startDate: '2026-10-01',
+        examDate: '2026-12-15', // 75 days runway — ample time
+        weeklyRhythm: 'balanced',
+      });
+
+      // Find multi-part chapters and verify that no single day has both Part 1 and Part 2
+      schedule.plan.forEach((day) => {
+        const parts = (day.tasks || []).filter((t) => t.part && t.totalParts);
+        const byChap = {};
+        parts.forEach((p) => {
+          byChap[p.chapId] = byChap[p.chapId] || [];
+          byChap[p.chapId].push(p.part);
+        });
+        // On an ample runway, Part 1/2 and Part 2/2 are never crammed onto the same day
+        Object.values(byChap).forEach((partsOnDay) => {
+          expect(partsOnDay.includes(1) && partsOnDay.includes(2)).toBe(false);
+        });
+      });
+    });
+
+    it('tags isFullOnDay=true when multi-part chapters land on the same day on a tight timetable', () => {
+      const schedule = generateSchedule({
+        stream: 'cs',
+        startDate: '2026-10-01',
+        examDate: '2026-10-08', // 7 days tight crash runway
+        weeklyRhythm: 'balanced',
+      });
+
+      const allTasks = schedule.plan.flatMap((d) => d.tasks);
+      const fullOnDayTasks = allTasks.filter((t) => t.isFullOnDay);
+
+      // On a 7-day crash runway with 30+ tasks, chapters must be scheduled together and tagged isFullOnDay
+      expect(fullOnDayTasks.length).toBeGreaterThan(0);
+      fullOnDayTasks.forEach((task) => {
+        expect(task.isFullOnDay).toBe(true);
+      });
+    });
+  });
 });

@@ -67,7 +67,7 @@ function getTaskResourceBadge(task) {
 }
 
 function getTaskDeepLinksHtml(task) {
-    if (!task || task.isRevision) return '';
+    if (!task || (task.isRevision && !task.isSpacedRetrieval && !task.isExamEveTask)) return '';
     const res = CHAPTER_RESOURCES?.subjects?.[task.subject] || CHAPTER_RESOURCES?.[task.subject];
     if (!res) return '';
     const pyq = res.pyqUrl || res.pyq;
@@ -2300,9 +2300,9 @@ function showToastMessage(text, icon = 'checkCircle') {
                 },
                 {
                     pct: 85,
-                    heading: isML ? "വിഷയങ്ങൾ തുല്യമായി പുനർവിഭജിക്കുന്നു..." : "Redistributing Subject Workload...",
-                    subheading: isML ? "ബാക്ക്ലോഗ് ഒഴിവാക്കി റിവിഷൻ ദിനങ്ങൾ നിലനിർത്തുന്നു" : "Interleaving subjects evenly with preserved revision buffers",
-                    icon: "fa-scale-balanced",
+                    heading: isML ? "എബ്ബിംഗ്ഹോസ് സ്പേസ്ഡ് റിവിഷൻ ക്രമീകരിക്കുന്നു..." : "Recalibrating Ebbinghaus Spaced Intervals...",
+                    subheading: isML ? "ബാക്ക്ലോഗ് ഒഴിവാക്കി മറവി തടയാൻ ഫോർഗെറ്റിംഗ് കർവ് പ്രകാരം റീകോൾ ഉറപ്പാക്കുന്നു" : "Recalculating spaced retrieval intervals to protect retention",
+                    icon: "fa-brain",
                     stageText: isML ? "ഘട്ടം 3 / 4" : "Phase 3 of 4",
                     checkIndex: 3
                 },
@@ -2333,9 +2333,9 @@ function showToastMessage(text, icon = 'checkCircle') {
                 },
                 {
                     pct: 86,
-                    heading: isML ? "വിഷയ ക്രമവും റിവിഷനും ചിട്ടപ്പെടുത്തുന്നു..." : "Balancing Multi-Subject Rotation...",
-                    subheading: isML ? "ചാപ്റ്റർ മുൻഗണനയും അവസാന വട്ട മോഡൽ എക്സാം ദിനങ്ങളും ഉറപ്പാക്കുന്നു" : "Enforcing prerequisite order and reserving active recall runway",
-                    icon: "fa-shield-halved",
+                    heading: isML ? "എബ്ബിംഗ്ഹോസ് സ്പേസ്ഡ് റിവിഷൻ ചിട്ടപ്പെടുത്തുന്നു..." : "Calibrating Ebbinghaus Spaced Intervals...",
+                    subheading: isML ? "മറവി തടയാൻ ഫോർഗെറ്റിംഗ് കർവ് പ്രകാരം റീകോൾ ദിനങ്ങളും പരീക്ഷത്തലേന്നും ഉറപ്പാക്കുന്നു" : "Applying spacing effect to defeat the forgetting curve and lock in retention",
+                    icon: "fa-brain",
                     stageText: isML ? "ഘട്ടം 3 / 4" : "Phase 3 of 4",
                     checkIndex: 3
                 },
@@ -3385,6 +3385,25 @@ function showToastMessage(text, icon = 'checkCircle') {
                     const focusTask = unfinishedTasks[0] || null;
                     const isAllDoneToday = (totalToday > 0 && doneToday === totalToday);
 
+                    const examEveBannerHTML = todayPlan.isExamEve ? `
+                        <div class="bg-gradient-to-r from-rose-500/15 via-red-500/10 to-amber-500/15 border-2 border-rose-500/60 dark:border-rose-500/40 rounded-2xl p-4 sm:p-5 mb-5 text-xs sm:text-sm text-rose-950 dark:text-rose-200 flex items-start gap-3.5 shadow-md shadow-rose-500/10 animate-fade-in-up">
+                            <div class="w-10 h-10 rounded-xl bg-rose-600 text-white flex items-center justify-center text-lg font-black shrink-0 shadow-sm shadow-rose-600/30">
+                                <i class="fa-solid fa-bolt"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2">
+                                    <strong class="text-sm sm:text-base font-black text-rose-900 dark:text-rose-100">${isML ? `പരീക്ഷത്തലേന്ന് (Exam Eve): ${todayPlan.exclusiveSubject}` : `🔥 Exam Eve High-Yield Focus: ${todayPlan.exclusiveSubject} Only`}</strong>
+                                    <span class="text-[10px] uppercase font-black tracking-wider px-2 py-0.5 rounded-full bg-rose-600 text-white shadow-xs">Critical</span>
+                                </div>
+                                <p class="mt-1 text-slate-700 dark:text-slate-300 font-medium">
+                                    ${isML 
+                                      ? `നാളെ ${todayPlan.exclusiveSubject} പരീക്ഷയാണ്! പ്ലാനർ മറ്റ് എല്ലാ വിഷയങ്ങളും മാറ്റിനിർത്തി ${todayPlan.exclusiveSubject}-ൽ മാത്രം പൂർണ്ണ ശ്രദ്ധ കേന്ദ്രീകരിക്കാൻ ക്രമീകരിച്ചിരിക്കുന്നു. പ്രധാന ഫോർമുലകളും കഴിഞ്ഞ വർഷങ്ങളിലെ ചോദ്യങ്ങളും മാത്രം റിവൈസ് ചെയ്യുക.`
+                                      : `Tomorrow is your ${todayPlan.exclusiveSubject} Exam! The planner has quarantined all other subjects so you can concentrate 100% on ${todayPlan.exclusiveSubject} formulas, high-yield questions, and mental rehearsal. Clear your head and ace it!`}
+                                </p>
+                            </div>
+                        </div>
+                    ` : '';
+
                     const warningBannerHTML = (appState.diagnostics && appState.diagnostics.isInfeasible) ? `
                         <div class="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-2xl p-4 mb-4 text-xs sm:text-sm text-amber-900 dark:text-amber-200 flex items-start gap-3 shadow-sm animate-fade-in-up">
                             <i class="fa-solid fa-triangle-exclamation text-amber-600 text-base mt-0.5 shrink-0"></i>
@@ -3569,6 +3588,7 @@ function showToastMessage(text, icon = 'checkCircle') {
                     ` : '';
 
                     todayTasksHTML = `
+                        ${examEveBannerHTML}
                         ${warningBannerHTML}
                         ${heroCardHTML}
                         ${queueSectionHTML}
@@ -3737,6 +3757,8 @@ function showToastMessage(text, icon = 'checkCircle') {
                                     <span class="text-xs font-extrabold text-slate-900">${isML ? `${ML_I18N.plan.day} ${day.dayNumber}` : `Day ${day.dayNumber}`}</span>
                                     <span class="text-xs font-semibold text-slate-400">(${day.date})</span>
                                     ${isToday ? `<span class="text-xs font-extrabold bg-blue-600 text-white px-2 py-0.5 rounded-full no-print">${isML ? ML_I18N.plan.todayBadge : 'TODAY'}</span>` : ''}
+                                    ${day.isExamEve ? `<span class="text-xs font-black bg-rose-100 text-rose-900 border border-rose-300 dark:bg-rose-950/70 dark:text-rose-200 dark:border-rose-700 px-2 py-0.5 rounded-full flex items-center gap-1 animate-pulse"><i class="fa-solid fa-bolt text-rose-600 dark:text-rose-400"></i>${isML ? `പരീക്ഷത്തലേന്ന്: ${day.exclusiveSubject}` : `🔥 Exam Eve: ${day.exclusiveSubject} Only`}</span>` : ''}
+                                    ${day.isExamDay ? `<span class="text-xs font-black bg-amber-100 text-amber-900 border border-amber-300 dark:bg-amber-950/70 dark:text-amber-200 dark:border-amber-700 px-2 py-0.5 rounded-full flex items-center gap-1"><i class="fa-solid fa-graduation-cap text-amber-600 dark:text-amber-400"></i>${isML ? `പരീക്ഷാദിനം: ${day.examSubject}` : `🎯 Exam Day: ${day.examSubject}`}</span>` : ''}
                                     ${day.isRevisionDay ? `<span class="text-xs font-bold bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full">${isML ? ML_I18N.plan.revisionDay : 'Revision Day'}</span>` : ''}
                                     ${day.isRestDay ? `<span class="text-xs font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full"><i class="fa-solid fa-mug-hot mr-1"></i>${isML ? ML_I18N.plan.restDay : 'Rest Day'}</span>` : ''}
                                 </div>
@@ -4052,6 +4074,11 @@ function showToastMessage(text, icon = 'checkCircle') {
                 desc = (p === total || p > 1) ? 'Exercise Problems & PYQs' : 'Core Concepts & Theory';
             }
 
+            // Tight timetable: all parts on same day — show "Full:" prefix for both cards
+            if (task.isFullOnDay) {
+                return `Full: ${desc}`;
+            }
+
             if (total === 1) {
                 return `Part 1/1 (Full Chapter): ${desc}`;
             }
@@ -4063,6 +4090,17 @@ function showToastMessage(text, icon = 'checkCircle') {
 
         function renderTaskGradeBadge(task) {
             if (!task) return '';
+            if (task.isExamEveTask) {
+                return `<span class="text-xs font-black px-1.5 py-0.5 rounded-md bg-rose-100 text-rose-900 border border-rose-300 dark:bg-rose-950/70 dark:text-rose-200 dark:border-rose-700 flex items-center gap-1 shadow-xs animate-pulse"><i class="fa-solid fa-bolt text-rose-600 dark:text-rose-400"></i> 🔥 Exam Eve Focus</span>`;
+            }
+            if (task.isForgettingCurveReview || task.isSpacedRetrieval) {
+                const intervalText = task.spacingInterval ? `Spaced Recall (${task.spacingInterval})` : 'Active Recall & PYQ';
+                const mlIntervalText = task.spacingInterval ? `സ്പേസ്ഡ് റീകോൾ (${task.spacingInterval})` : 'സ്പേസ്ഡ് റീകോൾ & PYQ';
+                return `<span class="text-xs font-bold px-1.5 py-0.5 rounded-md bg-indigo-100 text-indigo-900 border border-indigo-300 dark:bg-indigo-950/70 dark:text-indigo-200 dark:border-indigo-700 flex items-center gap-1 shadow-xs" title="Ebbinghaus Forgetting Curve Spaced Retrieval"><i class="fa-solid fa-brain text-indigo-600 dark:text-indigo-400"></i> 🧠 ${isML ? mlIntervalText : intervalText}</span>`;
+            }
+            if (task.isModelExam) {
+                return `<span class="text-xs font-bold px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-900 border border-amber-300 dark:bg-amber-950/70 dark:text-amber-200 dark:border-amber-700 flex items-center gap-1 shadow-xs"><i class="fa-solid fa-file-pen text-amber-600 dark:text-amber-400"></i> 📝 Model Exam</span>`;
+            }
             if (task.isRevision) {
                 return `<span class="text-xs font-bold px-1.5 py-0.5 rounded-md bg-purple-100 text-purple-800 border border-purple-200/70 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800/60">Revision</span>`;
             }
@@ -4077,9 +4115,13 @@ function showToastMessage(text, icon = 'checkCircle') {
         }
 
         function renderTaskPartBadge(task) {
-            if (!task || task.isRevision) return '';
+            if (!task || task.isRevision || task.isExamEveTask || task.isModelExam || task.isSpacedRetrieval || task.isForgettingCurveReview) return '';
             const p = task.part || 1;
             const total = task.totalParts || 1;
+            // Tight timetable: all parts land on same day — show "Full" instead of confusing "1/2" + "2/2"
+            if (task.isFullOnDay) {
+                return `<span class="text-xs font-black px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-300/80 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-700/60 flex items-center gap-1 shadow-xs"><i class="fa-solid fa-circle-check text-xs text-emerald-600 dark:text-emerald-400"></i> Full</span>`;
+            }
             if (p === total) {
                 return `<span class="text-xs font-black px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-300/80 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-700/60 flex items-center gap-1 shadow-xs"><i class="fa-solid fa-circle-check text-xs text-emerald-600"></i> Full Chapter (${p}/${total})</span>`;
             }

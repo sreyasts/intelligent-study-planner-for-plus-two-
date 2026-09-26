@@ -590,6 +590,101 @@ describe('Edge Cases, Boundary Conditions & Invariant Hardening', () => {
         expect(day.tasks[0].isImprovement).toBe(true);
       });
     });
+
+    it('enforces strict Exam Eve Exclusivity for user scenario (Maths on Oct 12, Physics on Oct 14)', () => {
+      const planState = buildIntelligentPlan({
+        stream: 'cs',
+        startDateStr: '2026-10-01',
+        deadlineDateStr: '2026-11-30',
+        includePlusOne: true,
+        plusOneSubjects: ['Mathematics', 'Physics'],
+        improvementDates: {
+          Mathematics: '2026-10-12',
+          Physics: '2026-10-14',
+        },
+      });
+
+      const oct11 = planState.plan.find((d) => d.date === '2026-10-11');
+      const oct12 = planState.plan.find((d) => d.date === '2026-10-12');
+      const oct13 = planState.plan.find((d) => d.date === '2026-10-13');
+      const oct14 = planState.plan.find((d) => d.date === '2026-10-14');
+
+      expect(oct11).toBeDefined();
+      expect(oct11.isExamEve).toBe(true);
+      expect(oct11.exclusiveSubject).toBe('Mathematics');
+      // Strictly ONLY Mathematics on Exam Eve (0 Physics, 0 Plus Two tasks)
+      expect(oct11.tasks.length).toBeGreaterThan(0);
+      expect(oct11.tasks.every((t) => t.subject === 'Mathematics')).toBe(true);
+      expect(oct11.tasks.some((t) => t.subject === 'Physics')).toBe(false);
+      expect(oct11.tasks.some((t) => t.grade === '+2')).toBe(false);
+
+      expect(oct12.isExamDay).toBe(true);
+      expect(oct12.examSubject).toBe('Mathematics');
+
+      expect(oct13).toBeDefined();
+      expect(oct13.isExamEve).toBe(true);
+      expect(oct13.exclusiveSubject).toBe('Physics');
+      // Strictly ONLY Physics on Exam Eve (0 Maths, 0 Plus Two tasks)
+      expect(oct13.tasks.length).toBeGreaterThan(0);
+      expect(oct13.tasks.every((t) => t.subject === 'Physics')).toBe(true);
+      expect(oct13.tasks.some((t) => t.subject === 'Mathematics')).toBe(false);
+      expect(oct13.tasks.some((t) => t.grade === '+2')).toBe(false);
+
+      expect(oct14.isExamDay).toBe(true);
+      expect(oct14.examSubject).toBe('Physics');
+
+      const validation = validatePlan(planState, undefined, {
+        stream: 'cs',
+        improvementConfig: [
+          { subject: 'Mathematics', examDate: '2026-10-12' },
+          { subject: 'Physics', examDate: '2026-10-14' },
+        ],
+      });
+      expect(validation.scorecard.deadlineViolations).toBe(0);
+      expect(validation.scorecard.duplicateTasks).toBe(0);
+      expect(validation.scorecard.orderingViolations).toBe(0);
+    });
+
+    it('implements Ebbinghaus Forgetting Curve Spaced Retrieval with decay arrest intervals', () => {
+      const planState = buildIntelligentPlan({
+        stream: 'cs',
+        startDateStr: '2026-10-01',
+        deadlineDateStr: '2026-11-30',
+        includePlusOne: true,
+        plusOneSubjects: ['Mathematics'],
+        improvementDates: {
+          Mathematics: '2026-10-25',
+        },
+      });
+
+      expect(planState.diagnostics.cognitiveModel).toBeDefined();
+      expect(planState.diagnostics.cognitiveModel.forgettingCurveApplied).toBe(true);
+      expect(planState.diagnostics.cognitiveModel.retentionAlgorithm).toBe('Ebbinghaus Spaced Retrieval');
+
+      const allTasks = planState.plan.flatMap((d) => d.tasks);
+      const allCurveReviews = allTasks.filter((t) => t.isForgettingCurveReview);
+      expect(allCurveReviews.length).toBeGreaterThan(0);
+
+      // Improvement-level Ebbinghaus reviews carry spacingInterval metadata
+      const ebbinghausReviews = allCurveReviews.filter((t) => t.spacingInterval);
+      expect(ebbinghausReviews.length).toBeGreaterThan(0);
+
+      // Verify that spaced retrieval tasks have spaced interval metadata
+      ebbinghausReviews.forEach((t) => {
+        expect(t.spacingInterval).toMatch(/^T\+\d+$/);
+        expect(t.isSpacedRetrieval).toBe(true);
+      });
+
+      // Verify initial study occurs prior to Ebbinghaus recall
+      const firstMathTask = allTasks.find((t) => t.subject === 'Mathematics' && !t.isRevision);
+      const firstReviewTask = ebbinghausReviews.find((t) => t.subject === 'Mathematics');
+      expect(firstMathTask).toBeDefined();
+      expect(firstReviewTask).toBeDefined();
+
+      const initialDay = planState.plan.findIndex((d) => d.tasks.some((t) => t.id === firstMathTask.id));
+      const reviewDay = planState.plan.findIndex((d) => d.tasks.some((t) => t.id === firstReviewTask.id));
+      expect(reviewDay).toBeGreaterThanOrEqual(initialDay);
+    });
   });
 });
 
