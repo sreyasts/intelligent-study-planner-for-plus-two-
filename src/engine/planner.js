@@ -429,7 +429,7 @@ function _executeCorePlanAlgorithm(
       const subTasks = p1Tasks.filter((t) => t.subject === cfg.subject);
       if (subTasks.length === 0) return;
 
-      const examDate = cfg.examDate || targetDeadline;
+      const examDate = cfg.examDate || deadlineStr;
       const daysUntilExam = calculateDaysBetween(startDateStr, examDate);
       const examDayIdx = planDays.findIndex((d) => d.date === examDate);
       let eveIdx = -1;

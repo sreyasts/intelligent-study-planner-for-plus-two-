@@ -561,6 +561,14 @@ assert(nonFinalPartBadge.includes('Part 1/2'), 'Test 7.4: Non-final part has "Pa
 const finalPartBadge = renderTaskPartBadge({ part: 2, totalParts: 2 });
 assert(finalPartBadge.includes('Full Chapter (2/2)') && finalPartBadge.includes('bg-emerald-100'), 'Test 7.4: Final part has "Full Chapter (2/2)" badge with emerald styling');
 
+// Test 7.4b: Same-Day Full Chapter Badge (Tight Timetable)
+const fullDayPartBadge = renderTaskPartBadge({ part: 1, totalParts: 2, isFullOnDay: true });
+assert(fullDayPartBadge.includes('Full') && !fullDayPartBadge.includes('Part 1/2'), 'Test 7.4b: isFullOnDay renders "Full" badge instead of "Part 1/2"');
+
+// Test 7.4c: Same-Day Full Topic Title (Tight Timetable)
+const fullDayTopic = formatTaskTopicTitle({ part: 1, totalParts: 2, isFullOnDay: true, topicTitle: 'Core Concepts & Theory' });
+assert(fullDayTopic === 'Full: Core Concepts & Theory', 'Test 7.4c: isFullOnDay formats topic title with "Full:" prefix');
+
 // --- 8. THEME ENGINE & CONTRAST INVARIANTS ---
 console.log('\n--- 8. THEME ENGINE & CONTRAST INVARIANTS ---');
 

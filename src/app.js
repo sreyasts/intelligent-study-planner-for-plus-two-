@@ -4094,6 +4094,8 @@ function showToastMessage(text, icon = 'checkCircle') {
                 return `<span class="text-xs font-black px-1.5 py-0.5 rounded-md bg-rose-100 text-rose-900 border border-rose-300 dark:bg-rose-950/70 dark:text-rose-200 dark:border-rose-700 flex items-center gap-1 shadow-xs animate-pulse"><i class="fa-solid fa-bolt text-rose-600 dark:text-rose-400"></i> 🔥 Exam Eve Focus</span>`;
             }
             if (task.isForgettingCurveReview || task.isSpacedRetrieval) {
+                const isML = (typeof getAppLanguage === 'function' && getAppLanguage() === 'ml') ||
+                             (typeof document !== 'undefined' && document.documentElement && document.documentElement.lang === 'ml');
                 const intervalText = task.spacingInterval ? `Spaced Recall (${task.spacingInterval})` : 'Active Recall & PYQ';
                 const mlIntervalText = task.spacingInterval ? `സ്പേസ്ഡ് റീകോൾ (${task.spacingInterval})` : 'സ്പേസ്ഡ് റീകോൾ & PYQ';
                 return `<span class="text-xs font-bold px-1.5 py-0.5 rounded-md bg-indigo-100 text-indigo-900 border border-indigo-300 dark:bg-indigo-950/70 dark:text-indigo-200 dark:border-indigo-700 flex items-center gap-1 shadow-xs" title="Ebbinghaus Forgetting Curve Spaced Retrieval"><i class="fa-solid fa-brain text-indigo-600 dark:text-indigo-400"></i> 🧠 ${isML ? mlIntervalText : intervalText}</span>`;
