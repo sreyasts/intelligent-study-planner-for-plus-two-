@@ -482,6 +482,7 @@ function loadInitialState() {
         }
 
         function openAuthModal() {
+            if (currentUser) return;
             const modal = document.getElementById('auth-modal');
             if (modal) {
                 modal.classList.remove('hidden');
@@ -490,6 +491,10 @@ function loadInitialState() {
         }
 
         function closeAuthModal() {
+            if (authModalTimer) {
+                clearTimeout(authModalTimer);
+                authModalTimer = null;
+            }
             localStorage.setItem('has_dismissed_milestone_auth', 'true');
             const modal = document.getElementById('auth-modal');
             if (modal) {
@@ -1660,6 +1665,12 @@ function showToastMessage(text, icon = 'checkCircle') {
             return `${year}-${mStr}-${dStr}`;
         }
 
+        function getRelativePresetDate(daysAhead = 30) {
+            const now = new Date();
+            now.setDate(now.getDate() + daysAhead);
+            return formatLocalDateStr(now);
+        }
+
         function setDeadlinePreset(dateStr) {
             const input = document.getElementById('deadline-date');
             if (input) {
@@ -2038,6 +2049,16 @@ function showToastMessage(text, icon = 'checkCircle') {
                             : "🎉 Your study plan is ready! Let's conquer Day 1!",
                             "fa-rocket text-blue-400");
                     }
+
+                    // Prompt simple sign-in screen after 8 seconds if not already signed in
+                    if (!currentUser) {
+                        if (authModalTimer) clearTimeout(authModalTimer);
+                        authModalTimer = setTimeout(() => {
+                            if (!currentUser) {
+                                openAuthModal();
+                            }
+                        }, 8000);
+                    }
                 }
             });
         }
@@ -2226,6 +2247,16 @@ function showToastMessage(text, icon = 'checkCircle') {
                             "fa-wand-magic-sparkles text-blue-400");
                     }
                     renderApp();
+
+                    // Prompt simple sign-in screen after 8 seconds if not already signed in
+                    if (!currentUser) {
+                        if (authModalTimer) clearTimeout(authModalTimer);
+                        authModalTimer = setTimeout(() => {
+                            if (!currentUser) {
+                                openAuthModal();
+                            }
+                        }, 8000);
+                    }
                 }
             });
         }
@@ -2706,6 +2737,10 @@ function showToastMessage(text, icon = 'checkCircle') {
 
                             <!-- Fast Presets -->
                             <div class="flex flex-wrap gap-2.5">
+                                <button type="button" onclick="setDeadlinePreset('${getRelativePresetDate(30)}')" class="py-2 px-3.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-700 dark:text-blue-300 text-xs font-bold border border-blue-200 dark:border-blue-700/80 transition flex items-center gap-2 shadow-xs">
+                                    <i class="fa-solid fa-bolt text-amber-500"></i>
+                                    <span>${isML ? '⚡ 30 ദിവസത്തെ പ്ലാൻ (ക്രാഷ്)' : '⚡ 30 Days (Fast Crash Pacing)'}</span>
+                                </button>
                                 <button type="button" onclick="setDeadlinePreset('${getPresetDate(11, 30)}')" class="py-2 px-3.5 rounded-xl bg-slate-100 dark:bg-[#162137] hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-700 dark:hover:text-blue-300 text-slate-700 dark:text-slate-200 text-xs font-bold border border-slate-200 dark:border-slate-700/80 transition flex items-center gap-2">
                                     <i class="fa-regular fa-calendar-check text-blue-600 dark:text-blue-400"></i>
                                     <span>${isML ? ML_I18N.setup.presetNov : 'Nov 30 (Term 2 Target)'}</span>
@@ -3975,6 +4010,26 @@ function showToastMessage(text, icon = 'checkCircle') {
             } catch(e) {}
         }
 
+        // Process high-intent Google search landing parameters (e.g. ?days=30, ?stream=imp_only, ?view=syllabus)
+        try {
+            if (typeof window !== 'undefined' && window.location.search && window.URLSearchParams) {
+                const urlParams = new window.URLSearchParams(window.location.search);
+                if (urlParams.get('stream') === 'imp_only' && !appState) {
+                    selectedStream = 'imp_only';
+                    setupCurrentStep = 2;
+                } else if (urlParams.get('view') === 'syllabus') {
+                    currentView = 'syllabus';
+                } else if ((urlParams.get('days') === '30' || urlParams.get('preset') === '30days') && !appState) {
+                    setupCurrentStep = 4;
+                    setTimeout(() => {
+                        setDeadlinePreset(getRelativePresetDate(30));
+                    }, 120);
+                }
+            }
+        } catch(err) {
+            console.warn('SEO query parameter processing note:', err);
+        }
+
         // Initialize App on DOM Load
         renderApp();
     
@@ -4049,6 +4104,7 @@ if (typeof window !== 'undefined') {
         renderSetupSubjectChapters,
         setTermSelection,
         getPresetDate,
+        getRelativePresetDate,
         setDeadlinePreset,
         updateDeadlinePreview,
         goToSetupStep,

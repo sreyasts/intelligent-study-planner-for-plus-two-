@@ -14,6 +14,23 @@ describe('Authentication & Cross-Domain Unification Invariants', () => {
     expect(appJsContent).toContain('clearTimeout(authModalTimer)');
   });
 
+  it('schedules simple sign-in modal 8 seconds after plan generation for non-signed-in users', () => {
+    const appJsContent = fs.readFileSync(appJsPath, 'utf8');
+    expect(appJsContent).toContain('authModalTimer = setTimeout');
+    expect(appJsContent).toContain('8000');
+    expect(appJsContent).toContain('openAuthModal()');
+  });
+
+  it('renders a simple and uncluttered sign-in screen in index.html', () => {
+    const indexContent = fs.readFileSync(indexPath, 'utf8');
+    expect(indexContent).toContain('id="auth-modal"');
+    expect(indexContent).toContain('id="auth-modal-google-btn"');
+    expect(indexContent).toContain('id="auth-consent-checkbox"');
+    expect(indexContent).toContain('id="auth-modal-guest-btn"');
+    // Ensure bulky chips are removed for simplicity
+    expect(indexContent).not.toContain('class="auth-chip"');
+  });
+
   it('declares all local UI state variables in signInWithGoogle prior to try/catch', () => {
     const appJsContent = fs.readFileSync(appJsPath, 'utf8');
     const signInIdx = appJsContent.indexOf('async function signInWithGoogle(');
