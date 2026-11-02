@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [7.1.1] - 2026-11-02
+
+### Fixed
+- Allow the app's class and session fields through owner-only Firestore validation so plans and progress actually upload.
+- Persist pending changes per account, retry failed saves after reconnect/reload, and report cloud failures instead of claiming success.
+- Reconcile concurrent task edits transactionally, preserve intentional unticks and immutable account fields, and ask before replacing a different plan.
+- Cover phone/PC recovery with browser tests and validate permitted and denied operations against the Firestore emulator in CI.
+
 ## [Unreleased]
 
 ### Fixed

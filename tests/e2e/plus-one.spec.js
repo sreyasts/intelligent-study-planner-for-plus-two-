@@ -27,7 +27,7 @@ for (const width of [390, 1280]) {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.screenshot({ path: test.info().outputPath(`plus-one-setup-${width}.png`), fullPage: true });
 
-    await page.getByRole('button', { name: '🚀 Start Day 1', exact: true }).click();
+    await page.getByRole('button', { name: 'Start Day 1', exact: true }).click();
     await expect(page.locator('#today-overview')).toBeVisible({ timeout: 20000 });
 
     const generated = await page.evaluate(() => JSON.parse(localStorage.getItem('plusTwoMissionState_v2')));
@@ -58,15 +58,17 @@ for (const width of [390, 1280]) {
       mimeType: 'application/json',
       buffer: Buffer.from(JSON.stringify(backup)),
     });
-    await expect(page.getByRole('dialog')).toContainText('Backup Restored');
-    await page.getByRole('dialog').getByRole('button', { name: 'OK', exact: true }).click();
+    await expect(page.getByRole('alertdialog')).toContainText('Restore study backup?');
+    await page.getByRole('alertdialog').getByRole('button', { name: 'Restore backup', exact: true }).click();
+    await expect(page.locator('#settings-modal')).toBeHidden();
     const restored = await page.evaluate(() => JSON.parse(localStorage.getItem('plusTwoMissionState_v2')));
     expect(restored.grade).toBe('+1');
     expect(restored.stream).toBe('cs');
 
     await page.evaluate(() => openRegenerateModal());
-    await page.locator('#regen-deadline-date').fill('2026-12-28');
-    await page.locator('#btn-confirm-regenerate').click();
+    await page.evaluate(() => continueAsGuest());
+    await page.locator('#completed-day-select').selectOption('0');
+    await page.locator('#regenerate-confirm-btn').click();
     await expect(page.locator('#today-overview')).toBeVisible({ timeout: 20000 });
     const rebuilt = await page.evaluate(() => JSON.parse(localStorage.getItem('plusTwoMissionState_v2')));
     expect(rebuilt.grade).toBe('+1');

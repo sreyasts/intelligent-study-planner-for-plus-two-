@@ -2,7 +2,7 @@
 import { isCalendarDate } from './improvement.js';
 export const MAX_BACKUP_BYTES = 2 * 1024 * 1024;
 const STATE_KEYS = ['plusTwoMissionState_v2', 'plusTwoPlanState'];
-const ACCOUNT_FIELDS = ['uid', 'userId', 'userEmail', 'email', 'displayName', 'photoURL'];
+const ACCOUNT_FIELDS = ['uid', 'ownerUid', 'userId', 'userEmail', 'email', 'displayName', 'photoURL', 'clientSessionId', 'lastSynced'];
 const isRecord = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 
 function requireValid(condition) {

@@ -9,7 +9,7 @@ test.describe('PWA Cold Offline Start & Language Switcher', () => {
     });
     // 1. Visit the app online first so service worker registers & precaches assets
     await page.goto('/');
-    await expect(page.locator('h1')).toContainText('Mission');
+    await expect(page.locator('h1')).toContainText('HSS Planner');
 
     // 2. Wait for Service Worker registration to complete
     await page.waitForFunction(async () => {
@@ -60,7 +60,7 @@ test.describe('PWA Cold Offline Start & Language Switcher', () => {
     await page.reload({ waitUntil: 'domcontentloaded' });
 
     // 6. Verify Cold Offline Experience loads correctly
-    await expect(page.locator('h1')).toContainText('Mission');
+    await expect(page.locator('h1')).toContainText('HSS Planner');
     await expect(page.locator('#lang-switch-btn')).toHaveCount(0);
     await expect(page.locator('#setup-step-1'), JSON.stringify(failures)).toBeVisible();
 

@@ -1,16 +1,16 @@
-// HSS Planner Service Worker v7.1.0 (Original Brand Logo Restored)
-const CACHE_NAME = 'hss-planner-v7.1.0';
+// HSS Planner Service Worker v7.1.1 (Original Brand Logo Restored)
+const CACHE_NAME = 'hss-planner-v7.1.1';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './manifest.json',
-  './icon.png?v=7.1.0',
-  './icon-192.png?v=7.1.0',
-  './icon-512.png?v=7.1.0',
-  './icon-maskable-192.png?v=7.1.0',
-  './icon-maskable-512.png?v=7.1.0',
-  './favicon-32.png?v=7.1.0',
-  './apple-touch-icon.png?v=7.1.0'
+  './icon.png?v=7.1.1',
+  './icon-192.png?v=7.1.1',
+  './icon-512.png?v=7.1.1',
+  './icon-maskable-192.png?v=7.1.1',
+  './icon-maskable-512.png?v=7.1.1',
+  './favicon-32.png?v=7.1.1',
+  './apple-touch-icon.png?v=7.1.1'
 ];
 
 self.addEventListener('install', (event) => {

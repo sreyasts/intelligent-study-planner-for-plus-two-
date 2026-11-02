@@ -120,7 +120,7 @@ describe('Requirement R4: Comprehensive Automated Multi-Scenario Simulation & Re
       }
     }
 
-    onSnapshot(callback) {
+    onSnapshot(options, callback = options) {
       this._listeners.add(callback);
       return () => {
         this._listeners.delete(callback);
@@ -164,6 +164,13 @@ describe('Requirement R4: Comprehensive Automated Multi-Scenario Simulation & Re
         this._collections.set(name, new MockFirestoreCollection());
       }
       return this._collections.get(name);
+    }
+
+    async runTransaction(update) {
+      const writes = [];
+      const result = await update({ get: ref => ref.get(), set: (ref, data) => writes.push([ref, data]) });
+      for (const [ref, data] of writes) await ref.set(data);
+      return result;
     }
 
     enablePersistence() {

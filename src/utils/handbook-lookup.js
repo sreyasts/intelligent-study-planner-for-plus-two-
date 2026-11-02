@@ -56,8 +56,6 @@ export const CANONICAL_HANDBOOK_MAP = Object.freeze({
   "+1_Computer_Science_8": "+1/Computer_Science/Computer_Science/Chapter_09_String_Handling_and_IO_Functions.pdf",
   "+1_Computer_Science_9": "+1/Computer_Science/Computer_Science/Chapter_08_Arrays.pdf",
   "+1_Computer_Science_10": "+1/Computer_Science/Computer_Science/Chapter_08_Arrays.pdf",
-  "+1_Computer_Science_11": "+1/Computer_Science/Computer_Science/Chapter_08_Arrays.pdf",
-  "+1_Computer_Science_12": "+1/Computer_Science/Computer_Science/Chapter_08_Arrays.pdf",
   "+1_Computer_Science_13": "+1/Computer_Science/Computer_Science/Chapter_12_Internet_and_Mobile_Computing.pdf",
   "+1_Botany_1": "+1/Biology_Science/Biology/Botany/Chapter_01_Biological_Classification.pdf",
   "+1_Botany_2": "+1/Biology_Science/Biology/Botany/Chapter_02_Plant_Kingdom.pdf",
@@ -1269,13 +1267,13 @@ export function getHandbookUrl(taskOrOptions, contextState = {}) {
   // Tier 1: Direct lookup by canonical chapId
   if (rawChapId) {
     if (RATIONALIZED_CHAPTER_IDS.has(rawChapId)) return null;
-    if (CANONICAL_HANDBOOK_MAP.hasOwnProperty(rawChapId)) {
+    if (Object.hasOwn(CANONICAL_HANDBOOK_MAP, rawChapId)) {
       const mapped = CANONICAL_HANDBOOK_MAP[rawChapId];
       if (mapped === null) return null;
       return '/handbooks/' + resolveStreamPath(mapped, effectiveStream);
     }
     const normalizedRawId = rawChapId.replace(/\s+/g, '_');
-    if (CANONICAL_HANDBOOK_MAP.hasOwnProperty(normalizedRawId)) {
+    if (Object.hasOwn(CANONICAL_HANDBOOK_MAP, normalizedRawId)) {
       const mapped = CANONICAL_HANDBOOK_MAP[normalizedRawId];
       if (mapped === null) return null;
       return '/handbooks/' + resolveStreamPath(mapped, effectiveStream);
@@ -1290,7 +1288,7 @@ export function getHandbookUrl(taskOrOptions, contextState = {}) {
   if (grade && subject && chapNumber !== undefined && chapNumber !== null) {
     const synthId = grade + '_' + subject + '_' + parseInt(chapNumber, 10);
     if (RATIONALIZED_CHAPTER_IDS.has(synthId)) return null;
-    if (CANONICAL_HANDBOOK_MAP.hasOwnProperty(synthId)) {
+    if (Object.hasOwn(CANONICAL_HANDBOOK_MAP, synthId)) {
       const mapped = CANONICAL_HANDBOOK_MAP[synthId];
       if (mapped === null) return null;
       return '/handbooks/' + resolveStreamPath(mapped, effectiveStream);
@@ -1303,14 +1301,14 @@ export function getHandbookUrl(taskOrOptions, contextState = {}) {
     const normTitle = normalizeHandbookTitle(rawTitle);
     if (subject) {
       const subKey = grade + '|' + normalizeHandbookTitle(subject) + '|' + normTitle;
-      if (TITLE_HANDBOOK_MAP.hasOwnProperty(subKey)) {
+      if (Object.hasOwn(TITLE_HANDBOOK_MAP, subKey)) {
         const mapped = TITLE_HANDBOOK_MAP[subKey];
         if (mapped === null) return null;
         return '/handbooks/' + resolveStreamPath(mapped, effectiveStream);
       }
     }
     const titleKey = grade + '|' + normTitle;
-    if (TITLE_HANDBOOK_MAP.hasOwnProperty(titleKey)) {
+    if (Object.hasOwn(TITLE_HANDBOOK_MAP, titleKey)) {
       const mapped = TITLE_HANDBOOK_MAP[titleKey];
       if (mapped === null) return null;
       return '/handbooks/' + resolveStreamPath(mapped, effectiveStream);

@@ -1,5 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const port = process.env.HSS_TEST_PORT || '4173';
+const baseURL = `http://localhost:${port}`;
+
 export default defineConfig({
   testDir: './tests/e2e',
   timeout: 30000,
@@ -12,7 +15,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: 'list',
   use: {
-    baseURL: 'http://localhost:4173',
+    baseURL,
     trace: 'on-first-retry',
   },
   projects: [
@@ -22,9 +25,9 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npx vite preview --port 4173',
-    url: 'http://localhost:4173',
-    reuseExistingServer: !process.env.CI,
+    command: `npx vite preview --port ${port} --strictPort`,
+    url: baseURL,
+    reuseExistingServer: !process.env.CI && !process.env.HSS_TEST_PORT,
     timeout: 120000,
   },
 });

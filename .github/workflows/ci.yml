@@ -35,6 +35,15 @@ jobs:
       - name: Run Invariant Regression Suite (500+ Checks)
         run: npm run test:legacy
 
+      - name: Set up Java for Firestore rule checks
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Verify real Firestore security rules
+        run: npm run test:sync-rules
+
       - name: Run Planner Benchmark Verification
         run: node scripts/benchmark-planner.js
 

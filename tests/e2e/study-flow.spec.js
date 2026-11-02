@@ -25,7 +25,7 @@ for (const width of [390, 1280]) {
     await expect(page.locator('#hours-chip-2')).toBeVisible();
     await expect(page.locator('#setup-advanced-accordion')).not.toHaveAttribute('open');
     await page.locator('#hours-chip-2').click();
-    await page.getByRole('button', { name: '🚀 Start Day 1', exact: true }).click();
+    await page.getByRole('button', { name: 'Start Day 1', exact: true }).click();
     await expect(page.locator('#today-overview')).toBeVisible({ timeout: 20000 });
     await expect(page.locator('#setup-wizard-card')).toHaveCount(0);
     await expect(page.locator('.study-tools')).not.toHaveAttribute('open');

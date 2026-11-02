@@ -10,7 +10,7 @@ for (const completed of [false, true]) {
       await page.clock.install({ time: new Date('2026-10-20T12:00:00+05:30') });
       await page.goto('/');
       await page.locator('#setup-step-pill-4').click();
-      await page.getByRole('button', { name: '🚀 Start Day 1', exact: true }).click();
+      await page.getByRole('button', { name: 'Start Day 1', exact: true }).click();
       await expect(page.locator('#today-overview')).toBeVisible({ timeout: 20000 });
       const original = await page.evaluate(completed => {
         const state = JSON.parse(localStorage.getItem('plusTwoMissionState_v2'));

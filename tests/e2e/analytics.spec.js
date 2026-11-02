@@ -20,7 +20,7 @@ test.describe('Local analytics event properties', () => {
 
     // 1. Visit App: 'opened' & 'setup_started' should fire
     await page.goto('/');
-    await expect(page.locator('h1')).toContainText('Mission');
+    await expect(page.locator('h1')).toContainText('HSS Planner');
 
     // Check opened event
     await page.waitForFunction(() => {
@@ -30,7 +30,7 @@ test.describe('Local analytics event properties', () => {
 
     // 2. Generate a plan: 'plan_created' should fire
     await page.locator('#setup-step-pill-4').click();
-    await page.getByRole('button', { name: '🚀 Start Day 1', exact: true }).click();
+    await page.getByRole('button', { name: 'Start Day 1', exact: true }).click();
     await expect(page.locator('#today-overview')).toBeVisible({ timeout: 20000 });
 
     // Verify 'plan_created' was logged

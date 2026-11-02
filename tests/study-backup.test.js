@@ -10,7 +10,8 @@ const makePlan = () => ({
 
 describe('Study backup validation and persistence', () => {
   it('round-trips dates, task IDs and completion while omitting account identity', () => {
-    const state = { ...makePlan(), userEmail: 'private@example.invalid', uid: 'account-id', displayName: 'Private name' };
+    const state = { ...makePlan(), userEmail: 'private@example.invalid', uid: 'account-id', ownerUid: 'account-id',
+      displayName: 'Private name', clientSessionId: 'private-session', lastSynced: '2026-11-01T00:00:00.000Z' };
     const exported = createStudyBackup(state, '6.4.3');
     const restored = parseStudyBackup(JSON.stringify(exported));
     expect(restored.plan).toEqual(state.plan);
@@ -18,6 +19,9 @@ describe('Study backup validation and persistence', () => {
     expect(restored).not.toHaveProperty('userEmail');
     expect(restored).not.toHaveProperty('uid');
     expect(restored).not.toHaveProperty('displayName');
+    expect(restored).not.toHaveProperty('ownerUid');
+    expect(restored).not.toHaveProperty('clientSessionId');
+    expect(restored).not.toHaveProperty('lastSynced');
     expect(state.userEmail).toBe('private@example.invalid');
   });
 

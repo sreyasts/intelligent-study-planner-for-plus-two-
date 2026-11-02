@@ -104,6 +104,7 @@ describe('Requirement R2: Non-Destructive Reset Plan with Hybrid Snapshot Restor
       const usersDb = new Map();
 
       const sandbox = {
+        accountSync: null,
         appState: initialPlan ? JSON.parse(JSON.stringify(initialPlan)) : null,
         selectedStream: initialPlan?.stream || 'cs',
         selectedGrade: initialPlan?.grade || '+2',

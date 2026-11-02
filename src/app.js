@@ -42,9 +42,6 @@ import {
   showAppConfirm,
 } from './ui/dialogs.js';
 import {
-  getSvgIcon,
-} from './ui/icons.js';
-import {
   STREAM_ICONS,
   GRADE_ICONS,
   getSubjectBoxIcon,
@@ -77,6 +74,7 @@ import { MAX_BACKUP_BYTES, parseStudyBackup, validateStudyBackup, createStudyBac
 import { persistTaskCompletion } from './utils/study-progress.js';
 import { getRemainingPlanTasks } from './utils/plan-scope.js';
 import { getHandbookUrl } from './utils/handbook-lookup.js';
+import { createAccountSync, queuePendingAccountState } from './auth/account-sync.js';
 import appPackage from '../package.json' with { type: 'json' };
 const APP_VERSION = appPackage.version;
 
@@ -94,7 +92,7 @@ function getTaskDeepLinksHtml(task) {
     if (!task || (task.isRevision && !task.isSpacedRetrieval && !task.isExamEveTask)) return '';
     const handbookUrl = getHandbookUrl(task, appState);
     if (!handbookUrl) return '';
-    const isMalayalam = typeof isML !== 'undefined' ? isML : (typeof currentLanguage !== 'undefined' && currentLanguage === 'ml');
+    const isMalayalam = getAppLanguage() === 'ml';
     return `
         <div class="daily-task-actions mt-1.5" onclick="event.stopPropagation()">
             <a href="${handbookUrl}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="daily-notes-btn" title="${isMalayalam ? 'അധ്യായ നോട്ട്സും PYQ ചോദ്യങ്ങളും (PDF) കാണുക' : 'Open chapter study notes & PYQs (PDF)'}">📖 Notes</a>
@@ -216,7 +214,7 @@ function loadInitialState() {
 
         const currentSessionId = (function() {
             if (typeof window === 'undefined') return 'server_' + Math.random().toString(36).substring(2, 9);
-            let sid = null;
+            let sid;
             try {
                 sid = sessionStorage.getItem('mpt_client_session_id');
                 if (!sid) {
@@ -229,7 +227,61 @@ function loadInitialState() {
             return sid;
         })();
 
-        let isCloudSyncInProgress = false;
+        let accountSync = null;
+        let syncStatus = 'idle';
+
+        function showSyncStatus(status, error) {
+            const changed = syncStatus !== status;
+            syncStatus = status;
+            const label = document.getElementById('account-sync-status');
+            if (label) label.textContent = status === 'synced' ? 'Saved to account' :
+                status === 'pending' ? 'Saving to account…' : 'Saved on device · cloud sync needs retry';
+            if (status === 'error' && changed) {
+                console.error('Account sync failed:', error);
+                showToastMessage('Progress is saved on this device. Cloud sync failed; retrying automatically.', 'fa-cloud text-amber-500');
+            }
+        }
+
+        function getAccountSync(user) {
+            if (!user || !db) return null;
+            if (accountSync && accountSync.uid === user.uid) return accountSync;
+            if (accountSync) accountSync.stop();
+            accountSync = createAccountSync({
+                db, user, storage: localStorage, sessionId: currentSessionId,
+                getLocal: () => appState,
+                apply: state => {
+                    if (currentUser?.uid !== user.uid) return;
+                    appState = state;
+                    if (appState && (!appState.engineVersion || appState.engineVersion < PLANNER_ENGINE_VERSION)) {
+                        appState = migrateLegacyUserPlan(appState);
+                    }
+                    if (appState) saveAppStateLocally();
+                    else {
+                        localStorage.removeItem('plusTwoMissionState_v2');
+                        localStorage.removeItem('plusTwoPlanState');
+                    }
+                    renderApp();
+                    updateAuthHeaderUI();
+                },
+                status: showSyncStatus,
+                chooseLocal: async (local, remote) => showAppConfirm({
+                    title: 'Cloud Account Sync',
+                    message: `Your account has a saved ${escapeStudyText(({ cs: 'Computer Science', bio: 'Biology Science', commerce: 'Commerce', humanities: 'Humanities' })[remote.stream] || remote.stream)} (${escapeStudyText(remote.grade || '+2')}) plan. This device has a different ${escapeStudyText(({ cs: 'Computer Science', bio: 'Biology Science', commerce: 'Commerce', humanities: 'Humanities' })[local.stream] || local.stream)} (${escapeStudyText(local.grade || '+2')}) plan. Choose the plan to use across your devices.`,
+                    icon: 'fa-cloud-arrow-down text-blue-500',
+                    confirmText: 'Use Device Plan & Update Account',
+                    cancelText: 'Load Saved Cloud Plan'
+                }),
+            });
+            const sync = accountSync;
+            sync.listen();
+            cloudSyncUnsubscribe = () => { sync.stop(); if (accountSync === sync) accountSync = null; };
+            return accountSync;
+        }
+
+        function stopAccountSync() {
+            if (accountSync) accountSync.stop();
+            accountSync = null;
+        }
 
         function getFirestoreCleanData(state) {
             if (!state) return null;
@@ -246,269 +298,34 @@ function loadInitialState() {
             persistStudyBackup(appState, localStorage);
         }
 
-        // Save State helper - saves to local storage AND syncs to Firebase Cloud Firestore!
         async function saveAppState() {
-            if (!appState) return;
-            const now = new Date().toISOString();
-            appState.lastModified = now;
-            appState.lastSynced = now;
+            if (!appState) return false;
+            appState.lastModified = new Date().toISOString();
             saveAppStateLocally();
-            await syncAppStateToCloud(appState);
+            return syncAppStateToCloud(appState);
         }
 
         async function syncAppStateToCloud(state) {
             const targetState = state || appState;
-            if (!targetState) return;
-
-            const now = new Date().toISOString();
-            targetState.lastSynced = now;
-            if (!targetState.lastModified) {
-                targetState.lastModified = now;
+            if (!targetState) return false;
+            if (!currentUser || !db) {
+                try { queuePendingAccountState(localStorage, targetState); }
+                catch (error) { showSyncStatus('error', error); }
+                return false;
             }
-            if (appState && appState !== targetState) {
-                appState.lastSynced = now;
-                if (!appState.lastModified) appState.lastModified = now;
-            }
+            if (targetState.ownerUid && targetState.ownerUid !== currentUser.uid) return false;
+            if (!targetState.lastModified) targetState.lastModified = new Date().toISOString();
+            targetState.ownerUid = currentUser.uid;
             saveAppStateLocally();
-
-            if (currentUser && db) {
-                try {
-                    const userDocRef = db.collection('users').doc(currentUser.uid);
-                    const payload = getFirestoreCleanData({
-                        ...targetState,
-                        userEmail: currentUser.email,
-                        displayName: currentUser.displayName || 'Student',
-                        lastSynced: now,
-                        lastModified: targetState.lastModified,
-                        clientSessionId: currentSessionId
-                    });
-                    await userDocRef.set(payload);
-                } catch(err) {
-                    console.error("Cloud save failed:", err);
-                    if (err.message && err.message.includes("database (default) does not exist")) {
-                        showAppAlert({
-                            title: "Cloud Sync Setup Needed",
-                            message: "Cloud Firestore database is not yet enabled in the Firebase console. Please open Firebase Console ➔ Firestore Database ➔ 'Create database'.",
-                            icon: "fa-cloud text-amber-500"
-                        });
-                    }
-                }
-            }
+            return getAccountSync(currentUser).save(targetState);
         }
 
         async function performCloudSync(user, explicitTrigger = false) {
-            if (!user || !db || isCloudSyncInProgress) return;
-            isCloudSyncInProgress = true;
-            try {
-                if (explicitTrigger) showToastMessage("Checking cloud sync...", "fa-rotate text-blue-400");
-                const userDocRef = db.collection('users').doc(user.uid);
-                const docSnap = await userDocRef.get();
-
-                if (docSnap.exists) {
-                    let cloudData = docSnap.data();
-                    if (cloudData && Array.isArray(cloudData.plan) && cloudData.plan.length > 0) {
-                        // Reconcile and upgrade cloud data to current engine version if needed
-                        if (!cloudData.engineVersion || cloudData.engineVersion < PLANNER_ENGINE_VERSION) {
-                            cloudData = migrateLegacyUserPlan(cloudData);
-                        }
-
-                        // Count completed tasks in local vs cloud
-                        const localCompletedTaskIds = new Set();
-                        if (appState && Array.isArray(appState.plan)) {
-                            appState.plan.forEach(day => {
-                                (day.tasks || []).forEach(t => {
-                                    if (t.completed) localCompletedTaskIds.add(t.id);
-                                });
-                            });
-                        }
-
-                        const cloudCompletedTaskIds = new Set();
-                        cloudData.plan.forEach(day => {
-                            (day.tasks || []).forEach(t => {
-                                if (t.completed) cloudCompletedTaskIds.add(t.id);
-                            });
-                        });
-
-                        const streamNamesMap = { cs: 'Computer Science', bio: 'Biology Science', commerce: 'Commerce', humanities: 'Humanities' };
-                        const cloudStreamName = streamNamesMap[cloudData.stream] || (cloudData.grade === '+1' ? 'Plus One' : 'Plus Two');
-                        const localStreamName = (appState && (streamNamesMap[appState.stream] || (appState.grade === '+1' ? 'Plus One' : 'Plus Two'))) || 'Current';
-
-                        // Case 1: Local device had no plan
-                        if (!appState || !Array.isArray(appState.plan) || appState.plan.length === 0) {
-                            appState = cloudData;
-                            saveAppStateLocally();
-                            renderApp();
-                            updateAuthHeaderUI();
-                            showToastMessage("Welcome back! Your study progress has been restored from your Google Account.", "fa-circle-check text-emerald-400");
-                            return;
-                        }
-
-                        // Case 2: Freshly generated local plan (0 completed tasks)
-                        // Do NOT silently wipe it out with cloud plan! Prompt user to choose.
-                        if (localCompletedTaskIds.size === 0) {
-                            const chooseDevicePlan = await showAppConfirm({
-                                title: "Cloud Account Sync",
-                                message: `Your Google Account has a saved ${cloudStreamName} study plan (${cloudCompletedTaskIds.size} completed). You also have an active ${localStreamName} plan on this device.<br><br>Which plan would you like to keep active across your devices?`,
-                                icon: "fa-cloud-arrow-up text-blue-500",
-                                confirmText: "Use Device Plan & Update Account",
-                                cancelText: "Load Saved Cloud Plan"
-                            });
-
-                            if (chooseDevicePlan) {
-                                appState.userEmail = user.email;
-                                appState.ownerUid = user.uid;
-                                const now = new Date().toISOString();
-                                appState.lastSynced = now;
-                                appState.lastModified = appState.lastModified || now;
-                                saveAppStateLocally();
-                                const payload = getFirestoreCleanData({
-                                    ...appState,
-                                    userEmail: user.email,
-                                    displayName: user.displayName || 'Student',
-                                    lastSynced: now,
-                                    lastModified: appState.lastModified,
-                                    clientSessionId: currentSessionId
-                                });
-                                await userDocRef.set(payload);
-                                renderApp();
-                                updateAuthHeaderUI();
-                                showToastMessage(`Current ${localStreamName} plan saved to your Google Account!`, "fa-cloud-arrow-up text-emerald-400");
-                            } else {
-                                appState = cloudData;
-                                saveAppStateLocally();
-                                renderApp();
-                                updateAuthHeaderUI();
-                                showToastMessage(`Loaded saved ${cloudStreamName} plan from your account.`, "fa-cloud-arrow-down text-blue-400");
-                            }
-                            return;
-                        }
-
-                        // Case 3: Both have completed tasks and the same stream -> merge completed tasks
-                        if (cloudData.stream === appState.stream) {
-                            let targetPlan = (cloudCompletedTaskIds.size >= localCompletedTaskIds.size) ? cloudData : appState;
-
-                            // Merge all completed tasks into targetPlan so no tick mark is ever lost
-                            targetPlan.plan.forEach(day => {
-                                (day.tasks || []).forEach(t => {
-                                    if (localCompletedTaskIds.has(t.id) || cloudCompletedTaskIds.has(t.id)) {
-                                        t.completed = true;
-                                    }
-                                });
-                            });
-
-                            appState = targetPlan;
-                            appState.userEmail = user.email;
-                            appState.ownerUid = user.uid;
-                            const now = new Date().toISOString();
-                            appState.lastSynced = now;
-                            appState.lastModified = appState.lastModified || now;
-                            saveAppStateLocally();
-                            const payload = getFirestoreCleanData({
-                                ...appState,
-                                userEmail: user.email,
-                                displayName: user.displayName || 'Student',
-                                lastSynced: now,
-                                lastModified: appState.lastModified,
-                                clientSessionId: currentSessionId
-                            });
-                            await userDocRef.set(payload);
-                            renderApp();
-                            updateAuthHeaderUI();
-                            showToastMessage("Signed in! Your progress has been synced to your Google Account.", "fa-circle-check text-emerald-400");
-                        } else {
-                            // Different streams between cloud and local session (both having completed tasks)
-                            const chooseDevicePlan = await showAppConfirm({
-                                title: "Cloud Account Sync",
-                                message: `Your Google Account has a saved ${cloudStreamName} study plan (${cloudCompletedTaskIds.size} completed). You also have an active ${localStreamName} plan on this device.<br><br>Which plan would you like to keep active across your devices?`,
-                                icon: "fa-cloud-arrow-down text-blue-500",
-                                confirmText: "Use Device Plan & Update Account",
-                                cancelText: "Load Saved Cloud Plan"
-                            });
-
-                            if (chooseDevicePlan) {
-                                appState.userEmail = user.email;
-                                appState.ownerUid = user.uid;
-                                const now = new Date().toISOString();
-                                appState.lastSynced = now;
-                                appState.lastModified = appState.lastModified || now;
-                                saveAppStateLocally();
-                                const payload = getFirestoreCleanData({
-                                    ...appState,
-                                    userEmail: user.email,
-                                    displayName: user.displayName || 'Student',
-                                    lastSynced: now,
-                                    lastModified: appState.lastModified,
-                                    clientSessionId: currentSessionId
-                                });
-                                await userDocRef.set(payload);
-                                showToastMessage(`Current ${localStreamName} plan saved to your Google Account!`, "fa-cloud-arrow-up text-emerald-400");
-                            } else {
-                                appState = cloudData;
-                                saveAppStateLocally();
-                                showToastMessage(`Loaded saved ${cloudStreamName} plan from your account.`, "fa-cloud-arrow-down text-blue-400");
-                            }
-                            renderApp();
-                            updateAuthHeaderUI();
-                        }
-                    } else {
-                        // Cloud doc exists but has empty plan: upload local guest plan
-                        if (appState && Array.isArray(appState.plan) && appState.plan.length > 0) {
-                            appState.userEmail = user.email;
-                            appState.ownerUid = user.uid;
-                            const now = new Date().toISOString();
-                            appState.lastSynced = now;
-                            appState.lastModified = appState.lastModified || now;
-                            const payload = getFirestoreCleanData({
-                                ...appState,
-                                userEmail: user.email,
-                                displayName: user.displayName || 'Student',
-                                lastSynced: now,
-                                lastModified: appState.lastModified,
-                                clientSessionId: currentSessionId
-                            });
-                            await userDocRef.set(payload);
-                            saveAppStateLocally();
-                            renderApp();
-                            updateAuthHeaderUI();
-                            showToastMessage("Signed in! Your progress has been saved to your Google Account.", "fa-cloud-arrow-up text-emerald-400");
-                        }
-                    }
-                } else {
-                    // Document doesn't exist on server yet!
-                    // If local has progress (e.g. Guest who started without sign-in), upload it now!
-                    if (appState && Array.isArray(appState.plan) && appState.plan.length > 0) {
-                        appState.userEmail = user.email;
-                        appState.ownerUid = user.uid;
-                        const now = new Date().toISOString();
-                        appState.lastSynced = now;
-                        appState.lastModified = appState.lastModified || now;
-                        const payload = getFirestoreCleanData({
-                            ...appState,
-                            userEmail: user.email,
-                            displayName: user.displayName || 'Student',
-                            lastSynced: now,
-                            lastModified: appState.lastModified,
-                            clientSessionId: currentSessionId
-                        });
-                        await userDocRef.set(payload);
-                        saveAppStateLocally();
-                        renderApp();
-                        updateAuthHeaderUI();
-                        showToastMessage("Signed in with Google! Your progress has been saved to your account.", "fa-cloud-arrow-up text-emerald-400");
-                    }
-                }
-            } catch(err) {
-                console.error("Cloud sync error:", err);
-                if (err.message && err.message.includes("database (default) does not exist")) {
-                    showAppAlert({
-                        title: "Cloud Sync Setup Needed",
-                        message: "Cloud Firestore database is not yet enabled in your Firebase console. Please go to Firebase Console ➔ Firestore Database ➔ 'Create database'.",
-                        icon: "fa-cloud text-amber-500"
-                    });
-                }
-            } finally {
-                isCloudSyncInProgress = false;
-            }
+            if (!user || !db || currentUser?.uid !== user.uid) return false;
+            if (explicitTrigger) showToastMessage('Checking cloud sync…', 'fa-rotate text-blue-400');
+            const synced = await getAccountSync(user).refresh();
+            if (synced && explicitTrigger) showToastMessage('Your study plan is saved to your account.', 'fa-circle-check text-emerald-400');
+            return synced;
         }
 
         // Attach user authentication listener and setup real-time Firestore synchronization
@@ -520,7 +337,7 @@ function loadInitialState() {
             if (typeof auth.getRedirectResult === 'function') {
                 auth.getRedirectResult().then((result) => {
                     if (result && result.user) {
-                        showToastMessage("Signed in with Google! Cloud sync active.", "fa-circle-check text-emerald-400");
+                        showToastMessage("Signed in with Google.", "fa-circle-check text-emerald-400");
                     }
                 }).catch((err) => {
                     console.warn("Redirect auth note:", err);
@@ -532,6 +349,11 @@ function loadInitialState() {
             auth.onAuthStateChanged(async (user) => {
                 const wasSignedIn = !!currentUser;
                 const priorUid = previousUserUid || (currentUser ? currentUser.uid : null);
+                if (priorUid !== user?.uid) {
+                    if (cloudSyncUnsubscribe) cloudSyncUnsubscribe();
+                    cloudSyncUnsubscribe = null;
+                    stopAccountSync();
+                }
                 currentUser = user;
                 previousUserUid = user ? user.uid : null;
                 if (typeof window !== 'undefined') window.currentUser = user;
@@ -567,37 +389,11 @@ function loadInitialState() {
                     // 1. Immediately perform initial cloud fetch/merge
                     await performCloudSync(user);
 
-                    // 2. Setup real-time listener for multi-device sync
-                    if (cloudSyncUnsubscribe) cloudSyncUnsubscribe();
-                    const userDocRef = db.collection('users').doc(user.uid);
-
-                    cloudSyncUnsubscribe = userDocRef.onSnapshot((docSnap) => {
-                        if (docSnap.metadata && docSnap.metadata.hasPendingWrites) {
-                            return;
-                        }
-                        if (docSnap.exists) {
-                            let cloudData = docSnap.data();
-                            if (cloudData && Array.isArray(cloudData.plan) && cloudData.plan.length > 0) {
-                                if (cloudData.clientSessionId && cloudData.clientSessionId === currentSessionId) {
-                                    return;
-                                }
-                                if (!cloudData.engineVersion || cloudData.engineVersion < PLANNER_ENGINE_VERSION) {
-                                    cloudData = migrateLegacyUserPlan(cloudData);
-                                }
-                                const cloudLastSynced = cloudData.lastSynced || '';
-                                const localLastSynced = (appState && appState.lastSynced) || '';
-                                if (!appState || cloudLastSynced !== localLastSynced) {
-                                    appState = cloudData;
-                                    saveAppStateLocally();
-                                    renderApp();
-                                    updateAuthHeaderUI();
-                                    showToastMessage("🔄 Synced from cloud", "fa-rotate text-blue-400");
-                                }
-                            }
-                        }
-                    }, (err) => {
-                        console.warn("Firestore listener note:", err);
-                    });
+                    // Ignore completion of a previous account's asynchronous fetch.
+                    if (currentUser?.uid !== user.uid) return;
+                    const sync = getAccountSync(user);
+                    sync.listen();
+                    cloudSyncUnsubscribe = () => { sync.stop(); if (accountSync === sync) accountSync = null; };
                 } else {
                     // User is not signed in (Guest or signed out)
                     if (cloudSyncUnsubscribe) {
@@ -644,6 +440,13 @@ function loadInitialState() {
             } catch(err) {
                 console.warn("Firebase initialization note:", err);
             }
+        }
+
+        if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+            window.addEventListener('online', () => { if (currentUser) void performCloudSync(currentUser); });
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible' && currentUser) void performCloudSync(currentUser);
+            });
         }
 
         // Initialize Firebase Auth on app start so existing sessions are detected immediately
@@ -852,11 +655,11 @@ function loadInitialState() {
                     currentUser = result.user;
                     if (typeof window !== 'undefined') window.currentUser = result.user;
                     updateAuthHeaderUI();
-                    await performCloudSync(currentUser, true);
+
                 }
 
                 closeAuthModal();
-                showToastMessage("Signed in with Google! Cloud sync active.", "fa-circle-check text-emerald-400");
+                showToastMessage("Signed in with Google.", "fa-circle-check text-emerald-400");
             } catch(err) {
                 console.error("Sign-in error:", err);
 
@@ -996,6 +799,7 @@ function loadInitialState() {
         }
 
         function setCurrentUser(val) {
+            if (currentUser?.uid !== val?.uid) stopAccountSync();
             currentUser = val;
             if (typeof window !== "undefined") {
                 window.currentUser = val;
@@ -1015,6 +819,7 @@ function loadInitialState() {
         }
 
         function setFirestoreDb(val) {
+            if (db !== val) stopAccountSync();
             db = val;
         }
 
@@ -1250,7 +1055,7 @@ function fireStudyConfetti(opts = { particleCount: 70, spread: 60, origin: { y: 
 
             // Update UI elements in DOM safely using escaped selector or dataset
             try {
-                const escapedId = (typeof CSS !== 'undefined' && CSS.escape) ? CSS.escape(taskId) : taskId.replace(/"/g, '\\"');
+                const escapedId = (typeof window !== 'undefined' && window.CSS?.escape) ? window.CSS.escape(taskId) : taskId.replace(/"/g, '\\"');
                 const checkboxElements = document.querySelectorAll(`[data-task-id="${escapedId}"]`);
                 checkboxElements.forEach(cb => {
                     if (targetTask.completed) {
@@ -1710,6 +1515,11 @@ function fireStudyConfetti(opts = { particleCount: 70, spread: 60, origin: { y: 
             }
 
             try {
+                if (accountSync) {
+                    accountSync.stop();
+                    accountSync.clear();
+                    accountSync = null;
+                }
                 // 1. If signed in, archive to Firestore user_archives and clear active plan document
                 if (typeof currentUser !== 'undefined' && currentUser && typeof db !== 'undefined' && db) {
                     if (preResetSnapshot) {
